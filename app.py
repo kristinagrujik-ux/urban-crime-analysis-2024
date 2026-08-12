@@ -5,8 +5,12 @@ st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", lay
 
 file_path = 'KRIMINALITET.xlsx'
 
-# Директно ги дефинираме листовите од вашиот Excel фајл
-sheet_names = ["Вкупен криминалитет", "Недозволена трговија со дрога"]
+@st.cache_data
+def get_sheet_names():
+    xls = pd.ExcelFile(file_path)
+    return xls.sheet_names
+
+sheet_names = get_sheet_names()
 selected_sheet = st.sidebar.selectbox("Избери категорија на извештај:", sheet_names)
 
 st.title(f"📊 Извештај: {selected_sheet}")
