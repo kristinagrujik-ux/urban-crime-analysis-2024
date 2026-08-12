@@ -23,8 +23,8 @@ st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
+    max_col = len(valid_rows.columns)
     
-    # Дефинирање на податоци за графиконите
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 3], '2023': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
     df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 7], '2023': valid_rows.iloc[:, 8]}).melt('Сектор', var_name='Година', value_name='Вредност')
     
@@ -36,9 +36,10 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
         ).properties(height=300), use_container_width=True)
     with col2:
-        st.write("**Пита: Кривични дела (%)**")
-        df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
-        st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        if max_col > 5:
+            st.write("**Пита: Кривични дела (%)**")
+            df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
+            st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
     # 2. Ред: Сторители (Бар + Пита)
     col3, col4 = st.columns(2)
@@ -48,29 +49,59 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
         ).properties(height=300), use_container_width=True)
     with col4:
-        st.write("**Пита: Сторители (%)**")
-        df_p2 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 9], errors='coerce').abs()}).dropna()
-        st.altair_chart(alt.Chart(df_p2).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        if max_col > 9:
+            st.write("**Пита: Сторители (%)**")
+            df_p2 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 9], errors='coerce').abs()}).dropna()
+            st.altair_chart(alt.Chart(df_p2).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
 else:
-    # Останати листови: 4 графикони (Криминал, Сторители, Стапка, Ефикасност)
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
-    # Логика за автоматско мапирање на колони
-    c1, c2 = st.columns(2)
-    with c1:
-        st.write("**Вкупни кривични дела**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(x=alt.X(f'{valid_rows.columns[0]}:N', sort=None), y=f'{valid_rows.columns[2]}:Q'), use_container_width=True)
-    with c2:
-        st.write("**Сторители**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(x=alt.X(f'{valid_rows.columns[0]}:N', sort=None), y=f'{valid_rows.columns[-1]}:Q'), use_container_width=True)
+    sector_col = valid_rows.columns[0]
+    
+    for col in valid_rows.columns[1:]:
+        valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
 
-    c3, c4 = st.columns(2)
-    with c3:
+    c_col = valid_rows.columns[2] if len(valid_rows.columns) > 2 else valid_rows.columns[1]
+    s_col = valid_rows.columns[-1] if len(valid_rows.columns) > 1 else None
+    st_col = valid_rows.columns[8] if len(valid_rows.columns) > 8 else s_col
+    ef_col = valid_rows.columns[9] if len(valid_rows.columns) > 9 else s_col
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Вкупни кривични дела**")
+        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
+            x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+            y=alt.Y(f'{c_col}:Q', title='Број', axis=alt.Axis(format='d')),
+            color=alt.Color(f'{sector_col}:N', legend=None)
+        ).properties(height=300), use_container_width=True)
+
+    with col2:
+        if s_col:
+            st.write("**Сторители**")
+            st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
+                x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+                y=alt.Y(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d')),
+                color=alt.Color(f'{sector_col}:N', legend=None)
+            ).properties(height=300), use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
         st.write("**Стапка на криминал 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_line(point=True).encode(x=f'{valid_rows.columns[0]}:N', y=f'{valid_rows.columns[8]}:Q'), use_container_width=True)
-    with c4:
+        st.altair_chart(alt.Chart(valid_rows).mark_line(point=True).encode(
+            x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+            y=alt.Y(f'{st_col}:Q', title='Стапка'),
+            color=alt.value('#e45756')
+        ).properties(height=300), use_container_width=True)
+
+    with col4:
         st.write("**Вкупна ефикасност 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(x=f'{valid_rows.columns[0]}:N', y=f'{valid_rows.columns[9]}:Q'), use_container_width=True)
+        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
+            x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+            y=alt.Y(f'{ef_col}:Q', title='Процент'),
+            color=alt.Color(f'{sector_col}:N', legend=None)
+        ).properties(height=300), use_container_width=True)
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
+
+
