@@ -15,9 +15,7 @@ st.title(f"📊 {selected_sheet}")
 @st.cache_data
 def load_data(sheet):
     if "Недозволена" in sheet or "дрога" in sheet.lower():
-        # Го читаме листот со две редови за заглавие како во Excel
-        df = pd.read_excel(file_path, sheet_name=sheet, header=[1, 2])
-        return df
+        return pd.read_excel(file_path, sheet_name=sheet, header=2)
     else:
         return pd.read_excel(file_path, sheet_name=sheet)
 
@@ -26,33 +24,27 @@ df = load_data(selected_sheet)
 st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
-    # Чистење и подготовка на податоците за графиконите за дрога
-    # Ги земаме секторите од првата колона
-    sectors = df.iloc[1:, 0].values
+    sector_col = df.columns[0]
+    df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно|Unnamed", case=False, na=False)].copy()
     
-    # Креираме чисти табели за цртање
-    chart_data_kd = pd.DataFrame({
-        '2024 година': pd.to_numeric(df.iloc[1:, 3], errors='coerce'),
-        '2023 година': pd.to_numeric(df.iloc[1:, 4], errors='coerce')
-    }, index=sectors)
-    
-    chart_data_st = pd.DataFrame({
-        '2024 година': pd.to_numeric(df.iloc[1:, 7], errors='coerce'),
-        '2023 година': pd.to_numeric(df.iloc[1:, 8], errors='coerce')
-    }, index=sectors)
-    
-    # Филтрирање да го нема редот "Вкупно" ако постои
-    chart_data_kd = chart_data_kd[~chart_data_kd.index.str.contains("Вкупно", case=False, na=False)]
-    chart_data_st = chart_data_st[~chart_data_st.index.str.contains("Вкупно", case=False, na=False)]
+    # Претворање на колоните во броеви за да работи графиконот
+    df_chart.iloc[:, 3] = pd.to_numeric(df_chart.iloc[:, 3], errors='coerce')
+    df_chart.iloc[:, 4] = pd.to_numeric(df_chart.iloc[:, 4], errors='coerce')
+    df_chart.iloc[:, 6] = pd.to_numeric(df_chart.iloc[:, 6], errors='coerce')
+    df_chart.iloc[:, 7] = pd.to_numeric(df_chart.iloc[:, 7], errors='coerce')
 
     col1, col2 = st.columns(2)
     with col1:
-        st.write("**Недозволена трговија со дрога - Кривични дела (2024 vs 2023)**")
-        st.bar_chart(chart_data_kd)
+        st.write("**Кривични дела (2024 vs 2023)**")
+        sub1 = df_chart.iloc[:, [0, 3, 4]].set_index(df_chart.columns[0])
+        sub1.columns = ['2024 година', '2023 година']
+        st.bar_chart(sub1)
         
     with col2:
-        st.write("**Недозволена трговија со дрога - Сторители (2024 vs 2023)**")
-        st.bar_chart(chart_data_st)
+        st.write("**Сторители (2024 vs 2023)**")
+        sub2 = df_chart.iloc[:, [0, 6, 7]].set_index(df_chart.columns[0])
+        sub2.columns = ['2024 година', '2023 година']
+        st.bar_chart(sub2)
         
 else:
     sector_col = df.columns[0]
