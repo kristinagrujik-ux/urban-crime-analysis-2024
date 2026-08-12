@@ -30,6 +30,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
 
     color_scale = alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8'])
 
+    # Прв ред: Кривични дела (Столпчест + Пит)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -58,6 +59,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             ).properties(height=350)
             st.altair_chart(pie_kd, use_container_width=True)
 
+    # Втор ред: Сторители (Столпчест + Пит)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
@@ -71,7 +73,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
 
     with col4:
         if max_col > 9:
-            st.write("**Сторители**")
+            st.write("**Сторители (Пит - Промена %)**")
             raw_val_st = valid_rows.iloc[:, 9].astype(str).str.strip()
             df_pie_st = pd.DataFrame({
                 'Сектор': valid_rows.iloc[:, 0], 
