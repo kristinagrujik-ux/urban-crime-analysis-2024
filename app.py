@@ -14,37 +14,32 @@ st.title(f"📊 {selected_sheet}")
 
 @st.cache_data
 def load_data(sheet):
-    if "Недозволена" in sheet or "дрога" in sheet.lower():
-        return pd.read_excel(file_path, sheet_name=sheet, header=2)
-    else:
-        return pd.read_excel(file_path, sheet_name=sheet)
+    return pd.read_excel(file_path, sheet_name=sheet)
 
 df = load_data(selected_sheet)
 
 st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
-    sector_col = df.columns[0]
-    df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно|Unnamed", case=False, na=False)].copy()
+    # Ги филтрираме само редовите каде што првата колона е валиден СВР сектор
+    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР", na=False)].copy()
     
-    # Претворање на колоните во броеви за да работи графиконот
-    df_chart.iloc[:, 3] = pd.to_numeric(df_chart.iloc[:, 3], errors='coerce')
-    df_chart.iloc[:, 4] = pd.to_numeric(df_chart.iloc[:, 4], errors='coerce')
-    df_chart.iloc[:, 6] = pd.to_numeric(df_chart.iloc[:, 6], errors='coerce')
-    df_chart.iloc[:, 7] = pd.to_numeric(df_chart.iloc[:, 7], errors='coerce')
+    # Претворање на колоните во броеви
+    for col_idx in [3, 4, 7, 8]:
+        valid_rows.iloc[:, col_idx] = pd.to_numeric(valid_rows.iloc[:, col_idx], errors='coerce')
 
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
-        sub1 = df_chart.iloc[:, [0, 3, 4]].set_index(df_chart.columns[0])
-        sub1.columns = ['2024 година', '2023 година']
-        st.bar_chart(sub1)
+        sub1 = valid_rows.iloc[:, [0, 3, 4]].copy()
+        sub1.columns = ['Сектор', '2024 година', '2023 година']
+        st.bar_chart(sub1.set_index('Сектор'))
         
     with col2:
         st.write("**Сторители (2024 vs 2023)**")
-        sub2 = df_chart.iloc[:, [0, 6, 7]].set_index(df_chart.columns[0])
-        sub2.columns = ['2024 година', '2023 година']
-        st.bar_chart(sub2)
+        sub2 = valid_rows.iloc[:, [0, 7, 8]].copy()
+        sub2.columns = ['Сектор', '2024 година', '2023 година']
+        st.bar_chart(sub2.set_index('Сектор'))
         
 else:
     sector_col = df.columns[0]
