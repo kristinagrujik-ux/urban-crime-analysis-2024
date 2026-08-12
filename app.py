@@ -24,7 +24,9 @@ df = load_data(selected_sheet)
 if not df.empty:
     df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
     sector_col = df.columns[0]
-    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    
+    # Ги земаме само нумеричките колони што НЕ содржат "Unnamed" во името
+    numeric_cols = [col for col in df.select_dtypes(include=['number']).columns if 'unnamed' not in str(col).lower()]
     
     if len(numeric_cols) >= 2:
         st.subheader("📈 Споредбена анализа по СВР сектори")
