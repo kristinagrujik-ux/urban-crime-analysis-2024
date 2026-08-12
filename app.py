@@ -22,21 +22,18 @@ df = load_data(selected_sheet)
 st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
-    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР", na=False)].copy()
+    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
     for col_idx in [3, 4, 7, 8]:
         valid_rows.iloc[:, col_idx] = pd.to_numeric(valid_rows.iloc[:, col_idx], errors='coerce')
 
-    sector_name = valid_rows.columns[0]
-
-    # Подготовка на податоци за Кривични дела (трансформација во долг формат за групирани столпчиња)
+    # Трансформација за секторите да бидат редови, а годините колони за групно прикажување
     df_kd = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0],
         '2024 година': valid_rows.iloc[:, 3],
         '2023 година': valid_rows.iloc[:, 4]
     }).melt('Сектор', var_name='Година', value_name='Вредност')
 
-    # Подготовка на податоци за Сторители
     df_st = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0],
         '2024 година': valid_rows.iloc[:, 7],
@@ -47,8 +44,8 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
         chart_kd = alt.Chart(df_kd).mark_bar().encode(
-            x=alt.X('Година:O', title=''),
-            xOffset=alt.XOffset('Година:O'),
+            x=alt.X('Сектор:N', title='', sort=None),
+            xOffset=alt.XOffset('Година:N'),
             y=alt.Y('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']))
         ).properties(height=350)
@@ -57,8 +54,8 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     with col2:
         st.write("**Сторители (2024 vs 2023)**")
         chart_st = alt.Chart(df_st).mark_bar().encode(
-            x=alt.X('Година:O', title=''),
-            xOffset=alt.XOffset('Година:O'),
+            x=alt.X('Сектор:N', title='', sort=None),
+            xOffset=alt.XOffset('Година:N'),
             y=alt.Y('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']))
         ).properties(height=350)
