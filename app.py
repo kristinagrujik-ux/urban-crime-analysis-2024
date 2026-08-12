@@ -24,10 +24,10 @@ st.subheader("📈 Графикони")
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
-    for col_idx in [3, 4, 7, 8]:
+    for col_idx in [3, 4, 7, 8, 5, 9]:
         valid_rows.iloc[:, col_idx] = pd.to_numeric(valid_rows.iloc[:, col_idx], errors='coerce')
 
-    # Трансформација за секторите да бидат редови, а годините колони за групно прикажување
+    # Податоци за столпчести графикони (Кривични дела и Сторители)
     df_kd = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0],
         '2024 година': valid_rows.iloc[:, 3],
@@ -40,6 +40,18 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         '2023 година': valid_rows.iloc[:, 8]
     }).melt('Сектор', var_name='Година', value_name='Вредност')
 
+    # Податоци за пит графикони (% промена од колоните 5 и 9)
+    df_pie_kd = pd.DataFrame({
+        'Сектор': valid_rows.iloc[:, 0],
+        'Промена': valid_rows.iloc[:, 5]
+    })
+
+    df_pie_st = pd.DataFrame({
+        'Сектор': valid_rows.iloc[:, 0],
+        'Промена': valid_rows.iloc[:, 9]
+    })
+
+    # Прв ред: Столпчести графикони
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -52,6 +64,17 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         st.altair_chart(chart_kd, use_container_width=True)
         
     with col2:
+        st.write("**Недозволена трговија со дрога (Пит - Кривични дела %)**")
+        pie_kd = alt.Chart(df_pie_kd).mark_arc(innerRadius=0).encode(
+            theta=alt.Theta('Промена:Q'),
+            color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
+            tooltip=['Сектор', 'Промена']
+        ).properties(height=350)
+        st.altair_chart(pie_kd, use_container_width=True)
+
+    # Втор ред: Сторители столпчести и пит
+    col3, col4 = st.columns(2)
+    with col3:
         st.write("**Сторители (2024 vs 2023)**")
         chart_st = alt.Chart(df_st).mark_bar().encode(
             x=alt.X('Сектор:N', title='', sort=None),
@@ -60,6 +83,15 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']))
         ).properties(height=350)
         st.altair_chart(chart_st, use_container_width=True)
+
+    with col4:
+        st.write("**Сторители (Пит - Промена %)**")
+        pie_st = alt.Chart(df_pie_st).mark_arc(innerRadius=0).encode(
+            theta=alt.Theta('Промена:Q'),
+            color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
+            tooltip=['Сектор', 'Промена']
+        ).properties(height=350)
+        st.altair_chart(pie_st, use_container_width=True)
         
 else:
     sector_col = df.columns[0]
