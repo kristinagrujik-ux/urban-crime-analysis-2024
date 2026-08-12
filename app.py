@@ -5,31 +5,21 @@ st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", lay
 
 file_path = 'KRIMINALITET.xlsx'
 
-@st.cache_data
-def load_excel():
-    # Ги читаме сите листови од Excel фајлот
-    xls = pd.ExcelFile(file_path)
-    return xls
-
-xls = load_excel()
-
-# Достапни листови во менито од страна
-sheet_names = xls.sheet_names
+# Директно ги дефинираме листовите од вашиот Excel фајл
+sheet_names = ["Вкупен криминалитет", "Недозволена трговија со дрога"]
 selected_sheet = st.sidebar.selectbox("Избери категорија на извештај:", sheet_names)
 
 st.title(f"📊 Извештај: {selected_sheet}")
 
-# Читање на избраниот лист
-df = pd.read_excel(file_path, sheet_name=selected_sheet)
+@st.cache_data
+def load_data(sheet):
+    return pd.read_excel(file_path, sheet_name=sheet)
 
-# Проверка дали листот има податоци и прикажување графикони
+df = load_data(selected_sheet)
+
 if not df.empty:
-    # Филтрирање без редот "Вкупно" за графиконите
     df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
-    
     sector_col = df.columns[0]
-    
-    # Земање на првите неколку нумерички колони за графикони
     numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
     
     if len(numeric_cols) >= 2:
