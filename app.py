@@ -25,7 +25,6 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     max_col = len(valid_rows.columns)
     
-    # Правилен редослед на годините за да одговараат на легендата
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024 година': valid_rows.iloc[:, 3], '2023 година': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
     df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024 година': valid_rows.iloc[:, 7], '2023 година': valid_rows.iloc[:, 8]}).melt('Сектор', var_name='Година', value_name='Вредност')
 
@@ -45,17 +44,20 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         
     with col2:
         if max_col > 5:
-            st.write("**Кривични дела (Пит - Промена %)**")
-            raw_val = valid_rows.iloc[:, 5].astype(str).str.replace('%', '').str.replace('+', '').str.strip()
-            df_pie = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Промена': pd.to_numeric(raw_val, errors='coerce').abs()}).dropna()
-            if not df_pie.empty:
-                df_pie['Процент'] = (df_pie['Промена'] / df_pie['Промена'].sum() * 100).round(1)
-                pie_kd = alt.Chart(df_pie).mark_arc(innerRadius=0).encode(
-                    theta=alt.Theta('Промена:Q'),
-                    color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
-                    tooltip=['Сектор', 'Процент']
-                ).properties(height=350)
-                st.altair_chart(pie_kd, use_container_width=True)
+            st.write("**Недозволена трговија со дрога (Пит - Кривични дела %)**")
+            raw_val = valid_rows.iloc[:, 5].astype(str).str.strip()
+            df_pie = pd.DataFrame({
+                'Сектор': valid_rows.iloc[:, 0], 
+                'Оригинал': raw_val,
+                'Големина': pd.to_numeric(raw_val.str.replace('%', '').str.replace('+', ''), errors='coerce').abs()
+            }).dropna()
+            
+            pie_kd = alt.Chart(df_pie).mark_arc(innerRadius=0).encode(
+                theta=alt.Theta('Големина:Q'),
+                color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
+                tooltip=['Сектор', alt.Tooltip('Оригинал:N', title="Промена")]
+            ).properties(height=350)
+            st.altair_chart(pie_kd, use_container_width=True)
 
     # Втор ред: Сторители (Столпчест + Пит)
     col3, col4 = st.columns(2)
@@ -71,16 +73,19 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
 
     with col4:
         if max_col > 9:
-            st.write("**Сторители (Пит - Промена %)**")
-            raw_val_st = valid_rows.iloc[:, 9].astype(str).str.replace('%', '').str.replace('+', '').str.strip()
-            df_pie_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Промена': pd.to_numeric(raw_val_st, errors='coerce').abs()}).dropna()
-            if not df_pie_st.empty:
-                df_pie_st['Процент'] = (df_pie_st['Промена'] / df_pie_st['Промена'].sum() * 100).round(1)
-                pie_st = alt.Chart(df_pie_st).mark_arc(innerRadius=0).encode(
-                    theta=alt.Theta('Промена:Q'),
-                    color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
-                    tooltip=['Сектор', 'Процент']
-                ).properties(height=350)
-                st.altair_chart(pie_st, use_container_width=True)
+            st.write("**Сторители**")
+            raw_val_st = valid_rows.iloc[:, 9].astype(str).str.strip()
+            df_pie_st = pd.DataFrame({
+                'Сектор': valid_rows.iloc[:, 0], 
+                'Оригинал': raw_val_st,
+                'Големина': pd.to_numeric(raw_val_st.str.replace('%', '').str.replace('+', ''), errors='coerce').abs()
+            }).dropna()
+            
+            pie_st = alt.Chart(df_pie_st).mark_arc(innerRadius=0).encode(
+                theta=alt.Theta('Големина:Q'),
+                color=alt.Color('Сектор:N', legend=alt.Legend(title="Сектор")),
+                tooltip=['Сектор', alt.Tooltip('Оригинал:N', title="Промена")]
+            ).properties(height=350)
+            st.altair_chart(pie_st, use_container_width=True)
 else:
     st.dataframe(df)
