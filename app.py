@@ -22,21 +22,24 @@ df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False
 
 st.subheader("📈 Графикони")
 
-# Проверка според избран лист
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
-    # За трговија со дрога - ги земаме нумеричките колони по индекс за да има графикони
-    num_cols = [c for c in df.select_dtypes(include=['number']).columns if 'unnamed' not in str(c).lower()]
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("**Споредбени податоци - Дел 1**")
-        if len(num_cols) >= 2:
-            st.bar_chart(df_chart.set_index(sector_col)[num_cols[0:2]])
-    with col2:
-        st.write("**Споредбени податоци - Дел 2**")
-        if len(num_cols) >= 4:
-            st.bar_chart(df_chart.set_index(sector_col)[num_cols[2:4]])
+    # Земи ги колоните што содржат броеви во редовите за податоци
+    try:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Кривични дела (2024 наспроти 2023)**")
+            # Ги избираме колоните со индекси 3 и 4 каде што се податоците за дрога
+            sub_df = df_chart.iloc[:, [0, 3, 4]].copy()
+            sub_df.columns = [sub_df.columns[0], '2024 година', '2023 година']
+            st.bar_chart(sub_df.set_index(sector_col))
+        with col2:
+            st.write("**Сторители (2024 наспроти 2023)**")
+            sub_df2 = df_chart.iloc[:, [0, 7, 8]].copy()
+            sub_df2.columns = [sub_df2.columns[0], '2024 година', '2023 година']
+            st.bar_chart(sub_df2.set_index(sector_col))
+    except Exception as e:
+        st.warning("Грешка при вчитување на графиконите за дрога.")
 else:
-    # За Вкупен криминалитет - автоматско пронаоѓање на колоните по клучни зборови за да нема KeyError
     c_kol = next((c for c in df.columns if 'кривични дела' in str(c).lower()), df.columns[1] if len(df.columns) > 1 else None)
     s_kol = next((c for c in df.columns if 'сторители' in str(c).lower()), df.columns[7] if len(df.columns) > 7 else None)
     st_kol = next((c for c in df.columns if 'стапка' in str(c).lower()), df.columns[8] if len(df.columns) > 8 else None)
