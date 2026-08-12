@@ -4,8 +4,6 @@ import pandas as pd
 st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", layout="wide")
 
 st.title("📊 Национален Извештај за Урбан Криминалитет 2024")
-st.markdown("Интерактивен дашборд со визуелизации по СВР сектори.")
-
 file_path = 'KRIMINALITET.xlsx'
 
 @st.cache_data
@@ -14,23 +12,26 @@ def load_data():
 
 df = load_data()
 
-# Филтер за СВР сектори
-sectors = df.iloc[:, 0].dropna().tolist()
-selected_sector = st.sidebar.selectbox("Избери СВР Сектор:", sectors)
+# Дефинирање на клучните колони (осигурете се дека имињата се поклопуваат со вашиот Excel)
+# Доколку имињата во Excel се разликуваат, само сменете ги овде во листата
+metrics = ["Кривични дела", "Сторители", "Стапка на криминал"]
 
-# Приказ на податоци за избраниот сектор
-st.subheader(f"Анализа за: {selected_sector}")
-sector_data = df[df.iloc[:, 0] == selected_sector]
-st.dataframe(sector_data)
+st.subheader("📈 Споредбена анализа на клучни метрики")
 
-# Наоѓање на колоните автоматски за да нема грешки
-sector_col = df.columns[0]
-efficiency_col = [col for col in df.columns if 'ефикасност' in str(col).lower()][0]
-crime_col = [col for col in df.columns if 'кривични дела' in str(col).lower()][0]
+# Креирање на три колони за графикони
+col1, col2, col3 = st.columns(3)
 
-# Интерактивни графикони
-st.subheader("📈 Споредба на Ефикасност по СВР сектори")
-st.bar_chart(df.set_index(sector_col)[efficiency_col])
+with col1:
+    st.write(f"**{metrics[0]}**")
+    st.bar_chart(df.set_index(df.columns[0])[metrics[0]])
 
-st.subheader("📊 Распределба на Кривични Дела")
-st.bar_chart(df.set_index(sector_col)[crime_col])
+with col2:
+    st.write(f"**{metrics[1]}**")
+    st.bar_chart(df.set_index(df.columns[0])[metrics[1]])
+
+with col3:
+    st.write(f"**{metrics[2]}**")
+    st.bar_chart(df.set_index(df.columns[0])[metrics[2]])
+
+st.subheader("📋 Детална табела со сите податоци")
+st.dataframe(df)
