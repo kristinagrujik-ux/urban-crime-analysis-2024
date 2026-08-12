@@ -3,49 +3,58 @@ import pandas as pd
 
 st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", layout="wide")
 
-st.title("📊 Национален Извештај за Урбан Криминалитет 2024")
 file_path = 'KRIMINALITET.xlsx'
 
 @st.cache_data
-def load_data():
-    return pd.read_excel(file_path)
+def load_excel():
+    # Ги читаме сите листови од Excel фајлот
+    xls = pd.ExcelFile(file_path)
+    return xls
 
-df = load_data()
+xls = load_excel()
 
-# Подготовка на податоци без редот "Вкупно"
-df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
+# Достапни листови во менито од страна
+sheet_names = xls.sheet_names
+selected_sheet = st.sidebar.selectbox("Избери категорија на извештај:", sheet_names)
 
-# Автоматско наоѓање на имињата на колоните за да нема грешки
-sector_col = df.columns[0]
-crime_col = [col for col in df.columns if 'кривични дела' in str(col).lower()][0]
-storiteli_col = [col for col in df.columns if 'сторители' in str(col).lower()][0]
-stapka_col = [col for col in df.columns if 'стапка' in str(col).lower()][0]
-efikasnost_col = [col for col in df.columns if 'ефикасност' in str(col).lower()][0]
+st.title(f"📊 Извештај: {selected_sheet}")
 
-st.subheader("📈 Споредбена анализа по СВР сектори")
+# Читање на избраниот лист
+df = pd.read_excel(file_path, sheet_name=selected_sheet)
 
-# Прв ред со два графикона
-col1, col2 = st.columns(2)
+# Проверка дали листот има податоци и прикажување графикони
+if not df.empty:
+    # Филтрирање без редот "Вкупно" за графиконите
+    df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
+    
+    sector_col = df.columns[0]
+    
+    # Земање на првите неколку нумерички колони за графикони
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    
+    if len(numeric_cols) >= 2:
+        st.subheader("📈 Споредбена анализа по СВР сектори")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**{numeric_cols[0]}**")
+            st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[0]])
+            
+        with col2:
+            st.write(f"**{numeric_cols[1]}**")
+            st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[1]])
+            
+        if len(numeric_cols) >= 3:
+            col3, col4 = st.columns(2)
+            with col3:
+                st.write(f"**{numeric_cols[2]}**")
+                st.line_chart(df_chart.set_index(sector_col)[numeric_cols[2]])
+            if len(numeric_cols) >= 4:
+                with col4:
+                    st.write(f"**{numeric_cols[3]}**")
+                    st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[3]])
 
-with col1:
-    st.write("**Кривични дела**")
-    st.bar_chart(df_chart.set_index(sector_col)[crime_col])
-
-with col2:
-    st.write("**Сторители**")
-    st.bar_chart(df_chart.set_index(sector_col)[storiteli_col])
-
-# Втор ред со два графикона
-col3, col4 = st.columns(2)
-
-with col3:
-    st.write("**Стапка на криминал**")
-    st.line_chart(df_chart.set_index(sector_col)[stapka_col])
-
-with col4:
-    st.write("**Вкупна ефикасност 2024**")
-    st.bar_chart(df_chart.set_index(sector_col)[efikasnost_col])
-
-st.subheader("📋 Детална табела со сите податоци")
-st.dataframe(df)
-
+    st.subheader("📋 Детална табела со податоци")
+    st.dataframe(df)
+else:
+    st.warning("Избраниот лист е празен.")
