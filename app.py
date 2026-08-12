@@ -23,12 +23,11 @@ st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
-    max_col = len(valid_rows.columns)
     
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 3], '2023': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
     df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 7], '2023': valid_rows.iloc[:, 8]}).melt('Сектор', var_name='Година', value_name='Вредност')
     
-    # 1. Ред: Кривични дела (Бар + Пита)
+    # 1. Ред: Кривични дела (Бар лево + Пита десно)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -36,12 +35,11 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
         ).properties(height=300), use_container_width=True)
     with col2:
-        if max_col > 5:
-            st.write("**Пита: Кривични дела (%)**")
-            df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
-            st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        st.write("**Пита: Кривични дела (%)**")
+        df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
+        st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
-    # 2. Ред: Сторители (Бар + Пита)
+    # 2. Ред: Сторители (Бар лево + Пита десно)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
@@ -49,10 +47,9 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
         ).properties(height=300), use_container_width=True)
     with col4:
-        if max_col > 9:
-            st.write("**Пита: Сторители (%)**")
-            df_p2 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 9], errors='coerce').abs()}).dropna()
-            st.altair_chart(alt.Chart(df_p2).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        st.write("**Пита: Сторители (%)**")
+        df_p2 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 8], errors='coerce').abs()}).dropna()
+        st.altair_chart(alt.Chart(df_p2).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
@@ -103,5 +100,6 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
+
 
 
