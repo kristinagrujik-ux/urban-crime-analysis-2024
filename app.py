@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", layout="wide")
 
@@ -21,25 +22,47 @@ df = load_data(selected_sheet)
 st.subheader("📈 Графикони")
 
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
-    # Ги филтрираме само редовите каде што првата колона е валиден СВР сектор
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР", na=False)].copy()
     
-    # Претворање на колоните во броеви
     for col_idx in [3, 4, 7, 8]:
         valid_rows.iloc[:, col_idx] = pd.to_numeric(valid_rows.iloc[:, col_idx], errors='coerce')
+
+    sector_name = valid_rows.columns[0]
+
+    # Подготовка на податоци за Кривични дела (трансформација во долг формат за групирани столпчиња)
+    df_kd = pd.DataFrame({
+        'Сектор': valid_rows.iloc[:, 0],
+        '2024 година': valid_rows.iloc[:, 3],
+        '2023 година': valid_rows.iloc[:, 4]
+    }).melt('Сектор', var_name='Година', value_name='Вредност')
+
+    # Подготовка на податоци за Сторители
+    df_st = pd.DataFrame({
+        'Сектор': valid_rows.iloc[:, 0],
+        '2024 година': valid_rows.iloc[:, 7],
+        '2023 година': valid_rows.iloc[:, 8]
+    }).melt('Сектор', var_name='Година', value_name='Вредност')
 
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
-        sub1 = valid_rows.iloc[:, [0, 3, 4]].copy()
-        sub1.columns = ['Сектор', '2024 година', '2023 година']
-        st.bar_chart(sub1.set_index('Сектор'))
+        chart_kd = alt.Chart(df_kd).mark_bar().encode(
+            x=alt.X('Година:O', title=''),
+            xOffset=alt.XOffset('Година:O'),
+            y=alt.Y('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']))
+        ).properties(height=350)
+        st.altair_chart(chart_kd, use_container_width=True)
         
     with col2:
         st.write("**Сторители (2024 vs 2023)**")
-        sub2 = valid_rows.iloc[:, [0, 7, 8]].copy()
-        sub2.columns = ['Сектор', '2024 година', '2023 година']
-        st.bar_chart(sub2.set_index('Сектор'))
+        chart_st = alt.Chart(df_st).mark_bar().encode(
+            x=alt.X('Година:O', title=''),
+            xOffset=alt.XOffset('Година:O'),
+            y=alt.Y('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']))
+        ).properties(height=350)
+        st.altair_chart(chart_st, use_container_width=True)
         
 else:
     sector_col = df.columns[0]
