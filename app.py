@@ -25,30 +25,35 @@ if not df.empty:
     df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
     sector_col = df.columns[0]
     
-    # Ги земаме само нумеричките колони што НЕ содржат "Unnamed" во името
-    numeric_cols = [col for col in df.select_dtypes(include=['number']).columns if 'unnamed' not in str(col).lower()]
+    st.subheader("📈 Споредбена анализа по СВР сектори")
     
-    if len(numeric_cols) >= 2:
-        st.subheader("📈 Споредбена анализа по СВР сектори")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"**{numeric_cols[0]}**")
-            st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[0]])
+    # Ред 1: Кривични дела и Вкупна ефикасност 2024
+    col1, col2 = st.columns(2)
+    with col1:
+        if "Кривични дела" in df.columns:
+            st.write("**Кривични дела**")
+            st.bar_chart(df_chart.set_index(sector_col)["Кривични дела"])
             
-        with col2:
-            st.write(f"**{numeric_cols[1]}**")
-            st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[1]])
+    with col2:
+        # Бараме колона што содржи "ефикасност" во името
+        efikasnost_col = next((col for col in df.columns if 'ефикасност' in str(col).lower()), None)
+        if efikasnost_col:
+            st.write(f"**{efikasnost_col}**")
+            st.bar_chart(df_chart.set_index(sector_col)[efikasnost_col])
+
+    # Ред 2: Стапка на криминал (линиски) и Сторители
+    col3, col4 = st.columns(2)
+    with col3:
+        # Бараме колона што содржи "стапка" во името
+        stapka_col = next((col for col in df.columns if 'стапка' in str(col).lower()), None)
+        if stapka_col:
+            st.write(f"**{stapka_col}**")
+            st.line_chart(df_chart.set_index(sector_col)[stapka_col])
             
-        if len(numeric_cols) >= 3:
-            col3, col4 = st.columns(2)
-            with col3:
-                st.write(f"**{numeric_cols[2]}**")
-                st.line_chart(df_chart.set_index(sector_col)[numeric_cols[2]])
-            if len(numeric_cols) >= 4:
-                with col4:
-                    st.write(f"**{numeric_cols[3]}**")
-                    st.bar_chart(df_chart.set_index(sector_col)[numeric_cols[3]])
+    with col4:
+        if "Сторители" in df.columns:
+            st.write("**Сторители**")
+            st.bar_chart(df_chart.set_index(sector_col)["Сторители"])
 
     st.subheader("📋 Детална табела со податоци")
     st.dataframe(df)
