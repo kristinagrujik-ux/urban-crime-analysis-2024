@@ -88,4 +88,36 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             ).properties(height=350)
             st.altair_chart(pie_st, use_container_width=True)
 else:
-    st.dataframe(df)
+    # За сите останати листови (како Вкупен криминалитет)
+    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
+    sector_col = valid_rows.columns[0]
+    
+    numeric_cols = []
+    for col in valid_rows.columns[1:]:
+        converted = pd.to_numeric(valid_rows[col], errors='coerce')
+        if converted.notna().sum() > 0:
+            valid_rows[col] = converted
+            numeric_cols.append(col)
+
+    if len(numeric_cols) >= 2:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**{numeric_cols[0]} по сектори**")
+            chart1 = alt.Chart(valid_rows).mark_bar().encode(
+                x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+                y=alt.Y(f'{numeric_cols[0]}:Q', title='Број'),
+                color=alt.Color(f'{sector_col}:N', legend=None)
+            ).properties(height=350)
+            st.altair_chart(chart1, use_container_width=True)
+
+        with col2:
+            st.write(f"**{numeric_cols[-1]} по сектори**")
+            chart2 = alt.Chart(valid_rows).mark_bar().encode(
+                x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+                y=alt.Y(f'{numeric_cols[-1]}:Q', title='Број'),
+                color=alt.Color(f'{sector_col}:N', legend=None)
+            ).properties(height=350)
+            st.altair_chart(chart2, use_container_width=True)
+
+st.subheader("📋 Детална табела")
+st.dataframe(df)
