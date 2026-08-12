@@ -23,10 +23,14 @@ st.subheader(f"Анализа за: {selected_sector}")
 sector_data = df[df.iloc[:, 0] == selected_sector]
 st.dataframe(sector_data)
 
-# Интерактивен графикон со столбчиња (Вкупна ефикасност по сектори)
+# Наоѓање на колоните автоматски за да нема грешки
+sector_col = df.columns[0]
+efficiency_col = [col for col in df.columns if 'ефикасност' in str(col).lower()][0]
+crime_col = [col for col in df.columns if 'кривични дела' in str(col).lower()][0]
+
+# Интерактивни графикони
 st.subheader("📈 Споредба на Ефикасност по СВР сектори")
-chart_data = df.set_index(df.columns[0])['Вкупна ефикасност 2024']
-st.bar_chart(chart_data)
+st.bar_chart(df.set_index(sector_col)[efficiency_col])
 
 st.subheader("📊 Распределба на Кривични Дела")
-st.bar_chart(df.set_index(df.columns[0])['Кривични дела'])
+st.bar_chart(df.set_index(sector_col)[crime_col])
