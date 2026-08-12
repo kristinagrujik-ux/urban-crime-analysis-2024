@@ -17,21 +17,23 @@ metrics = ["Кривични дела", "Сторители", "Стапка на
 
 st.subheader("📈 Споредбена анализа по СВР сектори")
 
+# Подготовка на податоци за графиконите: го отстрануваме редот "Вкупно" за да не ги расипува пропорциите
+df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
+
 # Креирање на три колони за графикони
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.write(f"**{metrics[0]}**")
-    st.bar_chart(df.set_index(df.columns[0])[metrics[0]])
+    st.bar_chart(df_chart.set_index(df_chart.columns[0])[metrics[0]])
 
 with col2:
     st.write(f"**{metrics[1]}**")
-    st.bar_chart(df.set_index(df.columns[0])[metrics[1]])
+    st.bar_chart(df_chart.set_index(df_chart.columns[0])[metrics[1]])
 
 with col3:
     st.write(f"**{metrics[2]}**")
-    # Овде користиме line_chart за третата метрика
-    st.line_chart(df.set_index(df.columns[0])[metrics[2]])
+    st.line_chart(df_chart.set_index(df_chart.columns[0])[metrics[2]])
 
 st.subheader("📋 Детална табела со сите податоци")
 st.dataframe(df)
