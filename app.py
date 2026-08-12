@@ -6,56 +6,51 @@ st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", lay
 file_path = 'KRIMINALITET.xlsx'
 
 @st.cache_data
-def get_sheet_names():
-    xls = pd.ExcelFile(file_path)
-    return xls.sheet_names
+def get_sheets():
+    return pd.ExcelFile(file_path).sheet_names
 
-sheet_names = get_sheet_names()
-selected_sheet = st.sidebar.selectbox("Избери категорија на извештај:", sheet_names)
-
-st.title(f"📊 Извештај: {selected_sheet}")
+selected_sheet = st.sidebar.selectbox("Избери категорија:", get_sheets())
+st.title(f"📊 {selected_sheet}")
 
 @st.cache_data
 def load_data(sheet):
     return pd.read_excel(file_path, sheet_name=sheet)
 
 df = load_data(selected_sheet)
+sector_col = df.columns[0]
+df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
 
-if not df.empty:
-    df_chart = df[~df.iloc[:, 0].astype(str).str.contains("Вкупно", case=False, na=False)]
-    sector_col = df.columns[0]
-    
-    st.subheader("📈 Споредбена анализа по СВР сектори")
-    
-    # Ред 1: Кривични дела и Вкупна ефикасност 2024
+st.subheader("📈 Графикони")
+
+# Логика за приказ:
+# Ако е лист за Трговија со дрога, прикажи споредба (2024 vs 2023)
+if "Недозволена" in selected_sheet:
+    cols = df.select_dtypes(include=['number']).columns
     col1, col2 = st.columns(2)
     with col1:
-        if "Кривични дела" in df.columns:
-            st.write("**Кривични дела**")
-            st.bar_chart(df_chart.set_index(sector_col)["Кривични дела"])
-            
+        st.write("**Кривични дела (2024 vs 2023)**")
+        st.bar_chart(df_chart.set_index(sector_col)[cols[0:2]])
     with col2:
-        # Бараме колона што содржи "ефикасност" во името
-        efikasnost_col = next((col for col in df.columns if 'ефикасност' in str(col).lower()), None)
-        if efikasnost_col:
-            st.write(f"**{efikasnost_col}**")
-            st.bar_chart(df_chart.set_index(sector_col)[efikasnost_col])
+        st.write("**Сторители (2024 vs 2023)**")
+        st.bar_chart(df_chart.set_index(sector_col)[cols[3:5]])
 
-    # Ред 2: Стапка на криминал (линиски) и Сторители
+# Инаку, прикажи ги стандардните графикони за Вкупен криминалитет
+else:
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Кривични дела**")
+        st.bar_chart(df_chart.set_index(sector_col)["Кривични дела"])
+    with col2:
+        st.write("**Сторители**")
+        st.bar_chart(df_chart.set_index(sector_col)["Сторители"])
+        
     col3, col4 = st.columns(2)
     with col3:
-        # Бараме колона што содржи "стапка" во името
-        stapka_col = next((col for col in df.columns if 'стапка' in str(col).lower()), None)
-        if stapka_col:
-            st.write(f"**{stapka_col}**")
-            st.line_chart(df_chart.set_index(sector_col)[stapka_col])
-            
+        st.write("**Стапка на криминал**")
+        st.line_chart(df_chart.set_index(sector_col)["Стапка на криминал"])
     with col4:
-        if "Сторители" in df.columns:
-            st.write("**Сторители**")
-            st.bar_chart(df_chart.set_index(sector_col)["Сторители"])
+        st.write("**Вкупна ефикасност 2024**")
+        st.bar_chart(df_chart.set_index(sector_col)["Вкупна ефикасност 2024"])
 
-    st.subheader("📋 Детална табела со податоци")
-    st.dataframe(df)
-else:
-    st.warning("Избраниот лист е празен.")
+st.subheader("📋 Детална табела")
+st.dataframe(df)
