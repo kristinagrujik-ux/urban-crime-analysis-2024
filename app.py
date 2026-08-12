@@ -24,13 +24,11 @@ st.subheader("📈 Графикони")
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
-    # Безбедно претворање само на тие колони што навистина постојат во табелата
     max_col = len(valid_rows.columns)
     for col_idx in [3, 4, 7, 8, 5, 9]:
         if max_col > col_idx:
             valid_rows.iloc[:, col_idx] = pd.to_numeric(valid_rows.iloc[:, col_idx], errors='coerce')
 
-    # Податоци за столпчести графикони
     df_kd = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0],
         '2024 година': valid_rows.iloc[:, 3] if max_col > 3 else 0,
@@ -43,6 +41,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         '2023 година': valid_rows.iloc[:, 8] if max_col > 8 else 0
     }).melt('Сектор', var_name='Година', value_name='Вредност')
 
+    # Прв ред: Кривични дела (Столпчест + Пит)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -65,6 +64,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             ).properties(height=350)
             st.altair_chart(pie_kd, use_container_width=True)
 
+    # Втор ред: Сторители (Столпчест + Пит)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
