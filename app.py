@@ -41,7 +41,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     with col1:
         st.write("**Криумчарење на мигранти (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
-            x=alt.X('Категорија:N', title='Категорија', sort=None),
+            x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=0)),
             y=alt.Y('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
             xOffset='Година:N'
@@ -165,3 +165,4 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
+
