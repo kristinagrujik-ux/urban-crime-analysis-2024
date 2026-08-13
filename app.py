@@ -25,7 +25,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     mig_rows = df.dropna(subset=[df.columns[0]]).copy()
     valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
     
-    # Сигурна замена со lambda функција без разлика на позицијата
+    # Сигурна замена со lambda функција за прекршување во нов ред
     kategorii = valid_mig.iloc[:, 0].astype(str).apply(
         lambda x: 'Број на криумчарени\nмигранти' if 'криумчарени мигранти' in x.lower() else x
     )
