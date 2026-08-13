@@ -1,4 +1,4 @@
-# 📊 National & Urban Crime Data Analysis & Safety Metrics Report 2024
+# 📊 National & Urban Crime Data Analysis & Safety Metrics Report North Macedonia 2024
 
 ## 🎯 Цел на проектот
 Анализа на стапката на криминалитет, географската распределба по Сектори за внатрешни работи (СВР) и ефикасноста на институциите во разрешувањето на кривичните дела на територијата на државата за 2024 година.
