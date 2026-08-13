@@ -27,24 +27,30 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 3], '2023': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
     df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 7], '2023': valid_rows.iloc[:, 8]}).melt('Сектор', var_name='Година', value_name='Вредност')
     
-    # 1. Ред: Кривични дела (Бар лево + Пита десно)
+    # 1. Ред: Кривични дела (Столпчиња еден до друг лево + Пита десно)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_kd).mark_bar().encode(
-            x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
+            x=alt.X('Сектор:N', sort=None, title='Сектор'),
+            xOffset=alt.XOffset('Година:N'),
+            y=alt.Y('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']))
         ).properties(height=300), use_container_width=True)
     with col2:
         st.write("**Пита: Кривични дела (%)**")
         df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
         st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
-    # 2. Ред: Сторители (Бар лево + Пита десно)
+    # 2. Ред: Сторители (Столпчиња еден до друг лево + Пита десно)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_st).mark_bar().encode(
-            x=alt.X('Сектор:N', sort=None), y=alt.Y('Вредност:Q'), color='Година:N'
+            x=alt.X('Сектор:N', sort=None, title='Сектор'),
+            xOffset=alt.XOffset('Година:N'),
+            y=alt.Y('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']))
         ).properties(height=300), use_container_width=True)
     with col4:
         st.write("**Пита: Сторители (%)**")
@@ -100,6 +106,3 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
-
-
-
