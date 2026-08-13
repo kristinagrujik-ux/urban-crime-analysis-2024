@@ -25,8 +25,10 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     mig_rows = df.dropna(subset=[df.columns[0]]).copy()
     valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
     
-    # Додаваме празни места околу текстот за да се зголеми растојанието помеѓу категориите
-    kategorii = valid_mig.iloc[:, 0].astype(str).apply(lambda x: f"    {x}    ")
+    # Автоматско прекршување на редовите (wrap) за последниот натпис
+    kategorii = valid_mig.iloc[:, 0].astype(str).str.replace(
+        'Број на криумчарени мигранти', 'Број на криумчарени\nмигранти'
+    )
     
     df_mig_bars = pd.DataFrame({
         'Категорија': kategorii,
@@ -35,7 +37,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     }).melt('Категорија', var_name='Година', value_name='Вредност')
     
     df_mig_pct = pd.DataFrame({
-        'Категорија': valid_mig.iloc[:, 0],
+        'Категорија': kategorii,
         'Процент': round(pd.to_numeric(valid_mig.iloc[:, 11], errors='coerce') * 100, 1)
     })
     df_mig_pct['Пр_Текст'] = df_mig_pct['Процент'].astype(str) + '%'
@@ -45,7 +47,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     with col1:
         st.write("**Криумчарење на мигранти (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
-            x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=0, labelLimit=700)),
+            x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=0, labelLimit=600)),
             y=alt.Y('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
             xOffset='Година:N'
