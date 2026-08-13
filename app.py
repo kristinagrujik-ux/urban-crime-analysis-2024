@@ -29,30 +29,27 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     
     color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
 
-    def prep_lollipop(data, val_2024, val_2023):
+    # Подготовка на податоци за Lollipop за 2024 година (како на сликата)
+    def prep_lollipop(data, val_2024):
         df_lp = pd.DataFrame({
             'Сектор': data.iloc[:, 0], 
-            '2024': pd.to_numeric(data.iloc[:, val_2024], errors='coerce'), 
-            '2023': pd.to_numeric(data.iloc[:, val_2023], errors='coerce')
+            'Вредност': pd.to_numeric(data.iloc[:, val_2024], errors='coerce')
         })
-        df_lp['Разлика'] = df_lp['2024'] - df_lp['2023']
-        df_lp['min_val'] = df_lp[['2024', '2023']].min(axis=1)
-        df_lp['max_val'] = df_lp[['2024', '2023']].max(axis=1)
+        df_lp['zero'] = 0
         return df_lp
 
-    df_lp1 = prep_lollipop(valid_rows, 3, 4)
-    df_lp2 = prep_lollipop(valid_rows, 6, 7)
+    df_lp1 = prep_lollipop(valid_rows, 3) # За 2024 кривични дела
+    df_lp2 = prep_lollipop(valid_rows, 6) # За 2024 сторители
 
     def draw_lollipop(data, title):
-        base = alt.Chart(data).encode(y=alt.Y('Сектор:N', sort='-x', title='Сектор'))
-        rule = base.mark_rule(color='gray').encode(x='min_val:Q', x2='max_val:Q')
-        points = base.mark_circle(size=120).encode(
-            x=alt.X('Разлика:Q', title='Разлика (2024 - 2023)'), 
-            color=alt.condition(alt.datum.Разлика > 0, alt.value('#e45756'), alt.value('#4c78a8'))
-        )
+        base = alt.Chart(data).encode(x=alt.X('Сектор:N', sort=None, title='Сектор'))
+        # Линијата одоздола (од 0 до Вредност)
+        rule = base.mark_rule(color='#e45756', strokeWidth=2).encode(y='zero:Q', y2='Вредност:Q')
+        # Точката на врвот
+        points = base.mark_circle(size=120, color='#e45756').encode(y=alt.Y('Вредност:Q', title='Број'))
         return (rule + points).properties(title=title, height=350)
 
-    # 1. Ред: Кривични дела (Хоризонтален бар лево + Diverging Lollipop десно)
+    # 1. Ред: Кривични дела (Хоризонтален бар лево + Lollipop десно)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -63,10 +60,10 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=350), use_container_width=True)
     with col2:
-        st.write("**Diverging Lollipop: Кривични дела**")
-        st.altair_chart(draw_lollipop(df_lp1, "Разлика во кривични дела"), use_container_width=True)
+        st.write("**Lollipop Chart: Кривични дела (2024)**")
+        st.altair_chart(draw_lollipop(df_lp1, "Кривични дела по сектори"), use_container_width=True)
 
-    # 2. Ред: Сторители (Хоризонтален бар лево + Diverging Lollipop десно)
+    # 2. Ред: Сторители (Хоризонтален бар лево + Lollipop десно)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
@@ -77,8 +74,8 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=350), use_container_width=True)
     with col4:
-        st.write("**Diverging Lollipop: Сторители**")
-        st.altair_chart(draw_lollipop(df_lp2, "Разлика кај сторители"), use_container_width=True)
+        st.write("**Lollipop Chart: Сторители (2024)**")
+        st.altair_chart(draw_lollipop(df_lp2, "Сторители по сектори"), use_container_width=True)
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
