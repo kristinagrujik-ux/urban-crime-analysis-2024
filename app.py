@@ -27,13 +27,13 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     
     df_mig_bars = pd.DataFrame({
         'Категорија': valid_mig.iloc[:, 0],
-        '2024': pd.to_numeric(valid_mig.iloc[:, 3], errors='coerce'),
-        '2023': pd.to_numeric(valid_mig.iloc[:, 6], errors='coerce')
+        '2024': pd.to_numeric(valid_mig.iloc[:, 5], errors='coerce'),
+        '2023': pd.to_numeric(valid_mig.iloc[:, 8], errors='coerce')
     }).melt('Категорија', var_name='Година', value_name='Вредност')
     
     df_mig_pct = pd.DataFrame({
         'Категорија': valid_mig.iloc[:, 0],
-        'Процент': round(pd.to_numeric(valid_mig.iloc[:, 9], errors='coerce') * 100, 1)
+        'Процент': round(pd.to_numeric(valid_mig.iloc[:, 11], errors='coerce') * 100, 1)
     })
     df_mig_pct['Пр_Текст'] = df_mig_pct['Процент'].astype(str) + '%'
 
