@@ -37,7 +37,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         df_lp['zero'] = 0
         return df_lp
 
-    # Колона 5 е Промена % за кривични дела, Колона 8 е Промена % за сторители
+    # Колона 5 за кривични дела %, Колона 8 за сторители %
     df_lp1 = prep_lollipop(valid_rows, 5)
     df_lp2 = prep_lollipop(valid_rows, 8)
 
@@ -87,44 +87,41 @@ else:
         valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
 
     c_col = valid_rows.columns[2] if len(valid_rows.columns) > 2 else valid_rows.columns[1]
-    s_col = valid_rows.columns[-1] if len(valid_rows.columns) > 1 else None
+    s_col = valid_rows.columns[7] if len(valid_rows.columns) > 7 else valid_rows.columns[-1]
     st_col = valid_rows.columns[8] if len(valid_rows.columns) > 8 else s_col
     ef_col = valid_rows.columns[9] if len(valid_rows.columns) > 9 else s_col
 
+    BLUE_COLOR = '#1f77b4'  # Односна сина боја од Excel
+
     col1, col2 = st.columns(2)
     with col1:
-        st.write("**Вкупни кривични дела**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
+        st.write("**Вкупен криминалитет за 2024 година по СВР**")
+        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
             x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
-            y=alt.Y(f'{c_col}:Q', title='Број', axis=alt.Axis(format='d')),
-            color=alt.Color(f'{sector_col}:N', legend=None)
-        ).properties(height=300), use_container_width=True)
+            y=alt.Y(f'{c_col}:Q', title='Број', axis=alt.Axis(format='d'))
+        ).properties(height=320), use_container_width=True)
 
     with col2:
-        if s_col:
-            st.write("**Сторители**")
-            st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
-                x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
-                y=alt.Y(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d')),
-                color=alt.Color(f'{sector_col}:N', legend=None)
-            ).properties(height=300), use_container_width=True)
+        st.write("**Сторители**")
+        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+            y=alt.Y(f'{sector_col}:N', title='Сектор', sort=None),
+            x=alt.X(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d'))
+        ).properties(height=320), use_container_width=True)
 
     col3, col4 = st.columns(2)
     with col3:
-        st.write("**Стапка на криминал 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_line(point=True).encode(
+        st.write("**Стаката на криминалитетот**")
+        st.altair_chart(alt.Chart(valid_rows).mark_line(color=BLUE_COLOR, point=True).encode(
             x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
-            y=alt.Y(f'{st_col}:Q', title='Стапка'),
-            color=alt.value('#e45756')
-        ).properties(height=300), use_container_width=True)
+            y=alt.Y(f'{st_col}:Q', title='Стапка')
+        ).properties(height=320), use_container_width=True)
 
     with col4:
         st.write("**Вкупна ефикасност 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar().encode(
-            x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
-            y=alt.Y(f'{ef_col}:Q', title='Процент'),
-            color=alt.Color(f'{sector_col}:N', legend=None)
-        ).properties(height=300), use_container_width=True)
+        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+            y=alt.Y(f'{sector_col}:N', title='Сектор', sort=None),
+            x=alt.X(f'{ef_col}:Q', title='Процент')
+        ).properties(height=320), use_container_width=True)
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
