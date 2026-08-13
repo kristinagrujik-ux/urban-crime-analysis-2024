@@ -21,7 +21,49 @@ df = load_data(selected_sheet)
 
 st.subheader("📈 Графикони")
 
-if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
+if "Криумчарење" in selected_sheet or "мигранти" in selected_sheet.lower():
+    # Чистење и подготовка на податоците за криумчарење на мигранти
+    mig_rows = df.dropna(subset=[df.columns[0]]).copy()
+    mig_rows = mig_rows[mig_rows.iloc[:, 0].astype(str).str.strip() != ""]
+    
+    # Филтрирање само на релевантните редици од табелата
+    valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
+    
+    df_mig_bars = pd.DataFrame({
+        'Категорија': valid_mig.iloc[:, 0],
+        '2024': pd.to_numeric(valid_mig.iloc[:, 3], errors='coerce'),
+        '2023': pd.to_numeric(valid_mig.iloc[:, 6], errors='coerce')
+    }).melt('Категорија', var_name='Година', value_name='Вредност')
+    
+    color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Криумчарење на мигранти (2024 vs 2023)**")
+        st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
+            x=alt.X('Категорија:N', title='Категорија', sort=None),
+            y=alt.Y('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=color_scale),
+            xOffset='Година:N'
+        ).properties(height=350), use_container_width=True)
+
+    with col2:
+        st.write("**Процент на промена (%)**")
+        df_pie = pd.DataFrame({
+            'Категорија': valid_mig.iloc[:, 0],
+            'Процент': round(pd.to_numeric(valid_mig.iloc[:, 9], errors='coerce') * 100, 1)
+        })
+        df_pie['Пр_Текст'] = df_pie['Процент'].astype(str) + '%'
+        
+        base_pie = alt.Chart(df_pie).encode(
+            theta=alt.Theta('Процент:Q'),
+            color=alt.Color('Категорија:N', legend=alt.Legend(title="Категории"))
+        )
+        pie = base_pie.mark_arc(outerRadius=120, innerRadius=0)
+        text_pie = base_pie.mark_text(radius=140, size=12).encode(text='Пр_Текст:N')
+        st.altair_chart((pie + text_pie).properties(height=350), use_container_width=True)
+
+elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 3], '2023': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
