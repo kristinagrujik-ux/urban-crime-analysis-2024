@@ -32,7 +32,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     def prep_lollipop(data, val_col):
         df_lp = pd.DataFrame({
             'Сектор': data.iloc[:, 0], 
-            'Процент': pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100
+            'Процент': round(pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100, 1)
         })
         df_lp['zero'] = 0
         return df_lp
@@ -44,9 +44,11 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         base = alt.Chart(data).encode(x=alt.X('Сектор:N', sort=None, title='Сектор'))
         rule = base.mark_rule(color='#e45756', strokeWidth=2).encode(y='zero:Q', y2='Процент:Q')
         points = base.mark_circle(size=120, color='#e45756').encode(y=alt.Y('Процент:Q', title='Процент (%)'))
+        # Додаден е знакот % кон текстот
         text = base.mark_text(align='center', baseline='bottom', dy=-10).encode(
             y=alt.Y('Процент:Q'),
-            text=alt.Text('Процент:Q', format='.1f')
+            text=alt.Text('Процент:Q', format='.1f'),
+            textExpr="datum.Процент + '%'"
         )
         return (rule + points + text).properties(title=title, height=350)
 
@@ -85,7 +87,6 @@ else:
 
     c_col = valid_rows.columns[2] if len(valid_rows.columns) > 2 else valid_rows.columns[1]
     
-    # Динамичко барање на точните колони според името во табелата
     col_names = list(valid_rows.columns)
     s_col = next((c for c in col_names if 'сторители' in str(c).lower()), col_names[7] if len(col_names) > 7 else col_names[-1])
     st_col = next((c for c in col_names if 'стапка' in str(c).lower() and 'кримин' in str(c).lower()), col_names[8] if len(col_names) > 8 else s_col)
