@@ -84,13 +84,15 @@ else:
         valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
 
     c_col = valid_rows.columns[2] if len(valid_rows.columns) > 2 else valid_rows.columns[1]
-    s_col = valid_rows.columns[7] if len(valid_rows.columns) > 7 else valid_rows.columns[-1]
-    st_col = valid_rows.columns[8] if len(valid_rows.columns) > 8 else s_col
-    ef_col = valid_rows.columns[9] if len(valid_rows.columns) > 9 else s_col
+    
+    # Динамичко барање на точните колони според името во табелата
+    col_names = list(valid_rows.columns)
+    s_col = next((c for c in col_names if 'сторители' in str(c).lower()), col_names[7] if len(col_names) > 7 else col_names[-1])
+    st_col = next((c for c in col_names if 'стапка' in str(c).lower() and 'кримин' in str(c).lower()), col_names[8] if len(col_names) > 8 else s_col)
+    ef_col = next((c for c in col_names if 'ефикасност' in str(c).lower()), col_names[9] if len(col_names) > 9 else s_col)
 
     BLUE_COLOR = '#1f77b4'
 
-    # Прв ред: Лево (Вкупни кривични дела), Десно (Сторители - хоризонтален бар)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Вкупен криминалитет за 2024 година по СВР**")
@@ -106,7 +108,6 @@ else:
             x=alt.X(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d'))
         ).properties(height=320), use_container_width=True)
 
-    # Втор ред: Лево (Стапката на криминалитетот - нормален линиски), Десно (Вкупна ефикасност - хоризонтален бар)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Стапката на криминалитетот**")
