@@ -29,7 +29,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     
     color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
 
-    # 1. Ред: Кривични дела (Хоризонтален Bar графикон лево + Пита десно)
+    # 1. Ред: Кривични дела (Хоризонтален Bar графикон лево + Donut десно)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -40,11 +40,11 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=350), use_container_width=True)
     with col2:
-        st.write("**Пита: Кривични дела (%)**")
+        st.write("**Donut: Кривични дела (%)**")
         df_p1 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 5], errors='coerce').abs()}).dropna()
-        st.altair_chart(alt.Chart(df_p1).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        st.altair_chart(alt.Chart(df_p1).mark_arc(innerRadius=60).encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
-    # 2. Ред: Сторители (Хоризонтален Bar графикон лево + Пита десно)
+    # 2. Ред: Сторители (Хоризонтален Bar графикон лево + Donut десно)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
@@ -55,9 +55,9 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=350), use_container_width=True)
     with col4:
-        st.write("**Пита: Сторители (%)**")
+        st.write("**Donut: Сторители (%)**")
         df_p2 = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], 'Вредност': pd.to_numeric(valid_rows.iloc[:, 8], errors='coerce').abs()}).dropna()
-        st.altair_chart(alt.Chart(df_p2).mark_arc().encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
+        st.altair_chart(alt.Chart(df_p2).mark_arc(innerRadius=60).encode(theta='Вредност:Q', color='Сектор:N'), use_container_width=True)
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
