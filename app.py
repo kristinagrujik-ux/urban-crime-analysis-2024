@@ -25,10 +25,10 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     mig_rows = df.dropna(subset=[df.columns[0]]).copy()
     valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
     
-    # Сигурно прекршување на редовите преку индекс за четвртата категорија
-    kategorii = valid_mig.iloc[:, 0].astype(str).tolist()
-    if len(kategorii) >= 4:
-        kategorii[3] = 'Број на криумчарени\nмигранти'
+    # Сигурна замена со lambda функција без разлика на позицијата
+    kategorii = valid_mig.iloc[:, 0].astype(str).apply(
+        lambda x: 'Број на криумчарени\nмигранти' if 'криумчарени мигранти' in x.lower() else x
+    )
     
     df_mig_bars = pd.DataFrame({
         'Категорија': kategorii,
@@ -171,4 +171,3 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df)
-
