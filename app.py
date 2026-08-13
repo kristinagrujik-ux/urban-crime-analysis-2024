@@ -90,6 +90,7 @@ else:
 
     BLUE_COLOR = '#1f77b4'
 
+    # Прв ред: Лево (Вкупни кривични дела), Десно (Сторители - хоризонтален бар)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Вкупен криминалитет за 2024 година по СВР**")
@@ -105,12 +106,13 @@ else:
             x=alt.X(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d'))
         ).properties(height=320), use_container_width=True)
 
+    # Втор ред: Лево (Стапката на криминалитетот - нормален линиски), Десно (Вкупна ефикасност - хоризонтален бар)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Стапката на криминалитетот**")
         st.altair_chart(alt.Chart(valid_rows).mark_line(color=BLUE_COLOR, point=True).encode(
-            y=alt.Y(f'{sector_col}:N', title='Сектор', sort=None),
-            x=alt.X(f'{st_col}:Q', title='Стапка')
+            x=alt.X(f'{sector_col}:N', title='Сектор', sort=None),
+            y=alt.Y(f'{st_col}:Q', title='Стапка')
         ).properties(height=320), use_container_width=True)
 
     with col4:
