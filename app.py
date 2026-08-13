@@ -24,9 +24,12 @@ st.subheader("📈 Графикони")
 if "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
+    # Правилно земање на податоци за кривични дела и сторители (2024 vs 2023)
     df_kd = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 3], '2023': valid_rows.iloc[:, 4]}).melt('Сектор', var_name='Година', value_name='Вредност')
-    df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 7], '2023': valid_rows.iloc[:, 8]}).melt('Сектор', var_name='Година', value_name='Вредност')
+    df_st = pd.DataFrame({'Сектор': valid_rows.iloc[:, 0], '2024': valid_rows.iloc[:, 6], '2023': valid_rows.iloc[:, 7]}).melt('Сектор', var_name='Година', value_name='Вредност')
     
+    color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
+
     # 1. Ред: Кривични дела (Столпчиња еден до друг лево + Пита десно)
     col1, col2 = st.columns(2)
     with col1:
@@ -35,7 +38,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None, title='Сектор'),
             xOffset=alt.XOffset('Година:N'),
             y=alt.Y('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']))
+            color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=300), use_container_width=True)
     with col2:
         st.write("**Пита: Кривични дела (%)**")
@@ -50,7 +53,7 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
             x=alt.X('Сектор:N', sort=None, title='Сектор'),
             xOffset=alt.XOffset('Година:N'),
             y=alt.Y('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']))
+            color=alt.Color('Година:N', scale=color_scale)
         ).properties(height=300), use_container_width=True)
     with col4:
         st.write("**Пита: Сторители (%)**")
