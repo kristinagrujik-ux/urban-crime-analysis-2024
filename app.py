@@ -30,9 +30,11 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
 
     def prep_lollipop(data, val_col):
+        val = round(pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100, 1)
         df_lp = pd.DataFrame({
             'Сектор': data.iloc[:, 0], 
-            'Процент': round(pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100, 1)
+            'Процент': val,
+            'Пр_Текст': val.astype(str) + '%'
         })
         df_lp['zero'] = 0
         return df_lp
@@ -44,11 +46,9 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
         base = alt.Chart(data).encode(x=alt.X('Сектор:N', sort=None, title='Сектор'))
         rule = base.mark_rule(color='#e45756', strokeWidth=2).encode(y='zero:Q', y2='Процент:Q')
         points = base.mark_circle(size=120, color='#e45756').encode(y=alt.Y('Процент:Q', title='Процент (%)'))
-        # Додаден е знакот % кон текстот
         text = base.mark_text(align='center', baseline='bottom', dy=-10).encode(
             y=alt.Y('Процент:Q'),
-            text=alt.Text('Процент:Q', format='.1f'),
-            textExpr="datum.Процент + '%'"
+            text='Пр_Текст:N'
         )
         return (rule + points + text).properties(title=title, height=350)
 
