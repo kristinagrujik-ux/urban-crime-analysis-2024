@@ -30,8 +30,14 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
     color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
 
     def prep_lollipop(data, val_2024, val_2023):
-        df_lp = pd.DataFrame({'Сектор': data.iloc[:, 0], '2024': data.iloc[:, val_2024], '2023': data.iloc[:, val_2023]})
+        df_lp = pd.DataFrame({
+            'Сектор': data.iloc[:, 0], 
+            '2024': pd.to_numeric(data.iloc[:, val_2024], errors='coerce'), 
+            '2023': pd.to_numeric(data.iloc[:, val_2023], errors='coerce')
+        })
         df_lp['Разлика'] = df_lp['2024'] - df_lp['2023']
+        df_lp['min_val'] = df_lp[['2024', '2023']].min(axis=1)
+        df_lp['max_val'] = df_lp[['2024', '2023']].max(axis=1)
         return df_lp
 
     df_lp1 = prep_lollipop(valid_rows, 3, 4)
@@ -39,8 +45,8 @@ if "Недозволена" in selected_sheet or "дрога" in selected_sheet.
 
     def draw_lollipop(data, title):
         base = alt.Chart(data).encode(y=alt.Y('Сектор:N', sort='-x', title='Сектор'))
-        rule = base.mark_rule(color='gray').encode(x='min(2023, 2024)', x2='max(2023, 2024)')
-        points = base.mark_circle(size=100).encode(
+        rule = base.mark_rule(color='gray').encode(x='min_val:Q', x2='max_val:Q')
+        points = base.mark_circle(size=120).encode(
             x=alt.X('Разлика:Q', title='Разлика (2024 - 2023)'), 
             color=alt.condition(alt.datum.Разлика > 0, alt.value('#e45756'), alt.value('#4c78a8'))
         )
