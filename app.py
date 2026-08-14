@@ -169,3 +169,6 @@ else:
             y=alt.Y(f'{sector_col}:N', title='Сектор', sort=None),
             x=alt.X(f'{ef_col}:Q', title='Процент')
         ).properties(height=320), use_container_width=True)
+
+st.subheader("📋 Детална табела")
+st.dataframe(df, use_container_width=True)
