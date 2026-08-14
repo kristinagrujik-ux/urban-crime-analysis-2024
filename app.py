@@ -69,14 +69,12 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
-    # 1. Кривични дела (Број) - Колона 3 (2024) и Колона 4 (2023)
     df_kd = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0], 
         '2024': pd.to_numeric(valid_rows.iloc[:, 3], errors='coerce'), 
         '2023': pd.to_numeric(valid_rows.iloc[:, 4], errors='coerce')
     }).melt('Сектор', var_name='Година', value_name='Вредност')
 
-    # 3. Сторители (Број) - Колона 6 (2024) и Колона 7 (2023) од табелата
     df_st = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0], 
         '2024': pd.to_numeric(valid_rows.iloc[:, 6], errors='coerce'), 
@@ -91,9 +89,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         df_lp['zero'] = 0
         return df_lp
 
-    # 2. Процент за Кривични дела (Колона 5)
     df_lp_kd = prep_lollipop(valid_rows, 5)  
-    # 4. Процент за Сторители (Колона 8)
     df_lp_st = prep_lollipop(valid_rows, 8)  
 
     def draw_lollipop(data, title):
@@ -103,7 +99,6 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         text = base.mark_text(align='center', baseline='bottom', dy=-10).encode(y=alt.Y('Процент:Q'), text='Пр_Текст:N')
         return (rule + points + text).properties(title=title, height=320)
 
-    # Прв ред (График 1 и График 2)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -117,7 +112,6 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
         st.altair_chart(draw_lollipop(df_lp_kd, "Процент на промена кај кривични дела"), use_container_width=True)
 
-    # Втор ред (График 3 - Bar chart за Сторители и График 4 - Lollipop chart за Сторители)
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители (2024 vs 2023)**")
@@ -141,6 +135,7 @@ elif "Организиран" in selected_sheet:
 
     for idx, row in valid_rows.iterrows():
         cat = str(row.iloc[0])
+        # Точни индекси за Организиран криминал: индекс 6 за 2024 година и индекс 8 за 2023 година
         val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
         val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
         
