@@ -104,17 +104,19 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.altair_chart(draw_lollipop(df_lp1, "Процент на промена кај кривични дела"), use_container_width=True)
 
 elif "Организиран" in selected_sheet:
+    # Ги земаме само редовите каде што првата колона има текст (ги отстрануваме празните)
     valid_rows = df.dropna(subset=[df.columns[0]]).copy()
     keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
     valid_rows = valid_rows[valid_rows.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
 
+    # Директно ги мапираме колоните според нивната позиција во табелата за да нема грешка
     df_okg = pd.DataFrame({
         'Категорија': valid_rows.iloc[:, 0].astype(str),
-        '2024': pd.to_numeric(valid_rows['Unnamed: 6'], errors='coerce'),
-        '2023': pd.to_numeric(valid_rows['Unnamed: 8'], errors='coerce')
+        '2024': pd.to_numeric(valid_rows.iloc[:, 6], errors='coerce'),
+        '2023': pd.to_numeric(valid_rows.iloc[:, 8], errors='coerce')
     }).melt('Категорија', var_name='Година', value_name='Број')
 
-    # Ги заменуваме празните места (NaN) со 0 за да се прикажат и нулите на графиконот
+    # Ги заменуваме NaN вредностите со 0 за да се појават на графиконот со нула
     df_okg['Број'] = df_okg['Број'].fillna(0)
 
     bars = alt.Chart(df_okg).mark_bar().encode(
