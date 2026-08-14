@@ -2,12 +2,10 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-# Поставување на страната
 st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", layout="wide")
 
 file_path = 'KRIMINALITET.xlsx'
 
-# Функција за вчитување на имињата на листовите
 @st.cache_data
 def get_sheets():
     return pd.ExcelFile(file_path).sheet_names
@@ -15,7 +13,6 @@ def get_sheets():
 selected_sheet = st.sidebar.selectbox("Избери категорија:", get_sheets())
 st.title(f"📊 {selected_sheet}")
 
-# Функција за вчитување на податоците
 @st.cache_data
 def load_data(sheet):
     return pd.read_excel(file_path, sheet_name=sheet)
@@ -24,7 +21,6 @@ df = load_data(selected_sheet)
 
 st.subheader("📈 Графикони")
 
-# Логика за "Криумчарење мигранти"
 if "Криумчарење" in selected_sheet or "мигранти" in selected_sheet.lower():
     mig_rows = df.dropna(subset=[df.columns[0]]).copy()
     valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
@@ -70,7 +66,6 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         )
         st.altair_chart((bar_chart + text_chart).properties(height=420), use_container_width=True)
 
-# Логика за "Недозволена трговија/Дрога"
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
@@ -108,7 +103,6 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
         st.altair_chart(draw_lollipop(df_lp1, "Процент на промена кај кривични дела"), use_container_width=True)
 
-# Логика за "Организиран криминал" со Data Labels
 elif "Организиран" in selected_sheet:
     valid_rows = df.dropna(subset=[df.columns[0]]).copy()
     keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
@@ -118,7 +112,10 @@ elif "Организиран" in selected_sheet:
         'Категорија': valid_rows.iloc[:, 0].astype(str),
         '2024': pd.to_numeric(valid_rows['Unnamed: 6'], errors='coerce'),
         '2023': pd.to_numeric(valid_rows['Unnamed: 8'], errors='coerce')
-    }).melt('Категорија', var_name='Година', value_name='Број').dropna()
+    }).melt('Категорија', var_name='Година', value_name='Број')
+
+    # Ги заменуваме празните места (NaN) со 0 за да се прикажат и нулите на графиконот
+    df_okg['Број'] = df_okg['Број'].fillna(0)
 
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
@@ -138,6 +135,8 @@ elif "Организиран" in selected_sheet:
     chart = (bars + text).properties(title='Споредба на кривични дела (2023 vs 2024)', height=450).interactive()
     st.altair_chart(chart, use_container_width=True)
 
-# Останати листови
 else:
     st.dataframe(df, use_container_width=True)
+
+st.subheader("📋 Детална табела")
+st.dataframe(df, use_container_width=True)
