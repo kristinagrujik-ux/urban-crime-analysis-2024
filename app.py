@@ -53,11 +53,11 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     with col2:
         st.write("**Процент на промена по категории**")
         bar_chart = alt.Chart(df_mig_pct).mark_bar(color='#d62728').encode(
-            y=alt.Y('Категорија:N', title='Категорија', sort='x', axis=alt.Axis(labelAngle=0, labelLimit=300)),
+            y=alt.Y('Категорија:N', title='Категорија', sort='-x', axis=alt.Axis(labelAngle=0, labelLimit=300)),
             x=alt.X('Процент:Q', title='Процент (%)')
         )
-        text_chart = alt.Chart(df_mig_pct).mark_text(align='right', dx=-5).encode(
-            y=alt.Y('Категорија:N', sort='x'),
+        text_chart = alt.Chart(df_mig_pct).mark_text(align='left', dx=5).encode(
+            y=alt.Y('Категорија:N', sort='-x'),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
         )
