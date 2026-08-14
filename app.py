@@ -104,20 +104,31 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.altair_chart(draw_lollipop(df_lp1, "Процент на промена кај кривични дела"), use_container_width=True)
 
 elif "Организиран" in selected_sheet:
-    # Ги земаме само редовите каде што првата колона има текст (ги отстрануваме празните)
-    valid_rows = df.dropna(subset=[df.columns[0]]).copy()
+    # Ги филтрираме редовите што содржат клучни зборови за организиран криминал
     keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
-    valid_rows = valid_rows[valid_rows.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
+    valid_rows = df[df.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
 
-    # Директно ги мапираме колоните според нивната позиција во табелата за да нема грешка
+    # Ги земаме точните колони врз основа на визуелната табела (колона 0 за категорија, колона 6 за 2024, колона 8 за 2023)
+    # Но за сигурност ги мапираме директно преку позиционата содржина прикажана во табелата
+    categories = []
+    vals_2024 = []
+    vals_2023 = []
+
+    for idx, row in valid_rows.iterrows():
+        cat = str(row.iloc[0])
+        # Проверка и повлекување на вистинските вредности за секој ред посебно
+        val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
+        val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
+        
+        categories.append(cat)
+        vals_2024.append(val_24 if pd.notna(val_24) else 0)
+        vals_2023.append(val_23 if pd.notna(val_23) else 0)
+
     df_okg = pd.DataFrame({
-        'Категорија': valid_rows.iloc[:, 0].astype(str),
-        '2024': pd.to_numeric(valid_rows.iloc[:, 6], errors='coerce'),
-        '2023': pd.to_numeric(valid_rows.iloc[:, 8], errors='coerce')
+        'Категорија': categories,
+        '2024': vals_2024,
+        '2023': vals_2023
     }).melt('Категорија', var_name='Година', value_name='Број')
-
-    # Ги заменуваме NaN вредностите со 0 за да се појават на графиконот со нула
-    df_okg['Број'] = df_okg['Број'].fillna(0)
 
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
