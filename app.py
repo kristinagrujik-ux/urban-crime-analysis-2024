@@ -125,53 +125,8 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.altair_chart(draw_lollipop(df_lp2, "Процент на промена кај сторители"), use_container_width=True)
 
 elif "Организиран" in selected_sheet:
-    valid_rows = df.dropna(subset=[df.columns[0]]).copy()
-    keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
-    valid_rows = valid_rows[valid_rows.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
-
-    kategorii = valid_rows.iloc[:, 0].astype(str)
-
-    numeric_cols = []
-    for col in valid_rows.columns[1:]:
-        numeric_series = pd.to_numeric(valid_rows[col], errors='coerce')
-        if numeric_series.notna().sum() >= len(valid_rows) * 0.5:
-            numeric_cols.append(col)
-
-    if len(numeric_cols) >= 4:
-        okg_2024_col, okg_2023_col, chl_2024_col, chl_2023_col = numeric_cols[:4]
-
-        df_okg = pd.DataFrame({
-            'Категорија': kategorii,
-            '2024': pd.to_numeric(valid_rows[okg_2024_col], errors='coerce'),
-            '2023': pd.to_numeric(valid_rows[okg_2023_col], errors='coerce')
-        }).melt('Категорија', var_name='Година', value_name='Вредност')
-
-        df_chl = pd.DataFrame({
-            'Категорија': kategorii,
-            '2024': pd.to_numeric(valid_rows[chl_2024_col], errors='coerce'),
-            '2023': pd.to_numeric(valid_rows[chl_2023_col], errors='coerce')
-        }).melt('Категорија', var_name='Година', value_name='Вредност')
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("**Организиран криминал**")
-            st.altair_chart(alt.Chart(df_okg).mark_bar().encode(
-                y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
-                x=alt.X('Вредност:Q', title='Број'),
-                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
-                yOffset='Година:N'
-            ).properties(height=420), use_container_width=True)
-
-        with col2:
-            st.write("**Членови на криминални групи**")
-            st.altair_chart(alt.Chart(df_chl).mark_bar().encode(
-                y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
-                x=alt.X('Вредност:Q', title='Број'),
-                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
-                yOffset='Година:N'
-            ).properties(height=420), use_container_width=True)
-    else:
-        st.warning("Не можев автоматски да ги препознаам колоните со податоци за овој лист.")
+    # Графиконите се отстранети по ваше барање, останува само табелата подолу.
+    pass
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
@@ -221,4 +176,3 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df, use_container_width=True)
-   
