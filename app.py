@@ -52,15 +52,16 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
 
     with col2:
         st.write("**Процент на промена по категории**")
-        # Сортирање од најголем негативен (најгоре) до најмал (најдолу)
+        
+        # Сортирање од најмал кон најголем за правилен распоред од врв до дно кај хоризонталните графикони во Altair
         sorted_categories = df_mig_pct.sort_values(by='Процент', ascending=True)['Категорија'].tolist()
 
         bar_chart = alt.Chart(df_mig_pct).mark_bar(color='#d62728').encode(
-            y=alt.Y('Категорија:N', title='Категорија', sort=sorted_categories, axis=alt.Axis(labelAngle=0, labelLimit=300)),
+            y=alt.Y('Категорија:O', title='Категорија', sort=sorted_categories, axis=alt.Axis(labelAngle=0, labelLimit=300)),
             x=alt.X('Процент:Q', title='Процент (%)')
         )
         text_chart = alt.Chart(df_mig_pct).mark_text(align='right', dx=-5).encode(
-            y=alt.Y('Категорија:N', sort=sorted_categories),
+            y=alt.Y('Категорија:O', sort=sorted_categories),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
         )
