@@ -125,8 +125,32 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.altair_chart(draw_lollipop(df_lp2, "Процент на промена кај сторители"), use_container_width=True)
 
 elif "Организиран" in selected_sheet:
-    # Графиконите се отстранети по ваше барање, останува само табелата подолу.
-    pass
+    valid_rows = df.dropna(subset=[df.columns[0]]).copy()
+    keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
+    valid_rows = valid_rows[valid_rows.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
+
+    kategorii = valid_rows.iloc[:, 0].astype(str)
+
+    df_okg = pd.DataFrame({
+        'Категорија': kategorii,
+        '2024': pd.to_numeric(valid_rows['Unnamed: 6'], errors='coerce'),
+        '2023': pd.to_numeric(valid_rows['Unnamed: 8'], errors='coerce')
+    }).melt('Категорија', var_name='Година', value_name='Број')
+    
+    df_okg = df_okg.dropna()
+
+    chart = alt.Chart(df_okg).mark_bar().encode(
+        x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=0, labelLimit=300)),
+        y=alt.Y('Број:Q', title='Број на случаи'),
+        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
+        xOffset='Година:N',
+        tooltip=['Категорија', 'Година', 'Број']
+    ).properties(
+        title='Споредба на кривични дела (2023 vs 2024)',
+        height=450
+    ).interactive()
+
+    st.altair_chart(chart, use_container_width=True)
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
