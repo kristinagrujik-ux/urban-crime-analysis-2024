@@ -140,10 +140,10 @@ elif "Организиран" in selected_sheet:
     df_okg = df_okg.dropna()
 
     chart = alt.Chart(df_okg).mark_bar().encode(
-        x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=0, labelLimit=300)),
-        y=alt.Y('Број:Q', title='Број на случаи'),
+        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
+        x=alt.X('Број:Q', title='Број на случаи'),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
-        xOffset='Година:N',
+        yOffset='Година:N',
         tooltip=['Категорија', 'Година', 'Број']
     ).properties(
         title='Споредба на кривични дела (2023 vs 2024)',
