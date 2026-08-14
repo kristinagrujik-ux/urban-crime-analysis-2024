@@ -60,7 +60,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
             y=alt.Y('Категорија:N', title='Категорија', sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=300)),
             x=alt.X('Процент:Q', title='Процент (%)')
         )
-        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='right', dx=-5).encode(
+        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=5).encode(
             y=alt.Y('Категорија:N', sort=sorted_cats),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
@@ -169,6 +169,3 @@ else:
             y=alt.Y(f'{sector_col}:N', title='Сектор', sort=None),
             x=alt.X(f'{ef_col}:Q', title='Процент')
         ).properties(height=320), use_container_width=True)
-
-st.subheader("📋 Детална табела")
-st.dataframe(df)
