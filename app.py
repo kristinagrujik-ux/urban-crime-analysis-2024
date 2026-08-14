@@ -21,7 +21,6 @@ df = load_data(selected_sheet)
 
 st.subheader("📈 Графикони")
 
-# Логика за "Криумчарење мигранти"
 if "Криумчарење" in selected_sheet or "мигранти" in selected_sheet.lower():
     mig_rows = df.dropna(subset=[df.columns[0]]).copy()
     valid_mig = mig_rows[mig_rows.iloc[:, 0].astype(str).str.contains("Откриени|кривични|сторители|мигранти", case=False, na=False)].copy()
@@ -67,14 +66,21 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         )
         st.altair_chart((bar_chart + text_chart).properties(height=420), use_container_width=True)
 
-# Логика за "Недозволена трговија со дрога"
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
+    # 1. Кривични дела (Број) - Колона 3 (2024) и Колона 4 (2023)
     df_kd = pd.DataFrame({
         'Сектор': valid_rows.iloc[:, 0], 
         '2024': pd.to_numeric(valid_rows.iloc[:, 3], errors='coerce'), 
         '2023': pd.to_numeric(valid_rows.iloc[:, 4], errors='coerce')
+    }).melt('Сектор', var_name='Година', value_name='Вредност')
+
+    # 3. Сторители (Број) - Колона 6 (2024) и Колона 7 (2023) од табелата
+    df_st = pd.DataFrame({
+        'Сектор': valid_rows.iloc[:, 0], 
+        '2024': pd.to_numeric(valid_rows.iloc[:, 6], errors='coerce'), 
+        '2023': pd.to_numeric(valid_rows.iloc[:, 7], errors='coerce')
     }).melt('Сектор', var_name='Година', value_name='Вредност')
     
     color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
@@ -85,15 +91,19 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         df_lp['zero'] = 0
         return df_lp
 
-    df_lp1 = prep_lollipop(valid_rows, 5)
+    # 2. Процент за Кривични дела (Колона 5)
+    df_lp_kd = prep_lollipop(valid_rows, 5)  
+    # 4. Процент за Сторители (Колона 8)
+    df_lp_st = prep_lollipop(valid_rows, 8)  
 
     def draw_lollipop(data, title):
         base = alt.Chart(data).encode(x=alt.X('Сектор:N', sort=None, title='Сектор'))
         rule = base.mark_rule(color='#e45756', strokeWidth=2).encode(y='zero:Q', y2='Процент:Q')
         points = base.mark_circle(size=120, color='#e45756').encode(y=alt.Y('Процент:Q', title='Процент (%)'))
         text = base.mark_text(align='center', baseline='bottom', dy=-10).encode(y=alt.Y('Процент:Q'), text='Пр_Текст:N')
-        return (rule + points + text).properties(title=title, height=350)
+        return (rule + points + text).properties(title=title, height=320)
 
+    # Прв ред (График 1 и График 2)
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Кривични дела (2024 vs 2023)**")
@@ -102,12 +112,25 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
             yOffset=alt.YOffset('Година:N'),
             x=alt.X('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=color_scale)
-        ).properties(height=350), use_container_width=True)
+        ).properties(height=320), use_container_width=True)
     with col2:
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
-        st.altair_chart(draw_lollipop(df_lp1, "Процент на промена кај кривични дела"), use_container_width=True)
+        st.altair_chart(draw_lollipop(df_lp_kd, "Процент на промена кај кривични дела"), use_container_width=True)
 
-# Логика за "Организиран криминал"
+    # Втор ред (График 3 - Bar chart за Сторители и График 4 - Lollipop chart за Сторители)
+    col3, col4 = st.columns(2)
+    with col3:
+        st.write("**Сторители (2024 vs 2023)**")
+        st.altair_chart(alt.Chart(df_st).mark_bar().encode(
+            y=alt.Y('Сектор:N', sort=None, title='Сектор'),
+            yOffset=alt.YOffset('Година:N'),
+            x=alt.X('Вредност:Q', title='Број'),
+            color=alt.Color('Година:N', scale=color_scale)
+        ).properties(height=320), use_container_width=True)
+    with col4:
+        st.write("**Lollipop Chart: Промена % - Сторители**")
+        st.altair_chart(draw_lollipop(df_lp_st, "Процент на промена кај сторители"), use_container_width=True)
+
 elif "Организиран" in selected_sheet:
     keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
@@ -149,7 +172,6 @@ elif "Организиран" in selected_sheet:
     chart = (bars + text).properties(title='Споредба на кривични дела (2023 vs 2024)', height=450).interactive()
     st.altair_chart(chart, use_container_width=True)
 
-# Логика за Вкупен криминалитет и останати (со 4 графици)
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
