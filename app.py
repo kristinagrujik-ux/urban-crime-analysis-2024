@@ -150,13 +150,13 @@ elif "Организиран" in selected_sheet:
 
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
-        x=alt.X('Број:Q', title='Број на случаи', axis=alt.Axis(format='d')),
+        x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
         yOffset='Година:N',
         tooltip=['Категорија', 'Година', 'Број']
     )
 
-    text = alt.Chart(df_okg).mark_text(align='left', baseline='middle', dx=3).encode(
+    text = alt.Chart(df_okg).mark_text(align='left', baseline='middle', dx=5).encode(
         y=alt.Y('Категорија:N', sort=None),
         x=alt.X('Број:Q'),
         text='Број:Q',
