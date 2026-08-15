@@ -46,7 +46,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
             x=alt.X('Категорија:N', title=None, sort=None, axis=alt.Axis(labelAngle=270, labelLimit=600)),
             y=alt.Y('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
+            color=alt.Color('Година:N', sort=['2023', '2024'], scale=alt.Scale(domain=['2023', '2024'], range=['#aec7e8', '#1f77b4']),
                             legend=alt.Legend(orient='bottom', direction='horizontal', title=None)),
             xOffset='Година:N'
         ).properties(height=420), use_container_width=True)
@@ -82,7 +82,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         '2023': pd.to_numeric(valid_rows.iloc[:, 7], errors='coerce')
     }).melt('Сектор', var_name='Година', value_name='Вредност')
     
-    color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
+    color_scale = alt.Scale(domain=['2023', '2024'], range=['#aec7e8', '#1f77b4'])
 
     def prep_lollipop(data, val_col):
         val = round(pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100, 1)
@@ -105,9 +105,9 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.write("**Кривични дела (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_kd).mark_bar().encode(
             y=alt.Y('Сектор:N', sort=None, title=None),
-            yOffset=alt.YOffset('Година:N'),
+            yOffset=alt.YOffset('Година:N', sort=['2023', '2024']),
             x=alt.X('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
+            color=alt.Color('Година:N', sort=['2023', '2024'], scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
         ).properties(height=320), use_container_width=True)
     with col2:
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
@@ -118,9 +118,9 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.write("**Сторители (2024 vs 2023)**")
         st.altair_chart(alt.Chart(df_st).mark_bar().encode(
             y=alt.Y('Сектор:N', sort=None, title=None),
-            yOffset=alt.YOffset('Година:N'),
+            yOffset=alt.YOffset('Година:N', sort=['2023', '2024']),
             x=alt.X('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
+            color=alt.Color('Година:N', sort=['2023', '2024'], scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
         ).properties(height=320), use_container_width=True)
     with col4:
         st.write("**Lollipop Chart: Промена % - Сторители**")
@@ -155,9 +155,9 @@ elif "Организиран" in selected_sheet:
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
-        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
+        color=alt.Color('Година:N', sort=['2023', '2024'], scale=alt.Scale(domain=['2023', '2024'], range=['#aec7e8', '#1f77b4']),
                         legend=alt.Legend(orient='bottom', direction='horizontal', title=None)),
-        yOffset='Година:N',
+        yOffset=alt.YOffset('Година:N', sort=['2023', '2024']),
         tooltip=['Категорија', 'Година', 'Број']
     )
 
@@ -165,7 +165,7 @@ elif "Организиран" in selected_sheet:
         y=alt.Y('Категорија:N', sort=None),
         x=alt.X('Број:Q'),
         text='Број:Q',
-        yOffset='Година:N'
+        yOffset=alt.YOffset('Година:N', sort=['2023', '2024'])
     )
 
     chart = (bars + text).properties(
