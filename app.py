@@ -256,3 +256,4 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df, use_container_width=True)
+
