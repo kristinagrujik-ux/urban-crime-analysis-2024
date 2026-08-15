@@ -57,10 +57,10 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         sorted_cats = df_mig_pct_sorted['Категорија'].tolist()
 
         bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728').encode(
-            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=300)),
-            x=alt.X('Процент:Q', title='Процент (%)')
+            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=600, labelPadding=15)),
+            x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-80, 5]))
         )
-        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=5).encode(
+        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=8).encode(
             y=alt.Y('Категорија:N', sort=sorted_cats),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
@@ -248,7 +248,7 @@ else:
         ).properties(height=320), use_container_width=True)
 
     with col4:
-        st.write("**Вкупна ефикасност 2024**")
+        st.write(**Вкупна ефикасност 2024**")
         st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
             y=alt.Y(f'{sector_col}:N', title=None, sort=None),
             x=alt.X(f'{ef_col}:Q', title='Процент')
