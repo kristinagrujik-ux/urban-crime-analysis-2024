@@ -135,7 +135,10 @@ elif "Организиран" in selected_sheet:
     for idx, row in valid_rows.iterrows():
         cat = str(row.iloc[0]).strip()
         if cat and cat.lower() != 'nan' and "област на криминал" not in cat.lower() and "вкупно" not in cat.lower():
-            # Овде останува оригиналното име без промени
+            # Обезбедуваме точно целосно име со буквата Т
+            if "посредување во проституција" in cat.lower() or "трговија со луѓе" in cat.lower():
+                cat = "Трговија со луѓе-посредување во проституција"
+            
             val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
             val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
             
@@ -150,7 +153,7 @@ elif "Организиран" in selected_sheet:
     }).melt('Категорија', var_name='Година', value_name='Број')
 
     bars = alt.Chart(df_okg).mark_bar().encode(
-        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=600, labelPadding=15)),
+        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=700, labelPadding=15)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
         yOffset='Година:N',
