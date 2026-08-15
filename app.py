@@ -144,7 +144,6 @@ elif "Организиран" in selected_sheet:
             val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
             val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
             
-            # Членови на криминални групи (индекси 10 и 12 според изгледот на табелата)
             mem_24 = pd.to_numeric(row.iloc[10], errors='coerce')
             mem_23 = pd.to_numeric(row.iloc[12], errors='coerce')
             
@@ -171,7 +170,7 @@ elif "Организиран" in selected_sheet:
     with col1:
         bars = alt.Chart(df_okg).mark_bar().encode(
             y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
-            x=alt.X('Број:Q', title='Број на случаи', axis=alt.Axis(format='d')),
+            x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
                             legend=alt.Legend(title="Година")),
             yOffset='Година:N',
@@ -191,7 +190,7 @@ elif "Организиран" in selected_sheet:
 
     with col2:
         bars_m = alt.Chart(df_members).mark_bar().encode(
-            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labels=False, ticks=False)),
+            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=15)),
             x=alt.X('Членови:Q', title='Број на членови', axis=alt.Axis(format='d')),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#2ca02c', '#98df8a']),
                             legend=alt.Legend(title="Година")),
