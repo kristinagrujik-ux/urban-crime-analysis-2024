@@ -149,8 +149,8 @@ elif "Организиран" in selected_sheet:
     }).melt('Категорија', var_name='Година', value_name='Број')
 
     bars = alt.Chart(df_okg).mark_bar().encode(
-        # Зголемен е labelLimit на 350 за да се гледа целосно и најдолгото име на категоријата
-        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=350)),
+        # Додадено е labelLimit и offset за целосно прикажување на долгите имиња со буквата Т
+        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=400, labelOverlap=False)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
         yOffset='Година:N',
@@ -164,7 +164,6 @@ elif "Организиран" in selected_sheet:
         yOffset='Година:N'
     )
 
-    # Зголемена е ширината (width='container') и висината на графиконот
     chart = (bars + text).properties(title='Споредба на кривични дела (2023 vs 2024)', height=500).interactive()
     st.altair_chart(chart, use_container_width=True)
 
