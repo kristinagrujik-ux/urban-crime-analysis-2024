@@ -56,27 +56,20 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         df_mig_pct_sorted = df_mig_pct.sort_values(by='Процент', ascending=True).reset_index(drop=True)
         sorted_cats = df_mig_pct_sorted['Категорија'].tolist()
 
-        # Столбови
-        bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728').encode(
-            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=None), # Исклучени стандардни етикети лево
-            x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-80, 15]))
+        # График со категории од лева страна (стандардна Y оска)
+        bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728', height=24).encode(
+            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=400)),
+            x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-90, 10]))
         )
         
-        # Процент текст (на врвот на столбот)
-        text_pct = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=5, color='black').encode(
+        # Текст на крајот од столбовите
+        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=6, color='black', fontWeight='bold').encode(
             y=alt.Y('Категорија:N', sort=sorted_cats),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
         )
 
-        # Име на категоријата внатре/до столбот за да се гледа читливо без сечење
-        text_cat = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=5, dy=-12, fontWeight='bold', color='#333333').encode(
-            y=alt.Y('Категорија:N', sort=sorted_cats),
-            x=alt.value(0), # Почеток од нула
-            text='Категорија:N'
-        )
-
-        st.altair_chart((bar_chart + text_pct + text_cat).properties(height=420), use_container_width=True)
+        st.altair_chart((bar_chart + text_chart).properties(width=600, height=400), use_container_width=True)
 
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
