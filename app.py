@@ -49,7 +49,7 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
                             legend=alt.Legend(orient='bottom', direction='horizontal', title=None)),
             xOffset='Година:N'
-        ).properties(height=420).configure_legend(orient='bottom', symbolType='square'), use_container_width=True)
+        ).properties(height=420), use_container_width=True)
 
     with col2:
         st.write("**Процент на промена по категории**")
@@ -108,7 +108,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
             yOffset=alt.YOffset('Година:N'),
             x=alt.X('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
-        ).properties(height=320).configure_legend(orient='bottom', symbolType='square'), use_container_width=True)
+        ).properties(height=320), use_container_width=True)
     with col2:
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
         st.altair_chart(draw_lollipop(df_lp_kd, "Процент на промена кај кривични дела"), use_container_width=True)
@@ -121,7 +121,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
             yOffset=alt.YOffset('Година:N'),
             x=alt.X('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', direction='horizontal', title=None))
-        ).properties(height=320).configure_legend(orient='bottom', symbolType='square'), use_container_width=True)
+        ).properties(height=320), use_container_width=True)
     with col4:
         st.write("**Lollipop Chart: Промена % - Сторители**")
         st.altair_chart(draw_lollipop(df_lp_st, "Процент на промена кај сторители"), use_container_width=True)
@@ -156,7 +156,7 @@ elif "Организиран" in selected_sheet:
         y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
-                        legend=alt.Legend(orient='bottom', direction='horizontal', title=None, align='center')),
+                        legend=alt.Legend(orient='bottom', direction='horizontal', title=None)),
         yOffset='Година:N',
         tooltip=['Категорија', 'Година', 'Број']
     )
@@ -171,11 +171,6 @@ elif "Организиран" in selected_sheet:
     chart = (bars + text).properties(
         title='Споредба на кривични дела (2023 vs 2024)', 
         height=500
-    ).configure_legend(
-        orient='bottom',
-        direction='horizontal',
-        legendX=200,
-        legendY=540
     ).interactive()
     
     st.altair_chart(chart, use_container_width=True)
