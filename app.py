@@ -33,8 +33,6 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         '2023': pd.to_numeric(valid_mig.iloc[:, 8], errors='coerce')
     }).melt('Категорија', var_name='Година', value_name='Вредност')
     
-    df_mig_bars['Вредност_Текст'] = df_mig_bars['Вредност'].astype(str)
-
     df_mig_pct = pd.DataFrame({
         'Категорија': kategorii,
         'Процент': round(pd.to_numeric(valid_mig.iloc[:, 11], errors='coerce') * 100, 1)
@@ -45,51 +43,37 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     
     with col1:
         st.write("**Криумчарење на мигранти (2024 vs 2023)**")
-        
-        # Прв графикон: Хоризонтални групирани столбови
-        bar_chart_1 = alt.Chart(df_mig_bars).mark_bar(size=14).encode(
-            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelAngle=0, labelLimit=500)),
-            yOffset=alt.YOffset('Година:N', sort=['2024', '2023']),
-            x=alt.X('Вредност:Q', title='Број'),
+        # Прв графикон: Вертикални столбови (Column Chart)
+        st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
+            x=alt.X('Категорија:N', title=None, sort=None, axis=alt.Axis(labelAngle=270, labelLimit=600)),
+            y=alt.Y('Вредност:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
-                            legend=alt.Legend(title="Година"))
-        )
-        
-        text_chart_1 = alt.Chart(df_mig_bars).mark_text(align='left', dx=4, color='black', fontSize=10, fontWeight='bold').encode(
-            y=alt.Y('Категорија:N', sort=None),
-            yOffset=alt.YOffset('Година:N', sort=['2024', '2023']),
-            x=alt.X('Вредност:Q'),
-            text='Вредност_Текст:N'
-        )
-
-        chart_group_1 = (bar_chart_1 + text_chart_1).properties(width=550, height=380).configure_view(
-            stroke=None
-        )
-
-        st.altair_chart(chart_group_1, use_container_width=True)
+                            legend=alt.Legend(title="Година")),
+            xOffset='Година:N'
+        ).properties(height=420), use_container_width=True)
 
     with col2:
         st.write("**Процент на промена по категории**")
         df_mig_pct_sorted = df_mig_pct.sort_values(by='Процент', ascending=True).reset_index(drop=True)
         sorted_cats = df_mig_pct_sorted['Категорија'].tolist()
 
-        # Втор графикон: Хоризонтални столбови за процент
-        bar_chart_2 = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728', size=24).encode(
-            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=500)),
+        # Втор графикон: Хоризонтални столбови (Horizontal Bar Chart)
+        bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728', size=26).encode(
+            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=500, tickBand='center')),
             x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-90, 15]))
         )
         
-        text_chart_2 = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=6, color='black', fontWeight='bold', fontSize=11).encode(
+        text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=8, color='black', fontWeight='bold', fontSize=12).encode(
             y=alt.Y('Категорија:N', sort=sorted_cats),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
         )
 
-        chart_group_2 = (bar_chart_2 + text_chart_2).properties(width=550, height=380).configure_view(
+        chart_final = (bar_chart + text_chart).properties(width=550, height=380).configure_view(
             stroke=None
         )
 
-        st.altair_chart(chart_group_2, use_container_width=True)
+        st.altair_chart(chart_final, use_container_width=True)
 
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
@@ -280,3 +264,4 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df, use_container_width=True)
+
