@@ -29,11 +29,16 @@ if "Кривични дела против државата" in selected_sheet:
     for idx, row in state_rows.iterrows():
         kriminal = str(row.iloc[0]).strip()
         if kriminal and kriminal.lower() != 'nan' and "кривични дела" not in kriminal.lower() and "област" not in kriminal.lower():
+            # Безбедно земање на вредностите преку ИЛ (заштита од грешки)
+            val_2024 = row.iloc[8] if len(row) > 8 else "-"
+            val_2023 = row.iloc[11] if len(row) > 11 else "-"
+            val_promena = row.iloc[14] if len(row) > 14 else "-"
+            
             table_data.append({
                 "Кривични дела": kriminal,
-                "2024 година": row.iloc[8] if len(row.columns) > 8 else "-",
-                "2023 година": row.iloc[11] if len(row.columns) > 11 else "-",
-                "Промена %": row.iloc[14] if len(row.columns) > 14 else "-"
+                "2024 година": val_2024,
+                "2023 година": val_2023,
+                "Промена %": val_promena
             })
             
     df_display = pd.DataFrame(table_data)
