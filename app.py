@@ -126,22 +126,24 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
         st.altair_chart(draw_lollipop(df_lp_st, "Процент на промена кај сторители"), use_container_width=True)
 
 elif "Организиран" in selected_sheet:
-    keywords = "Недозволена|Корупција|Криумчарење|Трговија|Сериозен|Кривични"
-    valid_rows = df[df.iloc[:, 0].astype(str).str.contains(keywords, case=False, na=False)].copy()
+    # Ги земаме само редовите каде што првата колона има текст (и ги отстрануваме насловните редови со "Област на криминал" или NaN)
+    valid_rows = df.dropna(subset=[df.columns[0]]).copy()
+    valid_rows = valid_rows[~valid_rows.iloc[:, 0].astype(str).str.contains("Област на криминал|ОКГ", case=False, na=False)].copy()
 
     categories = []
     vals_2024 = []
     vals_2023 = []
 
     for idx, row in valid_rows.iterrows():
-        cat = str(row.iloc[0])
-        # Точни индекси за Организиран криминал: индекс 6 за 2024 година и индекс 8 за 2023 година
-        val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
-        val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
-        
-        categories.append(cat)
-        vals_2024.append(val_24 if pd.notna(val_24) else 0)
-        vals_2023.append(val_23 if pd.notna(val_23) else 0)
+        cat = str(row.iloc[0]).strip()
+        if cat and cat.lower() != 'nan':
+            # Строго претворање во броеви за индекс 6 (2024) и индекс 8 (2023)
+            val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
+            val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
+            
+            categories.append(cat)
+            vals_2024.append(val_24 if pd.notna(val_24) else 0)
+            vals_2023.append(val_23 if pd.notna(val_23) else 0)
 
     df_okg = pd.DataFrame({
         'Категорија': categories,
@@ -151,7 +153,7 @@ elif "Организиран" in selected_sheet:
 
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=300)),
-        x=alt.X('Број:Q', title='Број на случаи'),
+        x=alt.X('Број:Q', title='Број на случаи', axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
         yOffset='Година:N',
         tooltip=['Категорија', 'Година', 'Број']
