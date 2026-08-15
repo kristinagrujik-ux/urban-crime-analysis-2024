@@ -138,7 +138,8 @@ elif "Организиран" in selected_sheet:
             val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
             val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
             
-            categories.append(cat)
+            # Додаваме празно место на почетокот за да се оддалечи од линијата
+            categories.append("    " + cat)
             vals_2024.append(val_24 if pd.notna(val_24) else 0)
             vals_2023.append(val_23 if pd.notna(val_23) else 0)
 
@@ -149,8 +150,7 @@ elif "Организиран" in selected_sheet:
     }).melt('Категорија', var_name='Година', value_name='Број')
 
     bars = alt.Chart(df_okg).mark_bar().encode(
-        # Додадено е labelLimit и offset за целосно прикажување на долгите имиња со буквата Т
-        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=400, labelOverlap=False)),
+        y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=400, labelPadding=10)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
         yOffset='Година:N',
