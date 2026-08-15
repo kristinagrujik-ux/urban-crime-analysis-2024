@@ -153,7 +153,8 @@ elif "Организиран" in selected_sheet:
     }).melt('Категорија', var_name='Година', value_name='Број')
 
     bars = alt.Chart(df_okg).mark_bar().encode(
-        y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
+        # Зголемен labelPadding за целосно видлив текст лево
+        y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=250)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
                         legend=alt.Legend(title="Година")),
