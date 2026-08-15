@@ -43,7 +43,6 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
     
     with col1:
         st.write("**Криумчарење на мигранти (2024 vs 2023)**")
-        # Прв графикон: Вертикални столбови (Column Chart)
         st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
             x=alt.X('Категорија:N', title=None, sort=None, axis=alt.Axis(labelAngle=270, labelLimit=600)),
             y=alt.Y('Вредност:Q', title='Број'),
@@ -57,7 +56,6 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         df_mig_pct_sorted = df_mig_pct.sort_values(by='Процент', ascending=True).reset_index(drop=True)
         sorted_cats = df_mig_pct_sorted['Категорија'].tolist()
 
-        # Втор графикон: Хоризонтални столбови (Horizontal Bar Chart)
         bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728', size=26).encode(
             y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=500, tickBand='center')),
             x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-90, 15]))
@@ -197,10 +195,11 @@ elif "Организиран" in selected_sheet:
         st.altair_chart(chart1, use_container_width=True)
 
     with col2:
+        # Променето во хоризонтални столбови со yOffset за 2024 vs 2023
         bars_m = alt.Chart(df_members).mark_bar().encode(
             y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
             x=alt.X('Членови:Q', title='Број на членови', scale=alt.Scale(domain=[0, 80]), axis=alt.Axis(format='d')),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2ca02c', '#98df8a'], range=['#2ca02c', '#98df8a']),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#2ca02c', '#98df8a']),
                             legend=alt.Legend(title="Година")),
             yOffset='Година:N',
             tooltip=['Категорија', 'Година', 'Членови']
