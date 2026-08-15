@@ -56,17 +56,16 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         df_mig_pct_sorted = df_mig_pct.sort_values(by='Процент', ascending=True).reset_index(drop=True)
         sorted_cats = df_mig_pct_sorted['Категорија'].tolist()
 
-        # Поправено: domain=[-100, 10] за да се добие простор за долгиот текст на етикетата
         bar_chart = alt.Chart(df_mig_pct_sorted).mark_bar(color='#d62728').encode(
-            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=600, labelPadding=15)),
-            x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-100, 10]))
+            y=alt.Y('Категорија:N', title=None, sort=sorted_cats, axis=alt.Axis(labelAngle=0, labelLimit=800, labelPadding=180)),
+            x=alt.X('Процент:Q', title='Процент (%)', scale=alt.Scale(domain=[-90, 10]))
         )
         text_chart = alt.Chart(df_mig_pct_sorted).mark_text(align='left', dx=8).encode(
             y=alt.Y('Категорија:N', sort=sorted_cats),
             x=alt.X('Процент:Q'),
             text='Пр_Текст:N'
         )
-        st.altair_chart((bar_chart + text_chart).properties(height=420), use_container_width=True)
+        st.altair_chart((bar_chart + text_chart).properties(width=500, height=420), use_container_width=True)
 
 elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
