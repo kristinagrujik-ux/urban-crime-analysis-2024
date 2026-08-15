@@ -153,7 +153,7 @@ elif "Организиран" in selected_sheet:
     }).melt('Категорија', var_name='Година', value_name='Број')
 
     bars = alt.Chart(df_okg).mark_bar().encode(
-        y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=15)),
+        y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
                         legend=alt.Legend(orient='bottom', direction='horizontal', title=None)),
@@ -171,9 +171,7 @@ elif "Организиран" in selected_sheet:
     chart = (bars + text).properties(
         title='Споредба на кривични дела (2023 vs 2024)', 
         height=500
-    ).configure_view(
-        stroke=None
-    ).options(padding={"left": 30, "top": 10, "right": 10, "bottom": 10}).interactive()
+    ).interactive()
     
     st.altair_chart(chart, use_container_width=True)
 
