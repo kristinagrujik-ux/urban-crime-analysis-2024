@@ -248,7 +248,7 @@ else:
         ).properties(height=320), use_container_width=True)
 
     with col4:
-        st.write(**Вкупна ефикасност 2024**")
+        st.write("**Вкупна ефикасност 2024**")
         st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
             y=alt.Y(f'{sector_col}:N', title=None, sort=None),
             x=alt.X(f'{ef_col}:Q', title='Процент')
