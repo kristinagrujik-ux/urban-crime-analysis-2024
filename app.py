@@ -190,8 +190,8 @@ elif "Организиран" in selected_sheet:
 
     with col2:
         bars_m = alt.Chart(df_members).mark_bar().encode(
-            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=15)),
-            x=alt.X('Членови:Q', title='Број на членови', axis=alt.Axis(format='d')),
+            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
+            x=alt.X('Членови:Q', title='Број на членови', scale=alt.Scale(domain=[0, 80]), axis=alt.Axis(format='d')),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#2ca02c', '#98df8a']),
                             legend=alt.Legend(title="Година")),
             yOffset='Година:N',
