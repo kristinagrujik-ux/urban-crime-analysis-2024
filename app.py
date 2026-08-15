@@ -46,7 +46,8 @@ if "Криумчарење" in selected_sheet or "мигранти" in selected_
         st.altair_chart(alt.Chart(df_mig_bars).mark_bar().encode(
             x=alt.X('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelAngle=270, labelLimit=600)),
             y=alt.Y('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
+                            legend=alt.Legend(orient='bottom', title='Година')),
             xOffset='Година:N'
         ).properties(height=420), use_container_width=True)
 
@@ -106,7 +107,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
             y=alt.Y('Сектор:N', sort=None, title='Сектор'),
             yOffset=alt.YOffset('Година:N'),
             x=alt.X('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=color_scale)
+            color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', title='Година'))
         ).properties(height=320), use_container_width=True)
     with col2:
         st.write("**Lollipop Chart: Промена % - Кривични дела**")
@@ -119,7 +120,7 @@ elif "Недозволена" in selected_sheet or "дрога" in selected_shee
             y=alt.Y('Сектор:N', sort=None, title='Сектор'),
             yOffset=alt.YOffset('Година:N'),
             x=alt.X('Вредност:Q', title='Број'),
-            color=alt.Color('Година:N', scale=color_scale)
+            color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(orient='bottom', title='Година'))
         ).properties(height=320), use_container_width=True)
     with col4:
         st.write("**Lollipop Chart: Промена % - Сторители**")
@@ -135,7 +136,6 @@ elif "Организиран" in selected_sheet:
     for idx, row in valid_rows.iterrows():
         cat = str(row.iloc[0]).strip()
         if cat and cat.lower() != 'nan' and "област на криминал" not in cat.lower() and "вкупно" not in cat.lower():
-            # Обезбедуваме точно целосно име со буквата Т
             if "посредување во проституција" in cat.lower() or "трговија со луѓе" in cat.lower():
                 cat = "Трговија со луѓе-посредување во проституција"
             
@@ -155,7 +155,8 @@ elif "Организиран" in selected_sheet:
     bars = alt.Chart(df_okg).mark_bar().encode(
         y=alt.Y('Категорија:N', title='Категорија', sort=None, axis=alt.Axis(labelLimit=700, labelPadding=15)),
         x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
-        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
+        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
+                        legend=alt.Legend(orient='bottom', title='Година')),
         yOffset='Година:N',
         tooltip=['Категорија', 'Година', 'Број']
     )
