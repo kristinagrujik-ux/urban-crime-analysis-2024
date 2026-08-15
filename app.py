@@ -132,6 +132,8 @@ elif "Организиран" in selected_sheet:
     categories = []
     vals_2024 = []
     vals_2023 = []
+    members_2024 = []
+    members_2023 = []
 
     for idx, row in valid_rows.iterrows():
         cat = str(row.iloc[0]).strip()
@@ -142,9 +144,15 @@ elif "Организиран" in selected_sheet:
             val_24 = pd.to_numeric(row.iloc[6], errors='coerce')
             val_23 = pd.to_numeric(row.iloc[8], errors='coerce')
             
+            # Членови на криминални групи (индекси 10 и 12 според изгледот на табелата)
+            mem_24 = pd.to_numeric(row.iloc[10], errors='coerce')
+            mem_23 = pd.to_numeric(row.iloc[12], errors='coerce')
+            
             categories.append(cat)
             vals_2024.append(val_24 if pd.notna(val_24) else 0)
             vals_2023.append(val_23 if pd.notna(val_23) else 0)
+            members_2024.append(mem_24 if pd.notna(mem_24) else 0)
+            members_2023.append(mem_23 if pd.notna(mem_23) else 0)
 
     df_okg = pd.DataFrame({
         'Категорија': categories,
@@ -152,28 +160,55 @@ elif "Организиран" in selected_sheet:
         '2023': vals_2023
     }).melt('Категорија', var_name='Година', value_name='Број')
 
-    bars = alt.Chart(df_okg).mark_bar().encode(
-        y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
-        x=alt.X('Број:Q', title='Број на случаи', scale=alt.Scale(domain=[0, 10]), axis=alt.Axis(format='d')),
-        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
-                        legend=alt.Legend(title="Година")),
-        yOffset='Година:N',
-        tooltip=['Категорија', 'Година', 'Број']
-    )
+    df_members = pd.DataFrame({
+        'Категорија': categories,
+        '2024': members_2024,
+        '2023': members_2023
+    }).melt('Категорија', var_name='Година', value_name='Членови')
 
-    text = alt.Chart(df_okg).mark_text(align='left', baseline='middle', dx=5).encode(
-        y=alt.Y('Категорија:N', sort=None),
-        x=alt.X('Број:Q'),
-        text='Број:Q',
-        yOffset='Година:N'
-    )
+    col1, col2 = st.columns(2)
 
-    chart = (bars + text).properties(
-        title='Споредба на кривични дела (2023 vs 2024)', 
-        height=500
-    ).interactive()
-    
-    st.altair_chart(chart, use_container_width=True)
+    with col1:
+        bars = alt.Chart(df_okg).mark_bar().encode(
+            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labelLimit=700, labelPadding=25)),
+            x=alt.X('Број:Q', title='Број на случаи', axis=alt.Axis(format='d')),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']),
+                            legend=alt.Legend(title="Година")),
+            yOffset='Година:N',
+            tooltip=['Категорија', 'Година', 'Број']
+        )
+        text = alt.Chart(df_okg).mark_text(align='left', baseline='middle', dx=5).encode(
+            y=alt.Y('Категорија:N', sort=None),
+            x=alt.X('Број:Q'),
+            text='Број:Q',
+            yOffset='Година:N'
+        )
+        chart1 = (bars + text).properties(
+            title='Организиран криминал', 
+            height=450
+        ).interactive()
+        st.altair_chart(chart1, use_container_width=True)
+
+    with col2:
+        bars_m = alt.Chart(df_members).mark_bar().encode(
+            y=alt.Y('Категорија:N', title=None, sort=None, axis=alt.Axis(labels=False, ticks=False)),
+            x=alt.X('Членови:Q', title='Број на членови', axis=alt.Axis(format='d')),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#2ca02c', '#98df8a']),
+                            legend=alt.Legend(title="Година")),
+            yOffset='Година:N',
+            tooltip=['Категорија', 'Година', 'Членови']
+        )
+        text_m = alt.Chart(df_members).mark_text(align='left', baseline='middle', dx=5).encode(
+            y=alt.Y('Категорија:N', sort=None),
+            x=alt.X('Членови:Q'),
+            text='Членови:Q',
+            yOffset='Година:N'
+        )
+        chart2 = (bars_m + text_m).properties(
+            title='Членови на криминални групи', 
+            height=450
+        ).interactive()
+        st.altair_chart(chart2, use_container_width=True)
 
 else:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
@@ -222,4 +257,3 @@ else:
 
 st.subheader("📋 Детална табела")
 st.dataframe(df, use_container_width=True)
-   
