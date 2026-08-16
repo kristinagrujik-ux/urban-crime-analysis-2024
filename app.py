@@ -125,10 +125,10 @@ elif "трговија" in selected_sheet:
         )
     with col2:
         st.write("**Недозволена трговија со дрога - Промена на кривични дела (%)**")
-        base_kd = alt.Chart(valid_rows).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None))
-        rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=1.5, opacity=0.6).encode(x=alt.X('Промена КД %:Q', axis=alt.Axis(format='%'), title='Промена'), x2='zero:Q')
-        circle_kd = base_kd.mark_circle(size=180, color=BLUE_COLOR, stroke='white', strokeWidth=1.5).encode(x='Промена КД %:Q')
-        text_kd_change = base_kd.mark_text(align='left', dx=12, fontSize=11).encode(x='Промена КД %:Q', text='Промена КД % текст:N')
+        base_kd = alt.Chart(valid_rows).encode(x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)))
+        rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(y=alt.Y('Промена КД %:Q', axis=alt.Axis(format='%'), title='Промена'), y2='zero:Q')
+        circle_kd = base_kd.mark_circle(size=220, color=BLUE_COLOR).encode(y='Промена КД %:Q')
+        text_kd_change = base_kd.mark_text(align='center', dy=-16, fontSize=11).encode(y='Промена КД %:Q', text='Промена КД % текст:N')
         st.altair_chart((rule_kd + circle_kd + text_kd_change).properties(height=350), use_container_width=True)
 
     col3, col4 = st.columns(2)
@@ -146,10 +146,10 @@ elif "трговија" in selected_sheet:
         )
     with col4:
         st.write("**Недозволена трговија со дрога - Промена на сторители (%)**")
-        base_stor = alt.Chart(valid_rows).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None))
-        rule_stor = base_stor.mark_rule(color='#d62728', strokeWidth=1.5, opacity=0.6).encode(x=alt.X('Промена Сторители %:Q', axis=alt.Axis(format='%'), title='Промена'), x2='zero:Q')
-        circle_stor = base_stor.mark_circle(size=180, color='#d62728', stroke='white', strokeWidth=1.5).encode(x='Промена Сторители %:Q')
-        text_stor_change = base_stor.mark_text(align='left', dx=12, fontSize=11).encode(x='Промена Сторители %:Q', text='Промена Сторители % текст:N')
+        base_stor = alt.Chart(valid_rows).encode(x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)))
+        rule_stor = base_stor.mark_rule(color='#d62728', strokeWidth=2).encode(y=alt.Y('Промена Сторители %:Q', axis=alt.Axis(format='%'), title='Промена'), y2='zero:Q')
+        circle_stor = base_stor.mark_circle(size=220, color='#d62728').encode(y='Промена Сторители %:Q')
+        text_stor_change = base_stor.mark_text(align='center', dy=-16, fontSize=11).encode(y='Промена Сторители %:Q', text='Промена Сторители % текст:N')
         st.altair_chart((rule_stor + circle_stor + text_stor_change).properties(height=350), use_container_width=True)
 
     st.subheader("📋 Детална табела")
