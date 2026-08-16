@@ -169,10 +169,10 @@ elif "Организиран" in selected_sheet:
 
         org_clean = pd.DataFrame({
             'Категорија': data_rows[label_col].values,
-            'ОКГ 2024': pd.to_numeric(data_rows[okg_2024_col], errors='coerce'),
-            'ОКГ 2023': pd.to_numeric(data_rows[okg_2023_col], errors='coerce'),
-            'Членови 2024': pd.to_numeric(data_rows[mem_2024_col], errors='coerce'),
-            'Членови 2023': pd.to_numeric(data_rows[mem_2023_col], errors='coerce'),
+            'ОКГ 2024': pd.to_numeric(data_rows[okg_2024_col], errors='coerce').fillna(0),
+            'ОКГ 2023': pd.to_numeric(data_rows[okg_2023_col], errors='coerce').fillna(0),
+            'Членови 2024': pd.to_numeric(data_rows[mem_2024_col], errors='coerce').fillna(0),
+            'Членови 2023': pd.to_numeric(data_rows[mem_2023_col], errors='coerce').fillna(0),
         }).dropna(subset=['Категорија'])
 
         cat_order = org_clean['Категорија'].tolist()
@@ -181,11 +181,11 @@ elif "Организиран" in selected_sheet:
         # Прв график: ОКГ - horizontal bar chart, 2024 vs 2023, со data labels
         with col1:
             st.write("**ОКГ: 2024 vs 2023 година**")
-            melted_okg = org_clean.melt(id_vars=['Категорија'], value_vars=['ОКГ 2024', 'ОКГ 2023'], var_name='Година', value_name='Број')
+            melted_okg = org_clean.rename(columns={'ОКГ 2024': '2024 година', 'ОКГ 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
             base_okg = alt.Chart(melted_okg).encode(
                 y=alt.Y('Категорија:N', sort=cat_order, title=None, axis=alt.Axis(labelLimit=280)),
                 x=alt.X('Број:Q', title='Број'),
-                color=alt.Color('Година:N', scale=alt.Scale(domain=['ОКГ 2024', 'ОКГ 2023'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
                 yOffset='Година:N'
             )
             bars_okg = base_okg.mark_bar()
@@ -195,11 +195,11 @@ elif "Организиран" in selected_sheet:
         # Втор график: Членови на криминални групи - horizontal bar chart, 2024 vs 2023, со data labels
         with col2:
             st.write("**Членови на криминални групи: 2024 vs 2023 година**")
-            melted_mem = org_clean.melt(id_vars=['Категорија'], value_vars=['Членови 2024', 'Членови 2023'], var_name='Година', value_name='Број')
+            melted_mem = org_clean.rename(columns={'Членови 2024': '2024 година', 'Членови 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
             base_mem = alt.Chart(melted_mem).encode(
                 y=alt.Y('Категорија:N', sort=cat_order, title=None, axis=alt.Axis(labelLimit=280)),
                 x=alt.X('Број:Q', title='Број'),
-                color=alt.Color('Година:N', scale=alt.Scale(domain=['Членови 2024', 'Членови 2023'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
                 yOffset='Година:N'
             )
             bars_mem = base_mem.mark_bar()
