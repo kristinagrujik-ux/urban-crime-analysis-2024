@@ -44,7 +44,6 @@ elif "трговија" in selected_sheet:
     col_2024 = valid_rows.columns[3]
     col_2023 = valid_rows.columns[4]
     
-    # Колони за Сторители: 2024 (колона 6) и 2023 (колона 7)
     col_stor_2024 = valid_rows.columns[6]
     col_stor_2023 = valid_rows.columns[7]
 
@@ -67,7 +66,7 @@ elif "трговија" in selected_sheet:
 
     col1, col2 = st.columns(2)
     
-    # 1. Вкупни КД: 2024 vs 2023 (Хоризонтален Bar)
+    # 1. Вкупни КД: 2024 vs 2023 (Групиран хоризонтален Bar)
     with col1:
         st.write("**Вкупни КД: 2024 vs 2023**")
         df_melted_kd = valid_rows.melt(id_vars=[sector_col], value_vars=[c24, c23], var_name='Година', value_name='Број')
@@ -79,17 +78,17 @@ elif "трговија" in selected_sheet:
         ).properties(height=350)
         st.altair_chart(bar_v, use_container_width=True)
 
-    # 2. Линиски график (2024 КД) - СО DATA LABELS
+    # 2. Lollipop график (2024 КД)
     with col2:
         st.write("**Недозволена трговија (2024)**")
         base_n = alt.Chart(valid_rows).encode(
             x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
             y=alt.Y(f'{c24}:Q', title='Број')
         )
-        line_n = base_n.mark_line(color=BLUE_COLOR)
-        points_n = base_n.mark_circle(size=60, color=BLUE_COLOR)
+        rule_n = base_n.mark_rule(color=BLUE_COLOR, strokeWidth=2)
+        points_n = base_n.mark_circle(size=80, color=BLUE_COLOR)
         text_n = base_n.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text(f'{c24}:Q'))
-        st.altair_chart((line_n + points_n + text_n).properties(height=350), use_container_width=True)
+        st.altair_chart((rule_n + points_n + text_n).properties(height=350), use_container_width=True)
 
     col3, col4 = st.columns(2)
     
@@ -107,17 +106,17 @@ elif "трговија" in selected_sheet:
         ).properties(height=350)
         st.altair_chart(bar_s, use_container_width=True)
 
-    # 4. Линиски график (2023 КД) - СО DATA LABELS
+    # 4. Lollipop график (2023 КД)
     with col4:
         st.write("**Споредба 2023 година**")
         base_23 = alt.Chart(valid_rows).encode(
             x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
             y=alt.Y(f'{c23}:Q', title='Број')
         )
-        line_23 = base_23.mark_line(color='#d62728')
-        points_23 = base_23.mark_circle(size=60, color='#d62728')
+        rule_23 = base_23.mark_rule(color='#d62728', strokeWidth=2)
+        points_23 = base_23.mark_circle(size=80, color='#d62728')
         text_23 = base_23.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text(f'{c23}:Q'))
-        st.altair_chart((line_23 + points_23 + text_23).properties(height=350), use_container_width=True)
+        st.altair_chart((rule_23 + points_23 + text_23).properties(height=350), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
