@@ -215,13 +215,51 @@ elif "Вкупен" in selected_sheet:
     sector_col = valid_rows.columns[0]
     for col in valid_rows.columns[1:]: valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
     sector_order = valid_rows[sector_col].tolist()
+
+    kd_col = valid_rows.columns[2]        # Кривични дела
+    storiteli_col = valid_rows.columns[6]  # Сторители
+    stapka_col = valid_rows.columns[7]     # Стапка на криминал
+    efikasnost_col = valid_rows.columns[8]  # Вкупна ефикасност 2024
+
     col1, col2 = st.columns(2)
     with col1:
-        st.write("**Вкупен криминалитет 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(x=alt.X(f'{sector_col}:N', sort=sector_order), y=alt.Y(f'{valid_rows.columns[2]}:Q')).properties(height=350), use_container_width=True)
+        st.write("**Вкупен криминалитет за 2024 година по СВР**")
+        st.altair_chart(
+            alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+                x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)),
+                y=alt.Y(f'{kd_col}:Q', title='Кривични дела')
+            ).properties(height=350),
+            use_container_width=True
+        )
     with col2:
         st.write("**Сторители**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x=alt.X(f'{valid_rows.columns[7]}:Q')).properties(height=350), use_container_width=True)
+        st.altair_chart(
+            alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+                y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None),
+                x=alt.X(f'{storiteli_col}:Q', title='Сторители')
+            ).properties(height=350),
+            use_container_width=True
+        )
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.write("**Стапка на криминалитет**")
+        base_stapka = alt.Chart(valid_rows).encode(
+            x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)),
+            y=alt.Y(f'{stapka_col}:Q', title='Стапка на криминал')
+        )
+        line_stapka = base_stapka.mark_line(color=BLUE_COLOR, point=alt.OverlayMarkDef(color=BLUE_COLOR))
+        st.altair_chart(line_stapka.properties(height=350), use_container_width=True)
+    with col4:
+        st.write("**Вкупна ефикасност 2024 година**")
+        st.altair_chart(
+            alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+                y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None),
+                x=alt.X(f'{efikasnost_col}:Q', title='Ефикасност')
+            ).properties(height=350),
+            use_container_width=True
+        )
+
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
