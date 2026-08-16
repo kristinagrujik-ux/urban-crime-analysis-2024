@@ -74,20 +74,15 @@ elif "Криумчарење на мигранти" in selected_sheet:
 
         st.altair_chart(chart_col.properties(height=380), use_container_width=True)
 
-    # Втор график: Торта / Пирови график (Pie Chart) за Промена (%)
+    # Втор график: Horizontal bar chart за Промена (%)
     with col2:
         st.write("**Промена (%) според категорија**")
-        pie_chart = alt.Chart(mig_clean).mark_arc(outerRadius=120, innerRadius=0).encode(
-            theta=alt.Theta('abs(Промена):Q', title='Промена'),
-            color=alt.Color('Категорија:N', legend=alt.Legend(title="Категории")),
-            tooltip=['Категорија', 'Промена текст']
+        bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
+            y=alt.Y('Категорија:N', sort=cat_order, title=None),
+            x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена')
         )
-        text_pie = alt.Chart(mig_clean).mark_text(radius=140, size=12).encode(
-            theta=alt.Theta('abs(Промена):Q', stack=True),
-            text=alt.Text('Промена текст:N'),
-            detail='Категорија:N'
-        )
-        st.altair_chart((pie_chart + text_pie).properties(height=380), use_container_width=True)
+        text_change = bar_change.mark_text(align='left', dx=3).encode(text='Промена текст:N')
+        st.altair_chart((bar_change + text_change).properties(height=380), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
