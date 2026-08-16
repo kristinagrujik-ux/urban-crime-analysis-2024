@@ -46,7 +46,7 @@ elif "Организиран криминал" in selected_sheet or "Орган�
     col_cl_2023 = valid_rows.columns[12]
 
     okg_clean = pd.DataFrame({
-        'Област': valid_rows[sector_col].values,
+        'Област': valid_rows[sector_col].astype(str).values,
         'ОКГ 2024': pd.to_numeric(valid_rows[col_okg_2024], errors='coerce').fillna(0),
         'ОКГ 2023': pd.to_numeric(valid_rows[col_okg_2023], errors='coerce').fillna(0),
         'Членови 2024': pd.to_numeric(valid_rows[col_cl_2024], errors='coerce').fillna(0),
@@ -61,10 +61,10 @@ elif "Организиран криминал" in selected_sheet or "Орган�
         st.write("**ОКГ: 2024 vs 2023 година**")
         melted_okg = okg_clean.melt(id_vars=['Област'], value_vars=['ОКГ 2024', 'ОКГ 2023'], var_name='Година', value_name='Број')
         chart_okg = alt.Chart(melted_okg).mark_bar().encode(
-            y=alt.Y('Област:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=250)),
+            y=alt.Y('Област:N', title=None, sort=sector_order),
             x=alt.X('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['ОКГ 2024', 'ОКГ 2023'], range=[BLUE_COLOR, GREEN_COLOR]), legend=alt.Legend(title="Година")),
-            yOffset='Година:N'
+            yOffset=alt.Y('Година:N', sort=['ОКГ 2024', 'ОКГ 2023'])
         )
         st.altair_chart(chart_okg.properties(height=380), use_container_width=True)
 
@@ -73,10 +73,10 @@ elif "Организиран криминал" in selected_sheet or "Орган�
         st.write("**Членови на криминални групи: 2024 vs 2023 година**")
         melted_cl = okg_clean.melt(id_vars=['Област'], value_vars=['Членови 2024', 'Членови 2023'], var_name='Година', value_name='Број')
         chart_cl = alt.Chart(melted_cl).mark_bar().encode(
-            y=alt.Y('Област:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=250)),
+            y=alt.Y('Област:N', title=None, sort=sector_order),
             x=alt.X('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['Членови 2024', 'Членови 2023'], range=[BLUE_COLOR, GREEN_COLOR]), legend=alt.Legend(title="Година")),
-            yOffset='Година:N'
+            yOffset=alt.Y('Година:N', sort=['Членови 2024', 'Членови 2023'])
         )
         st.altair_chart(chart_cl.properties(height=380), use_container_width=True)
 
@@ -114,7 +114,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
             x=alt.X('Категорија:N', title=None, sort=cat_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
             y=alt.Y('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=[BLUE_COLOR, GREEN_COLOR]), legend=alt.Legend(title="Година")),
-            xOffset='Година:N'
+            xOffset=alt.Y('Година:N', sort=['2024 година', '2023 година'])
         )
         bars = base_col.mark_bar()
         text_col = base_col.mark_text(align='center', baseline='bottom', dy=-5).encode(text=alt.Text('Број:Q'))
@@ -157,7 +157,7 @@ elif "трговија" in selected_sheet:
     with col1:
         st.write("**Вкупни КД: 2024 vs 2023**")
         df_melted_kd = valid_rows.melt(id_vars=[sector_col], value_vars=["2024 година", "2023 година"], var_name='Година', value_name='Број')
-        st.altair_chart(alt.Chart(df_melted_kd).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=[BLUE_COLOR, GREEN_COLOR])), yOffset='Година:N').properties(height=350), use_container_width=True)
+        st.altair_chart(alt.Chart(df_melted_kd).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=[BLUE_COLOR, GREEN_COLOR])), yOffset=alt.Y('Година:N', sort=['2024 година', '2023 година'])).properties(height=350), use_container_width=True)
     with col2:
         st.write("**Промена на кривични дела (%)**")
         base_n = alt.Chart(valid_rows).encode(x=alt.X(f'{sector_col}:N', sort=sector_order), y=alt.Y('Промена КД %:Q', axis=alt.Axis(format='%')))
@@ -167,7 +167,7 @@ elif "трговија" in selected_sheet:
     with col3:
         st.write("**Сторители: 2024 vs 2023**")
         df_melted_stor = valid_rows.melt(id_vars=[sector_col], value_vars=["Сторители 2024", "Сторители 2023"], var_name='Година', value_name='Број')
-        st.altair_chart(alt.Chart(df_melted_stor).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color=alt.Color('Година:N', scale=alt.Scale(domain=['Сторители 2024', 'Сторители 2023'], range=[BLUE_COLOR, GREEN_COLOR])), yOffset='Година:N').properties(height=350), use_container_width=True)
+        st.altair_chart(alt.Chart(df_melted_stor).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color=alt.Color('Година:N', scale=alt.Scale(domain=['Сторители 2024', 'Сторители 2023'], range=[BLUE_COLOR, GREEN_COLOR])), yOffset=alt.Y('Година:N', sort=['Сторители 2024', 'Сторители 2023'])).properties(height=350), use_container_width=True)
     with col4:
         st.write("**Промена на сторители (%)**")
         base_23 = alt.Chart(valid_rows).encode(x=alt.X(f'{sector_col}:N', sort=sector_order), y=alt.Y('Промена Сторители %:Q', axis=alt.Axis(format='%')))
