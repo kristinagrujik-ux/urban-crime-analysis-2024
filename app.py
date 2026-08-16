@@ -78,11 +78,11 @@ elif "Криумчарење на мигранти" in selected_sheet:
     with col2:
         st.write("**Промена (%) според категорија**")
         bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
-            y=alt.Y('Категорија:N', sort=cat_order, title=None),
+            y=alt.Y('Категорија:N', sort=cat_order, title=None, axis=alt.Axis(labelLimit=250)),
             x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена')
         )
         text_change = bar_change.mark_text(align='left', dx=3).encode(text='Промена текст:N')
-        st.altair_chart((bar_change + text_change).properties(height=380), use_container_width=True)
+        st.altair_chart((bar_change + text_change).properties(height=380, width=350), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
