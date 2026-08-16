@@ -36,8 +36,8 @@ if "Кривични дела против државата" in selected_sheet:
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
-    target_categories = ["Откриени случаи", "Број на кривични дела", "Број на сторители", "Број на криумчарени мигранти"]
-    mig_df = df[df.iloc[:, 0].isin(target_categories)].copy()
+    # Ги земаме првите 4 реда кои се однесуваат на овие категории
+    mig_df = df.iloc[:4, :].copy()
     
     cat_col = mig_df.columns[0]
     col_2024 = mig_df.columns[5]
@@ -50,14 +50,15 @@ elif "Криумчарење на мигранти" in selected_sheet:
         '2023': pd.to_numeric(mig_df[col_2023], errors='coerce'),
         'Промена': pd.to_numeric(mig_df[col_change], errors='coerce')
     })
+    
     mig_clean['Промена текст'] = mig_clean['Промена'].apply(
         lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x)
     )
 
     col1, col2 = st.columns(2)
-    cat_order = ["Откриени случаи", "Број на кривични дела", "Број на сторители", "Број на криумчарени мигранти"]
+    cat_order = mig_clean['Категорија'].tolist()
 
-    # Прв график: Column chart БЕЗ data labels
+    # Прв график: Column chart за 2024 vs 2023 со сите 4 категории
     with col1:
         st.write("**Споредба по категории: 2024 vs 2023**")
         melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024', '2023'], var_name='Година', value_name='Број')
