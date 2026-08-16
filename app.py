@@ -43,26 +43,35 @@ elif "трговија" in selected_sheet:
     
     col_2024 = valid_rows.columns[3]
     col_2023 = valid_rows.columns[4]
-    col_storiteli = valid_rows.columns[6]
+    
+    # Колони за Сторители: 2024 (колона 6) и 2023 (колона 7)
+    col_stor_2024 = valid_rows.columns[6]
+    col_stor_2023 = valid_rows.columns[7]
 
-    valid_rows = valid_rows.rename(columns={col_2024: "2024 година", col_2023: "2023 година", col_storiteli: "Сторители"})
+    valid_rows = valid_rows.rename(columns={
+        col_2024: "2024 година", 
+        col_2023: "2023 година", 
+        col_stor_2024: "Сторители 2024", 
+        col_stor_2023: "Сторители 2023"
+    })
     
     c24 = "2024 година"
     c23 = "2023 година"
-    c_stor = "Сторители"
+    c_stor_24 = "Сторители 2024"
+    c_stor_23 = "Сторители 2023"
 
-    for col in [c24, c23, c_stor]:
+    for col in [c24, c23, c_stor_24, c_stor_23]:
         valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
 
     sector_order = valid_rows[sector_col].tolist()
 
     col1, col2 = st.columns(2)
     
-    # 1. Вкупни КД: 2024 vs 2023 (Групиран хоризонтален Bar со сина и црвена лента за секој град)
+    # 1. Вкупни КД: 2024 vs 2023 (Хоризонтален Bar)
     with col1:
         st.write("**Вкупни КД: 2024 vs 2023**")
-        df_melted = valid_rows.melt(id_vars=[sector_col], value_vars=[c24, c23], var_name='Година', value_name='Број')
-        bar_v = alt.Chart(df_melted).mark_bar().encode(
+        df_melted_kd = valid_rows.melt(id_vars=[sector_col], value_vars=[c24, c23], var_name='Година', value_name='Број')
+        bar_v = alt.Chart(df_melted_kd).mark_bar().encode(
             y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=200)),
             x=alt.X('Број:Q', title='Број на дела'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=[c24, c23], range=['#1f77b4', '#d62728']), legend=alt.Legend(title="Година")),
@@ -70,7 +79,7 @@ elif "трговија" in selected_sheet:
         ).properties(height=350)
         st.altair_chart(bar_v, use_container_width=True)
 
-    # 2. Линиски график (2024) - СО DATA LABELS
+    # 2. Линиски график (2024 КД) - СО DATA LABELS
     with col2:
         st.write("**Недозволена трговија (2024)**")
         base_n = alt.Chart(valid_rows).encode(
@@ -84,16 +93,21 @@ elif "трговија" in selected_sheet:
 
     col3, col4 = st.columns(2)
     
-    # 3. Сторители - Хоризонтален Bar
+    # 3. Сторители: 2024 vs 2023 (Групиран хоризонтален Bar)
     with col3:
-        st.write("**Сторители (2024)**")
-        bar_s = alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+        st.write("**Сторители: 2024 vs 2023**")
+        df_melted_stor = valid_rows.melt(id_vars=[sector_col], value_vars=[c_stor_24, c_stor_23], var_name='Година', value_name='Број')
+        df_melted_stor['Година'] = df_melted_stor['Година'].replace({c_stor_24: '2024 година', c_stor_23: '2023 година'})
+        
+        bar_s = alt.Chart(df_melted_stor).mark_bar().encode(
             y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=200)),
-            x=alt.X(f'{c_stor}:Q', title='Број на сторители')
+            x=alt.X('Број:Q', title='Број на сторители'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#d62728']), legend=alt.Legend(title="Година")),
+            yOffset='Година:N'
         ).properties(height=350)
         st.altair_chart(bar_s, use_container_width=True)
 
-    # 4. Линиски график (2023) - СО DATA LABELS
+    # 4. Линиски график (2023 КД) - СО DATA LABELS
     with col4:
         st.write("**Споредба 2023 година**")
         base_23 = alt.Chart(valid_rows).encode(
@@ -164,4 +178,3 @@ elif "Вкупен" in selected_sheet:
 # 4. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
- 
