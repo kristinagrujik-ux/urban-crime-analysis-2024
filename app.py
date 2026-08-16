@@ -12,7 +12,7 @@ def get_sheets():
     return pd.ExcelFile(file_path).sheet_names
 
 # Сидбар за избор на категорија
-selected_sheet = st.sidebar.selectbox("Избери категорија:", get_sheets())
+selected_sheet = st.sidebar.selectbox("Избери категорія:", get_sheets())
 st.title(f"📊 {selected_sheet}")
 
 @st.cache_data
@@ -46,11 +46,13 @@ elif "Вкупен криминалитет" in selected_sheet or "вкупен 
     
     sector_col = clean_df.columns[1]     # СВР Скопје, Битола итн.
     col_kriminal = clean_df.columns[3]   # Кривични дела
-    col_storiteli = clean_df.columns[8]  # Сторители
-    col_stapka = clean_df.columns[9]     # Стапка на криминал
-    col_efikasnost = clean_df.columns[10]# Вкупна ефикасност
     
-    # Чистење и конверзија во броеви (отстранување празни места доколку ги има)
+    # Динамичко избирање на колони од крајот за да се избегне IndexError
+    col_storiteli = clean_df.columns[-3]  # Сторители (трета од крај)
+    col_stapka = clean_df.columns[-2]     # Стапка (втора од крај)
+    col_efikasnost = clean_df.columns[-1] # Ефикасност (последна)
+    
+    # Чистење и конверзија во броеви
     clean_df['Sector_Name'] = clean_df[sector_col].astype(str).str.strip()
     clean_df['Kriminal_Val'] = pd.to_numeric(clean_df[col_kriminal].astype(str).str.replace(r'\s+', '', regex=True), errors='coerce')
     clean_df['Storiteli_Val'] = pd.to_numeric(clean_df[col_storiteli].astype(str).str.replace(r'\s+', '', regex=True), errors='coerce')
