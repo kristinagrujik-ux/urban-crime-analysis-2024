@@ -4,7 +4,6 @@ import altair as alt
 
 st.set_page_config(page_title="Urban Crime Analysis 2024", page_icon="📊", layout="wide")
 
-# Дефинирање на патеката до фајлот
 file_path = 'KRIMINALITET.xlsx'
 
 @st.cache_data
@@ -36,7 +35,7 @@ if "Кривични дела против државата" in selected_sheet:
     df_display = pd.DataFrame(table_data)
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 2. ОСТАНАТИ СЛУЧАИ: Графикони и табели за другите листови
+# 2. ОСТАНАТИ СЛУЧАИ: Графикони и табели
 else:
     st.subheader("📈 Графикони")
 
@@ -83,11 +82,132 @@ else:
     elif "Недозволена" in selected_sheet or "дрога" in selected_sheet.lower():
         valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
         
-        # Поедноставена логика за наркотици
-        st.dataframe(df, use_container_width=True)
+        df_kd = pd.DataFrame({
+            'Сектор': valid_rows.iloc[:, 0], 
+            '2024': pd.to_numeric(valid_rows.iloc[:, 3], errors='coerce'), 
+            '2023': pd.to_numeric(valid_rows.iloc[:, 4], errors='coerce')
+        }).melt('Сектор', var_name='Година', value_name='Вредност')
+
+        df_st = pd.DataFrame({
+            'Сектор': valid_rows.iloc[:, 0], 
+            '2024': pd.to_numeric(valid_rows.iloc[:, 6], errors='coerce'), 
+            '2023': pd.to_numeric(valid_rows.iloc[:, 7], errors='coerce')
+        }).melt('Сектор', var_name='Година', value_name='Вредност')
+        
+        color_scale = alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])
+
+        def prep_lollipop(data, val_col):
+            val = round(pd.to_numeric(data.iloc[:, val_col], errors='coerce') * 100, 1)
+            df_lp = pd.DataFrame({'Сектор': data.iloc[:, 0], 'Процент': val, 'Пр_Текст': val.astype(str) + '%'})
+            df_lp['zero'] = 0
+            return df_lp
+
+        df_lp_kd = prep_lollipop(valid_rows, 5)  
+        df_lp_st = prep_lollipop(valid_rows, 8)  
+
+        def draw_lollipop(data, title):
+            base = alt.Chart(data).encode(x=alt.X('Сектор:N', sort=None, title=None))
+            rule = base.mark_rule(color='#e45756', strokeWidth=2).encode(y='zero:Q', y2='Процент:Q')
+            points = base.mark_circle(size=120, color='#e45756').encode(y=alt.Y('Процент:Q', title='Процент (%)'))
+            text = base.mark_text(align='center', baseline='bottom', dy=-10).encode(y=alt.Y('Процент:Q'), text='Пр_Текст:N')
+            return (rule + points + text).properties(title=title, height=320)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Кривични дела (2024 vs 2023)**")
+            st.altair_chart(alt.Chart(df_kd).mark_bar().encode(
+                y=alt.Y('Сектор:N', sort=None, title=None),
+                yOffset=alt.YOffset('Година:N'),
+                x=alt.X('Вредност:Q', title='Број'),
+                color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(title="Година"))
+            ).properties(height=320), use_container_width=True)
+        with col2:
+            st.write("**Lollipop Chart: Промена % - Кривични дела**")
+            st.altair_chart(draw_lollipop(df_lp_kd, "Процент на промена кај кривични дела"), use_container_width=True)
+
+        col3, col4 = st.columns(2)
+        with col3:
+            st.write("**Сторители (2024 vs 2023)**")
+            st.altair_chart(alt.Chart(df_st).mark_bar().encode(
+                y=alt.Y('Сектор:N', sort=None, title=None),
+                yOffset=alt.YOffset('Година:N'),
+                x=alt.X('Вредност:Q', title='Број'),
+                color=alt.Color('Година:N', scale=color_scale, legend=alt.Legend(title="Година"))
+            ).properties(height=320), use_container_width=True)
+        with col4:
+            st.write("**Lollipop Chart: Промена % - Сторители**")
+            st.altair_chart(draw_lollipop(df_lp_st, "Процент на промена кај сторители"), use_container_width=True)
 
     elif "Организиран" in selected_sheet:
-        st.dataframe(df, use_container_width=True)
+        valid_rows = df.dropna(subset=[df.columns[0]]).copy()
+        categories, vals_2024, vals_2023, members_2024, members_2023 = [], [], [], [], []
+
+        for idx, row in valid_rows.iterrows():
+            cat = str(row.iloc[0]).strip()
+            if cat and cat.lower() != 'nan' and "област на криминал" not in cat.lower() and "вкупно" not in cat.lower():
+                if "посредување во проституција" in cat.lower() or "трговија со луѓе" in cat.lower():
+                    cat = "Трговија со луѓе-посредување во проституција"
+                
+                v24 = pd.to_numeric(row.iloc[6], errors='coerce')
+                v23 = pd.to_numeric(row.iloc[8], errors='coerce')
+                m24 = pd.to_numeric(row.iloc[10], errors='coerce')
+                m23 = pd.to_numeric(row.iloc[12], errors='coerce')
+                
+                categories.append(cat)
+                vals_2024.append(v24 if pd.notna(v24) else 0)
+                vals_2023.append(v23 if pd.notna(v23) else 0)
+                members_2024.append(m24 if pd.notna(m24) else 0)
+                members_2023.append(m23 if pd.notna(m23) else 0)
+
+        df_okg = pd.DataFrame({'Категорија': categories, '2024': vals_2024, '2023': vals_2023}).melt('Категорија', var_name='Година', value_name='Број')
+        df_members = pd.DataFrame({'Категорија': categories, '2024': members_2024, '2023': members_2023}).melt('Категорија', var_name='Година', value_name='Членови')
+
+        col1, col2 = st.columns(2)
+        with col1:
+            chart1 = alt.Chart(df_okg).mark_bar().encode(
+                y=alt.Y('Категорија:N', title=None, axis=alt.Axis(labelLimit=700)),
+                x=alt.X('Број:Q', title='Број на случаи'),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8'])),
+                yOffset='Година:N'
+            ).properties(title='Организиран криминал', height=450)
+            st.altair_chart(chart1, use_container_width=True)
+
+        with col2:
+            chart2 = alt.Chart(df_members).mark_bar().encode(
+                y=alt.Y('Категорија:N', title=None, axis=alt.Axis(labelLimit=700)),
+                x=alt.X('Членови:Q', title='Број на членови'),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#2ca02c', '#98df8a'])),
+                yOffset='Година:N'
+            ).properties(title='Членови на криминални групи', height=450)
+            st.altair_chart(chart2, use_container_width=True)
 
     else:
-        st.dataframe(df, use_container_width=True)
+        valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
+        sector_col = valid_rows.columns[0]
+        
+        for col in valid_rows.columns[1:]:
+            valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
+
+        c_col = valid_rows.columns[2] if len(valid_rows.columns) > 2 else valid_rows.columns[1]
+        col_names = list(valid_rows.columns)
+        s_col = next((c for c in col_names if 'сторители' in str(c).lower()), col_names[7] if len(col_names) > 7 else col_names[-1])
+
+        BLUE_COLOR = '#1f77b4'
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Вкупен криминалитет за 2024 година по СВР**")
+            st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+                x=alt.X(f'{sector_col}:N', title=None, sort=None),
+                y=alt.Y(f'{c_col}:Q', title='Број', axis=alt.Axis(format='d'))
+            ).properties(height=320), use_container_width=True)
+
+        with col2:
+            st.write("**Сторители**")
+            st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
+                y=alt.Y(f'{sector_col}:N', title=None, sort=None),
+                x=alt.X(f'{s_col}:Q', title='Број', axis=alt.Axis(format='d'))
+            ).properties(height=320), use_container_width=True)
+
+    st.subheader("📋 Детална табела")
+    st.dataframe(df, use_container_width=True)
