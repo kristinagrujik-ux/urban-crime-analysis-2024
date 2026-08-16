@@ -39,14 +39,14 @@ elif "Криумчарење на мигранти" in selected_sheet:
     mig_df = df.iloc[:4, :].copy()
     
     cat_col = mig_df.columns[0]
-    col_2024 = mig_df.columns[5]
-    col_2023 = mig_df.columns[10]
+    col_2024 = mig_df.columns[5]   # Колона за 2024
+    col_2023 = mig_df.columns[10]  # Колона за 2023 (поправено од 10-та колона како во Excel)
     col_change = mig_df.columns[11]
 
     mig_clean = pd.DataFrame({
         'Категорија': mig_df[cat_col].values,
-        '2024': pd.to_numeric(mig_df[col_2024], errors='coerce'),
-        '2023': pd.to_numeric(mig_df[col_2023], errors='coerce'),
+        '2024 година': pd.to_numeric(mig_df[col_2024], errors='coerce'),
+        '2023 година': pd.to_numeric(mig_df[col_2023], errors='coerce'),
         'Промена': pd.to_numeric(mig_df[col_change], errors='coerce')
     })
     
@@ -57,15 +57,15 @@ elif "Криумчарење на мигранти" in selected_sheet:
     col1, col2 = st.columns(2)
     cat_order = mig_clean['Категорија'].tolist()
 
-    # Прв график: Column chart за 2024 vs 2023 со Data Labels
+    # Прв график: Column chart за 2024 vs 2023 со две столпчиња и бројки
     with col1:
         st.write("**Споредба по категории: 2024 vs 2023**")
-        melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024', '2023'], var_name='Година', value_name='Број')
+        melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
         
         base_col = alt.Chart(melted_mig).encode(
             x=alt.X('Категорија:N', title=None, sort=cat_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
             y=alt.Y('Број:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
             xOffset='Година:N'
         )
         bars = base_col.mark_bar()
@@ -73,17 +73,20 @@ elif "Криумчарење на мигранти" in selected_sheet:
         
         st.altair_chart((bars + text_col).properties(height=380), use_container_width=True)
 
-    # Втор график: Хоризонтален Bar chart за Промена (%) со Data Labels
+    # Втор график: Торта / Пирови график (Pie Chart) за Промена (%)
     with col2:
         st.write("**Промена (%) според категорија**")
-        base_bar = alt.Chart(mig_clean).encode(
-            y=alt.Y('Категорија:N', title=None, sort=cat_order, axis=alt.Axis(labelLimit=250)),
-            x=alt.X('Промена:Q', title='Промена (%)', axis=alt.Axis(format='%'))
+        pie_chart = alt.Chart(mig_clean).mark_arc(outerRadius=120, innerRadius=0).encode(
+            theta=alt.Theta('abs(Промена):Q', title='Промена'),
+            color=alt.Color('Категорија:N', legend=alt.Legend(title="Категории")),
+            tooltip=['Категорија', 'Промена текст']
         )
-        h_bars = base_bar.mark_bar(color='#d62728')
-        text_bar = base_bar.mark_text(align='left', baseline='middle', dx=5).encode(text=alt.Text('Промена текст:N'))
-        
-        st.altair_chart((h_bars + text_bar).properties(height=380), use_container_width=True)
+        text_pie = alt.Chart(mig_clean).mark_text(radius=140, size=12).encode(
+            theta=alt.Theta('abs(Промена):Q', stack=True),
+            text=alt.Text('Промена текст:N'),
+            detail='Категорија:N'
+        )
+        st.altair_chart((pie_chart + text_pie).properties(height=380), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
