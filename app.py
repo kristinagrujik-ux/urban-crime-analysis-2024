@@ -43,24 +43,38 @@ elif "трговија" in selected_sheet:
     
     col_2024 = valid_rows.columns[3]
     col_2023 = valid_rows.columns[4]
+    col_change_kd = valid_rows.columns[5] # Промена % за КД
     
     col_stor_2024 = valid_rows.columns[6]
     col_stor_2023 = valid_rows.columns[7]
+    col_change_stor = valid_rows.columns[8] # Промена % за Сторители
 
     valid_rows = valid_rows.rename(columns={
         col_2024: "2024 година", 
         col_2023: "2023 година", 
+        col_change_kd: "Промена КД %",
         col_stor_2024: "Сторители 2024", 
-        col_stor_2023: "Сторители 2023"
+        col_stor_2023: "Сторители 2023",
+        col_change_stor: "Промена Сторители %"
     })
     
     c24 = "2024 година"
     c23 = "2023 година"
+    c_change_kd = "Промена КД %"
     c_stor_24 = "Сторители 2024"
     c_stor_23 = "Сторители 2023"
+    c_change_stor = "Промена Сторители %"
 
     for col in [c24, c23, c_stor_24, c_stor_23]:
         valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
+
+    # Конвертирај ги процентите во читав текст (пр. 0.057 -> 5.7%)
+    valid_rows['Промена КД % текст'] = valid_rows[c_change_kd].apply(
+        lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x)
+    )
+    valid_rows['Промена Сторители % текст'] = valid_rows[c_change_stor].apply(
+        lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x)
+    )
 
     sector_order = valid_rows[sector_col].tolist()
 
@@ -78,16 +92,16 @@ elif "трговија" in selected_sheet:
         ).properties(height=350)
         st.altair_chart(bar_v, use_container_width=True)
 
-    # 2. Lollipop график (2024 КД)
+    # 2. Lollipop график за Промена на КД % (Горе Десно)
     with col2:
-        st.write("**Недозволена трговија (2024)**")
+        st.write("**Промена на кривични дела (%)**")
         base_n = alt.Chart(valid_rows).encode(
             x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
-            y=alt.Y(f'{c24}:Q', title='Број')
+            y=alt.Y(f'{c_change_kd}:Q', title='Промена (%)', axis=alt.Axis(format='%'))
         )
         rule_n = base_n.mark_rule(color=BLUE_COLOR, strokeWidth=2)
         points_n = base_n.mark_circle(size=80, color=BLUE_COLOR)
-        text_n = base_n.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text(f'{c24}:Q'))
+        text_n = base_n.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text('Промена КД % текст:N'))
         st.altair_chart((rule_n + points_n + text_n).properties(height=350), use_container_width=True)
 
     col3, col4 = st.columns(2)
@@ -106,16 +120,16 @@ elif "трговија" in selected_sheet:
         ).properties(height=350)
         st.altair_chart(bar_s, use_container_width=True)
 
-    # 4. Lollipop график (2023 КД)
+    # 4. Lollipop график за Промена на Сторители % (Долу Десно)
     with col4:
-        st.write("**Споредба 2023 година**")
+        st.write("**Промена на сторители (%)**")
         base_23 = alt.Chart(valid_rows).encode(
             x=alt.X(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
-            y=alt.Y(f'{c23}:Q', title='Број')
+            y=alt.Y(f'{c_change_stor}:Q', title='Промена (%)', axis=alt.Axis(format='%'))
         )
         rule_23 = base_23.mark_rule(color='#d62728', strokeWidth=2)
         points_23 = base_23.mark_circle(size=80, color='#d62728')
-        text_23 = base_23.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text(f'{c23}:Q'))
+        text_23 = base_23.mark_text(align='center', baseline='bottom', dy=-10).encode(text=alt.Text('Промена Сторители % текст:N'))
         st.altair_chart((rule_23 + points_23 + text_23).properties(height=350), use_container_width=True)
 
     st.subheader("📋 Детална табела")
@@ -177,3 +191,4 @@ elif "Вкупен" in selected_sheet:
 # 4. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
+    
