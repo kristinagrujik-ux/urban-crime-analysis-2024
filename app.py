@@ -41,20 +41,26 @@ elif "трговија" in selected_sheet or "Трговија" in selected_shee
 
 # --- 5. Вкупен криминалитет (Главни графикони) ---
 elif "Вкупен криминалитет" in selected_sheet or "вкупен криминалитет" in selected_sheet:
-    # Исклучување на ред "Вкупно" и редови кои немаат СВР
-    clean_df = df[df.iloc[:, 1].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
+    # Конвертирај ги имињата на колоните во стринг за да се избегнат грешки во содржината
+    df.columns = [str(c) for c in df.columns]
+    
+    # Филтрирање на редовите каде што втората колона содржи СВР или ОСОСК
+    clean_df = df[df.iloc[:, 1].astype(str).str.contains("СВР|ОСОСК", na=False)].dropna(subset=[df.columns[1]]).copy()
     
     sector_col = clean_df.columns[1]
     col_kriminal = clean_df.columns[3]
     col_storiteli = clean_df.columns[7]
     col_stapka = clean_df.columns[8]
-    col_efikasnost = clean_df.columns[-1]  # Земање на последната колона за ефикасност безбедно
+    col_efikasnost = clean_df.columns[-1]  # Последна колона за ефикасност
     
-    # Конверзија во нумерички вредности
-    for col in [col_kriminal, col_storiteli, col_stapka, col_efikasnost]:
-        clean_df[col] = pd.to_numeric(clean_df[col], errors='coerce')
+    # Строга конверзија во нумерички вредности и преименување во чисти имиња за Altair
+    clean_df['Kriminal_Val'] = pd.to_numeric(clean_df[col_kriminal], errors='coerce')
+    clean_df['Storiteli_Val'] = pd.to_numeric(clean_df[col_storiteli], errors='coerce')
+    clean_df['Stapka_Val'] = pd.to_numeric(clean_df[col_stapka], errors='coerce')
+    clean_df['Efikasnost_Val'] = pd.to_numeric(clean_df[col_efikasnost], errors='coerce')
+    clean_df['Sector_Name'] = clean_df[sector_col].astype(str)
     
-    sector_order = clean_df[sector_col].tolist()
+    sector_order = clean_df['Sector_Name'].tolist()
     
     # Распоред на графикони
     col1, col2 = st.columns(2)
@@ -62,18 +68,18 @@ elif "Вкупен криминалитет" in selected_sheet or "вкупен 
     with col1:
         st.write("**Вкупен криминалитет за 2024 година по СВР**")
         chart1 = alt.Chart(clean_df).mark_bar(color=BLUE_COLOR).encode(
-            x=alt.X(f'{sector_col}:N', sort=sector_order, title=None, axis=alt.Axis(labelAngle=-45)), 
-            y=alt.Y(f'{col_kriminal}:Q', title="Кривични дела")
+            x=alt.X('Sector_Name:N', sort=sector_order, title=None, axis=alt.Axis(labelAngle=-45)), 
+            y=alt.Y('Kriminal_Val:Q', title="Кривични дела")
         ).properties(height=300)
         st.altair_chart(chart1, use_container_width=True)
         
     with col2:
         st.write("**Сторители**")
         chart2 = alt.Chart(clean_df).mark_bar(color='#b22222').encode(
-            x=alt.X(f'{col_storiteli}:Q', title="Сторители"),
-            y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None)
+            x=alt.X('Storiteli_Val:Q', title="Сторители"),
+            y=alt.Y('Sector_Name:N', sort=sector_order, title=None)
         ).properties(height=300)
-        text2 = chart2.mark_text(align='left', baseline='middle', dx=3).encode(text=f'{col_storiteli}:Q')
+        text2 = chart2.mark_text(align='left', baseline='middle', dx=3).encode(text='Storiteli_Val:Q')
         st.altair_chart(chart2 + text2, use_container_width=True)
 
     col3, col4 = st.columns(2)
@@ -81,20 +87,20 @@ elif "Вкупен криминалитет" in selected_sheet or "вкупен 
     with col3:
         st.write("**Стапка на криминалитет**")
         base_line = alt.Chart(clean_df).encode(
-            x=alt.X(f'{sector_col}:N', sort=sector_order, title=None, axis=alt.Axis(labelAngle=-45)),
-            y=alt.Y(f'{col_stapka}:Q', title="Стапка")
+            x=alt.X('Sector_Name:N', sort=sector_order, title=None, axis=alt.Axis(labelAngle=-45)),
+            y=alt.Y('Stapka_Val:Q', title="Стапка")
         )
         line = base_line.mark_line(color=BLUE_COLOR, point=True, strokeWidth=3)
-        text_line = base_line.mark_text(dy=-15).encode(text=f'{col_stapka}:Q')
+        text_line = base_line.mark_text(dy=-15).encode(text='Stapka_Val:Q')
         st.altair_chart((line + text_line).properties(height=300), use_container_width=True)
         
     with col4:
         st.write("**Вкупна ефикасност 2024 година**")
         chart4 = alt.Chart(clean_df).mark_bar(color=BLUE_COLOR).encode(
-            x=alt.X(f'{col_efikasnost}:Q', title="Ефикасност (%)"),
-            y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None)
+            x=alt.X('Efikasnost_Val:Q', title="Ефикасност (%)"),
+            y=alt.Y('Sector_Name:N', sort=sector_order, title=None)
         ).properties(height=300)
-        text4 = chart4.mark_text(align='left', baseline='middle', dx=3).encode(text=f'{col_efikasnost}:Q')
+        text4 = chart4.mark_text(align='left', baseline='middle', dx=3).encode(text='Efikasnost_Val:Q')
         st.altair_chart(chart4 + text4, use_container_width=True)
         
     st.subheader("📋 Детална табела")
