@@ -41,14 +41,14 @@ elif "трговија" in selected_sheet or "Трговија" in selected_shee
 
 # --- 5. Вкупен криминалитет (Главни графикони) ---
 elif "Вкупен криминалитет" in selected_sheet or "вкупен криминалитет" in selected_sheet:
-    # Исклучување на ред "Вкупно" за да не го расипува графиконот
+    # Исклучување на ред "Вкупно" и редови кои немаат СВР
     clean_df = df[df.iloc[:, 1].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     
     sector_col = clean_df.columns[1]
     col_kriminal = clean_df.columns[3]
     col_storiteli = clean_df.columns[7]
     col_stapka = clean_df.columns[8]
-    col_efikasnost = clean_df.columns[9]
+    col_efikasnost = clean_df.columns[-1]  # Земање на последната колона за ефикасност безбедно
     
     # Конверзија во нумерички вредности
     for col in [col_kriminal, col_storiteli, col_stapka, col_efikasnost]:
