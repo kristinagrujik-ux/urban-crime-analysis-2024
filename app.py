@@ -36,7 +36,6 @@ if "Кривични дела против државата" in selected_sheet:
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
-    # Ги земаме првите 4 реда кои се однесуваат на овие категории
     mig_df = df.iloc[:4, :].copy()
     
     cat_col = mig_df.columns[0]
@@ -58,17 +57,21 @@ elif "Криумчарење на мигранти" in selected_sheet:
     col1, col2 = st.columns(2)
     cat_order = mig_clean['Категорија'].tolist()
 
-    # Прв график: Column chart за 2024 vs 2023 со сите 4 категории
+    # Прв график: Column chart за 2024 vs 2023 со Data Labels
     with col1:
         st.write("**Споредба по категории: 2024 vs 2023**")
         melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024', '2023'], var_name='Година', value_name='Број')
+        
         base_col = alt.Chart(melted_mig).encode(
             x=alt.X('Категорија:N', title=None, sort=cat_order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
             y=alt.Y('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024', '2023'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
             xOffset='Година:N'
         )
-        st.altair_chart(base_col.mark_bar().properties(height=380), use_container_width=True)
+        bars = base_col.mark_bar()
+        text_col = base_col.mark_text(align='center', baseline='bottom', dy=-5).encode(text=alt.Text('Број:Q'))
+        
+        st.altair_chart((bars + text_col).properties(height=380), use_container_width=True)
 
     # Втор график: Хоризонтален Bar chart за Промена (%) со Data Labels
     with col2:
@@ -79,6 +82,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
         )
         h_bars = base_bar.mark_bar(color='#d62728')
         text_bar = base_bar.mark_text(align='left', baseline='middle', dx=5).encode(text=alt.Text('Промена текст:N'))
+        
         st.altair_chart((h_bars + text_bar).properties(height=380), use_container_width=True)
 
     st.subheader("📋 Детална табела")
