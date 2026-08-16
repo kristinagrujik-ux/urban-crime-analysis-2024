@@ -198,7 +198,7 @@ elif "Организиран" in selected_sheet:
             melted_mem = org_clean.rename(columns={'Членови 2024': '2024 година', 'Членови 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
             base_mem = alt.Chart(melted_mem).encode(
                 y=alt.Y('Категорија:N', sort=cat_order, title=None, axis=alt.Axis(labelLimit=280)),
-                x=alt.X('Број:Q', title='Број'),
+                x=alt.X('Број:Q', title='Број', scale=alt.Scale(domain=[0, 80])),
                 color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
                 yOffset='Година:N'
             )
