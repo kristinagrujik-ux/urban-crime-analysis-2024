@@ -19,7 +19,7 @@ def load_data(sheet):
 
 df = load_data(selected_sheet)
 BLUE_COLOR = '#1f77b4'
-GREEN_COLOR = '#2ca02c'  # Дефинирана зелена боја
+GREEN_COLOR = '#2ca02c'
 
 # 1. СПЕЦИЈАЛЕН СЛУЧАЈ: Табела за Кривични дела против државата
 if "Кривични дела против државата" in selected_sheet:
@@ -35,7 +35,7 @@ if "Кривични дела против државата" in selected_sheet:
     df_display = pd.DataFrame(table_data)
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ (ИЛИ СЛИЧНИ ТАБЕЛИ)
+# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран криминал" in selected_sheet or "Организиран" in selected_sheet:
     valid_rows = df.iloc[3:9, :].copy() if len(df) > 9 else df.copy()
     
@@ -60,29 +60,25 @@ elif "Организиран криминал" in selected_sheet or "Орган�
     with col1:
         st.write("**ОКГ: 2024 vs 2023 година**")
         melted_okg = okg_clean.melt(id_vars=['Област'], value_vars=['ОКГ 2024', 'ОКГ 2023'], var_name='Година', value_name='Број')
-        base_okg = alt.Chart(melted_okg).encode(
+        chart_okg = alt.Chart(melted_okg).mark_bar().encode(
             y=alt.Y('Област:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=250)),
             x=alt.X('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['ОКГ 2024', 'ОКГ 2023'], range=[BLUE_COLOR, GREEN_COLOR]), legend=alt.Legend(title="Година")),
             yOffset='Година:N'
         )
-        bars_okg = base_okg.mark_bar()
-        text_okg = base_okg.mark_text(align='left', baseline='middle', dx=3).encode(text=alt.Text('Број:Q'))
-        st.altair_chart((bars_okg + text_okg).properties(height=380), use_container_width=True)
+        st.altair_chart(chart_okg.properties(height=380), use_container_width=True)
 
-    # Втор график (Членови на криминални групи) - Со зелена боја за 2023
+    # Втор график (Членови на криминални групи)
     with col2:
         st.write("**Членови на криминални групи: 2024 vs 2023 година**")
         melted_cl = okg_clean.melt(id_vars=['Област'], value_vars=['Членови 2024', 'Членови 2023'], var_name='Година', value_name='Број')
-        base_cl = alt.Chart(melted_cl).encode(
-            y=alt.Y('Област:N', title=None, sort=sector_order, axis=alt.Axis(labels=False)), # Исклучени дупли имиња на y-оската
+        chart_cl = alt.Chart(melted_cl).mark_bar().encode(
+            y=alt.Y('Област:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=250)),
             x=alt.X('Број:Q', title='Број'),
             color=alt.Color('Година:N', scale=alt.Scale(domain=['Членови 2024', 'Членови 2023'], range=[BLUE_COLOR, GREEN_COLOR]), legend=alt.Legend(title="Година")),
             yOffset='Година:N'
         )
-        bars_cl = base_cl.mark_bar()
-        text_cl = base_cl.mark_text(align='left', baseline='middle', dx=3).encode(text=alt.Text('Број:Q'))
-        st.altair_chart((bars_cl + text_cl).properties(height=380), use_container_width=True)
+        st.altair_chart(chart_cl.properties(height=380), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
