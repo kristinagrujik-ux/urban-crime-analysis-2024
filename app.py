@@ -77,12 +77,16 @@ elif "Криумчарење на мигранти" in selected_sheet:
     # Втор график: Horizontal bar chart за Промена (%)
     with col2:
         st.write("**Промена (%) според категорија**")
+        cat_order_reversed = cat_order[::-1]  # За да биде "Број на криумчарени мигранти" прв (горе)
         bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
-            y=alt.Y('Категорија:N', sort=cat_order, title=None, axis=alt.Axis(labelLimit=250)),
+            y=alt.Y('Категорија:N', sort=cat_order_reversed, title=None, axis=alt.Axis(labelLimit=280, labelFontSize=11, labelPadding=10)),
             x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена')
         )
         text_change = bar_change.mark_text(align='left', dx=3).encode(text='Промена текст:N')
-        st.altair_chart((bar_change + text_change).properties(height=380, width=350), use_container_width=True)
+        st.altair_chart(
+            (bar_change + text_change).properties(height=380, padding={"left": 20, "top": 5, "right": 20, "bottom": 5}),
+            use_container_width=True
+        )
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
@@ -144,14 +148,4 @@ elif "Вкупен" in selected_sheet:
     sector_order = valid_rows[sector_col].tolist()
     col1, col2 = st.columns(2)
     with col1:
-        st.write("**Вкупен криминалитет 2024**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(x=alt.X(f'{sector_col}:N', sort=sector_order), y=alt.Y(f'{valid_rows.columns[2]}:Q')).properties(height=350), use_container_width=True)
-    with col2:
-        st.write("**Сторители**")
-        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x=alt.X(f'{valid_rows.columns[7]}:Q')).properties(height=350), use_container_width=True)
-    st.subheader("📋 Детална табела")
-    st.dataframe(df, use_container_width=True)
-
-# 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
-else:
-    st.dataframe(df, use_container_width=True)
+        st.write("
