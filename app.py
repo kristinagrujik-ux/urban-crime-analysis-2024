@@ -107,35 +107,50 @@ elif "трговија" in selected_sheet:
 
     valid_rows['Промена КД % текст'] = valid_rows['Промена КД %'].apply(lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x))
     valid_rows['Промена Сторители % текст'] = valid_rows['Промена Сторители %'].apply(lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x))
+    valid_rows['zero'] = 0
     sector_order = valid_rows[sector_col].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Вкупни КД: 2024 vs 2023**")
         df_melted_kd = valid_rows.melt(id_vars=[sector_col], value_vars=["2024 година", "2023 година"], var_name='Година', value_name='Број')
-        st.altair_chart(alt.Chart(df_melted_kd).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color='Година:N', yOffset='Година:N').properties(height=350), use_container_width=True)
-    with col2:
-        st.write("**Промена на кривични дела (%)**")
-        chart_kd_change = alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
-            y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None),
-            x=alt.X('Промена КД %:Q', axis=alt.Axis(format='%'), title='Промена')
+        st.altair_chart(
+            alt.Chart(df_melted_kd).mark_bar().encode(
+                y=alt.Y(f'{sector_col}:N', sort=sector_order),
+                x='Број:Q',
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                yOffset='Година:N'
+            ).properties(height=350),
+            use_container_width=True
         )
-        text_kd_change = chart_kd_change.mark_text(align='left', dx=3).encode(text='Промена КД % текст:N')
-        st.altair_chart((chart_kd_change + text_kd_change).properties(height=350), use_container_width=True)
+    with col2:
+        st.write("**Недозволена трговија со дрога - Промена на кривични дела (%)**")
+        base_kd = alt.Chart(valid_rows).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None))
+        rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=3).encode(x=alt.X('Промена КД %:Q', axis=alt.Axis(format='%'), title='Промена'), x2='zero:Q')
+        circle_kd = base_kd.mark_circle(size=110, color=BLUE_COLOR).encode(x='Промена КД %:Q')
+        text_kd_change = base_kd.mark_text(align='left', dx=10).encode(x='Промена КД %:Q', text='Промена КД % текст:N')
+        st.altair_chart((rule_kd + circle_kd + text_kd_change).properties(height=350), use_container_width=True)
 
     col3, col4 = st.columns(2)
     with col3:
         st.write("**Сторители: 2024 vs 2023**")
         df_melted_stor = valid_rows.melt(id_vars=[sector_col], value_vars=["Сторители 2024", "Сторители 2023"], var_name='Година', value_name='Број')
-        st.altair_chart(alt.Chart(df_melted_stor).mark_bar().encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x='Број:Q', color='Година:N', yOffset='Година:N').properties(height=350), use_container_width=True)
-    with col4:
-        st.write("**Промена на сторители (%)**")
-        chart_stor_change = alt.Chart(valid_rows).mark_bar(color='#d62728').encode(
-            y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None),
-            x=alt.X('Промена Сторители %:Q', axis=alt.Axis(format='%'), title='Промена')
+        st.altair_chart(
+            alt.Chart(df_melted_stor).mark_bar().encode(
+                y=alt.Y(f'{sector_col}:N', sort=sector_order),
+                x='Број:Q',
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['Сторители 2024', 'Сторители 2023'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                yOffset='Година:N'
+            ).properties(height=350),
+            use_container_width=True
         )
-        text_stor_change = chart_stor_change.mark_text(align='left', dx=3).encode(text='Промена Сторители % текст:N')
-        st.altair_chart((chart_stor_change + text_stor_change).properties(height=350), use_container_width=True)
+    with col4:
+        st.write("**Недозволена трговија со дрога - Промена на сторители (%)**")
+        base_stor = alt.Chart(valid_rows).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order, title=None))
+        rule_stor = base_stor.mark_rule(color='#d62728', strokeWidth=3).encode(x=alt.X('Промена Сторители %:Q', axis=alt.Axis(format='%'), title='Промена'), x2='zero:Q')
+        circle_stor = base_stor.mark_circle(size=110, color='#d62728').encode(x='Промена Сторители %:Q')
+        text_stor_change = base_stor.mark_text(align='left', dx=10).encode(x='Промена Сторители %:Q', text='Промена Сторители % текст:N')
+        st.altair_chart((rule_stor + circle_stor + text_stor_change).properties(height=350), use_container_width=True)
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
