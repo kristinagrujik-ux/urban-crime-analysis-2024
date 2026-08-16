@@ -36,9 +36,9 @@ if "Кривични дела против државата" in selected_sheet:
     df_display = pd.DataFrame(table_data)
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
+# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА (и слични листови)
 elif "трговија" in selected_sheet:
-    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР", na=False)].copy()
+    valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
     
     col_2024 = valid_rows.columns[3]
@@ -52,15 +52,15 @@ elif "трговија" in selected_sheet:
 
     col1, col2 = st.columns(2)
     
-    # 1. Вкупни КД (2024 vs 2023) - Хоризонтален Bar
+    # 1. Вкупни КД (2024 vs 2023) - Хоризонтален Bar со правилен редослед (СВР Скопје горе)
     with col1:
         st.write("**Вкупни КД: 2024 vs 2023**")
         bar_v = alt.Chart(valid_rows).transform_fold(
             [col_2024, col_2023], as_=['Година', 'Број']
         ).mark_bar().encode(
-            y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order[::-1], axis=alt.Axis(labelLimit=200)),
+            y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=200)),
             x=alt.X('Број:Q', title='Број на дела'),
-            color=alt.Color('Година:N', legend=alt.Legend(title="Година"))
+            color=alt.Color('Година:N', scale=alt.Scale(domain=[col_2024, col_2023], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година"))
         ).properties(height=350)
         st.altair_chart(bar_v, use_container_width=True)
 
@@ -82,7 +82,7 @@ elif "трговија" in selected_sheet:
     with col3:
         st.write("**Сторители (2024)**")
         bar_s = alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(
-            y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order[::-1], axis=alt.Axis(labelLimit=200)),
+            y=alt.Y(f'{sector_col}:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=200)),
             x=alt.X(f'{col_storiteli}:Q', title='Број на сторители')
         ).properties(height=350)
         st.altair_chart(bar_s, use_container_width=True)
