@@ -148,4 +148,15 @@ elif "Вкупен" in selected_sheet:
     sector_order = valid_rows[sector_col].tolist()
     col1, col2 = st.columns(2)
     with col1:
-        st.write("
+        st.write("**Вкупен криминалитет 2024**")
+        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(x=alt.X(f'{sector_col}:N', sort=sector_order), y=alt.Y(f'{valid_rows.columns[2]}:Q')).properties(height=350), use_container_width=True)
+    with col2:
+        st.write("**Сторители**")
+        st.altair_chart(alt.Chart(valid_rows).mark_bar(color=BLUE_COLOR).encode(y=alt.Y(f'{sector_col}:N', sort=sector_order), x=alt.X(f'{valid_rows.columns[7]}:Q')).properties(height=350), use_container_width=True)
+    st.subheader("📋 Детална табела")
+    st.dataframe(df, use_container_width=True)
+
+# 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
+else:
+    st.dataframe(df, use_container_width=True)
+       
