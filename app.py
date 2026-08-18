@@ -22,7 +22,6 @@ BLUE_COLOR = '#1f77b4'
 
 # 1. СПЕЦИЈАЛЕН СЛУЧАЈ: Табела за Кривични дела против државата
 if "Кривични дела против државата" in selected_sheet:
-    st.subheader("📋 Детална табела")
     table_data = [
         {"Кривични дела": "Предизвикување омраза и нетрпеливост", "2024 година": 10, "2023 година": 2, "Промена %": "пет пати ↗"},
         {"Кривични дела": "Учество во странска војска и полиција", "2024 година": 2, "2023 година": "-", "Промена %": "200% ↗"},
@@ -32,6 +31,24 @@ if "Кривични дела против државата" in selected_sheet:
         {"Кривични дела": "Вкупно кривични дела", "2024 година": 15, "2023 година": 4, "Промена %": "три и пол пати ↗"}
     ]
     df_display = pd.DataFrame(table_data)
+
+    st.write("**Кривични дела: 2024 vs 2023 година**")
+    chart_data = df_display[df_display["Кривични дела"] != "Вкупно кривични дела"].copy()
+    chart_data["2024 година"] = pd.to_numeric(chart_data["2024 година"], errors='coerce').fillna(0)
+    chart_data["2023 година"] = pd.to_numeric(chart_data["2023 година"], errors='coerce').fillna(0)
+    cat_order_kd = chart_data["Кривични дела"].tolist()
+    melted_kd = chart_data.melt(id_vars=["Кривични дела"], value_vars=["2024 година", "2023 година"], var_name='Година', value_name='Број')
+    st.altair_chart(
+        alt.Chart(melted_kd).mark_bar().encode(
+            y=alt.Y('Кривични дела:N', sort=cat_order_kd, title=None, axis=alt.Axis(labelLimit=320)),
+            x=alt.X('Број:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#2ca02c', '#a8dba8']), legend=alt.Legend(title="Година")),
+            yOffset='Година:N'
+        ).properties(height=350),
+        use_container_width=True
+    )
+
+    st.subheader("📋 Детална табела")
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
