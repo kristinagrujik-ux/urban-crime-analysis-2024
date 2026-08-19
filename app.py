@@ -27,7 +27,7 @@ GREEN_COLOR = '#2ca02c'
 if "Кривични дела против државата" in selected_sheet:
     st.subheader("Кривични дела: 2024 vs 2023 година")
     
-    # Подготовка на податоците со точни нумерички вредности и нули каде што имаше '-'
+    # Подготовка на податоците со точни вредности за секоја година
     chart_data = pd.DataFrame([
         {"Кривични дела": "Предизвикување омраза и нетрпеливост", "2024 година": 10, "2023 година": 2},
         {"Кривични дела": "Учество во странска војска и полиција", "2024 година": 2, "2023 година": 0},
@@ -41,20 +41,25 @@ if "Кривични дела против државата" in selected_sheet:
     
     cat_order = chart_data['Кривични дела'].tolist()
     
-    # Базичен графикон со столбови
+    # Базичен графикон со столбови (дефинирање на редоследот и боите експлицитно)
     base_chart = alt.Chart(melted_data).encode(
         y=alt.Y('Кривични дела:N', title=None, sort=cat_order, axis=alt.Axis(labelLimit=300)),
         x=alt.X('Број:Q', title='Број'),
-        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=[GREEN_COLOR, '#aec7e8']), legend=alt.Legend(title="Година"))
+        color=alt.Color(
+            'Година:N', 
+            scale=alt.Scale(domain=['2024 година', '2023 година'], range=[GREEN_COLOR, BLUE_COLOR]), 
+            legend=alt.Legend(title="Година")
+        ),
+        yOffset='Година:N'
     )
     
     bars = base_chart.mark_bar()
     
-    # Додавање на data labels (броевите) врз или до столбовите
+    # Додавање на data labels (броевите) врз столбовите
     text_labels = base_chart.mark_text(
         align='left',
         baseline='middle',
-        dx=5
+        dx=3
     ).encode(
         text=alt.Text('Број:Q')
     )
