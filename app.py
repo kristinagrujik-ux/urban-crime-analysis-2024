@@ -41,7 +41,7 @@ if "Кривични дела против државата" in selected_sheet:
     base_kd_state = alt.Chart(melted_kd).encode(
         y=alt.Y('Кривични дела:N', sort=cat_order_kd, title=None, axis=alt.Axis(labelLimit=320)),
         x=alt.X('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
-        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#2ca02c', '#a8dba8']), legend=alt.Legend(title="Година")),
+        color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#228B22', '#50C878']), legend=alt.Legend(title="Година")),
         yOffset='Година:N'
     )
     bars_kd_state = base_kd_state.mark_bar()
