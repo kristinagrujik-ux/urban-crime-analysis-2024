@@ -317,6 +317,7 @@ elif "Убиства" in selected_sheet:
 
         data_rows = raw.iloc[header_row_idx + 1:].copy()
         data_rows = data_rows[data_rows[label_col].notna()]
+        data_rows = data_rows[~data_rows[label_col].astype(str).str.contains('Вкупно', na=False)]
 
         ubistva_clean = pd.DataFrame({
             'СВР': data_rows[label_col].values,
