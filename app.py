@@ -304,8 +304,17 @@ elif "Убиства" in selected_sheet:
     else:
         header_row = raw.iloc[header_row_idx]
         year_cols = [col for col in raw.columns if str(header_row[col]).strip() in ['2024 година', '2023 година']]
-        change_col = next((col for col in raw.columns if 'Промена' in str(header_row[col]) or 'Промена' in str(raw.columns[col])), raw.columns[4])
         
+        # Безбедно наоѓање на колоната за промена (без IndexError)
+        change_col = None
+        for col in raw.columns:
+            val_str = str(header_row[col]) if header_row_idx is not None else ""
+            if 'Промена' in val_str or 'промена' in val_str or 'Промена' in str(col):
+                change_col = col
+                break
+        if change_col is None and len(raw.columns) > 4:
+            change_col = raw.columns[4]
+
         col_2024, col_2023 = year_cols[0], year_cols[1]
 
         data_rows = raw.iloc[header_row_idx + 1:].copy()
@@ -316,7 +325,7 @@ elif "Убиства" in selected_sheet:
             'СВР': data_rows[label_col].values,
             '2024 година': pd.to_numeric(data_rows[col_2024], errors='coerce').fillna(0),
             '2023 година': pd.to_numeric(data_rows[col_2023], errors='coerce').fillna(0),
-            'Промена': pd.to_numeric(data_rows[change_col], errors='coerce')
+            'Промена': pd.to_numeric(data_rows[change_col], errors='coerce') if change_col in data_rows else 0
         }).dropna(subset=['СВР'])
 
         ubistva_clean['Промена текст'] = ubistva_clean['Промена'].apply(
@@ -365,3 +374,4 @@ elif "Убиства" in selected_sheet:
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
+      
