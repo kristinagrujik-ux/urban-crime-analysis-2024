@@ -53,12 +53,9 @@ if "Кривични дела против државата" in selected_sheet:
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
-    # Земаме само редовите со категориите (без "Број на ОКГ")
     mig_df = df.iloc[:4, :].copy()
-
     cat_col = mig_df.columns[0]
 
-    # Наоѓаме ги колоните по име наместо по фиксен индекс (поробусно)
     col_2024 = next(c for c in mig_df.columns if '2024' in str(c))
     col_2023 = next(c for c in mig_df.columns if '2023' in str(c))
     col_change = next(c for c in mig_df.columns if 'Промена' in str(c))
@@ -77,7 +74,6 @@ elif "Криумчарење на мигранти" in selected_sheet:
     col1, col2 = st.columns(2)
     cat_order = mig_clean['Категорија'].tolist()
 
-    # Прв график: Column chart за 2024 vs 2023 - столбови групирани по година, БЕЗ data labels
     with col1:
         st.write("**Споредба по категории: 2024 vs 2023**")
         melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -88,13 +84,11 @@ elif "Криумчарење на мигранти" in selected_sheet:
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
             xOffset='Година:N'
         )
-
         st.altair_chart(chart_col.properties(height=380), use_container_width=True)
 
-    # Втор график: Horizontal bar chart за Промена (%)
     with col2:
         st.write("**Промена (%) според категорија**")
-        cat_order_reversed = cat_order[::-1]  # За да биде "Број на криумчарени мигранти" прв (горе)
+        cat_order_reversed = cat_order[::-1]
         bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
             y=alt.Y('Категорија:N', sort=cat_order_reversed, title=None, axis=alt.Axis(labelLimit=280, labelFontSize=11, labelPadding=10)),
             x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена')
@@ -177,7 +171,6 @@ elif "Организиран" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
 
-    # Наоѓаме го редот со подзаглавија ("2024 година" / "2023 година")
     header_row_idx = None
     for i in range(min(5, len(raw))):
         row_vals = raw.iloc[i].astype(str)
@@ -210,7 +203,6 @@ elif "Организиран" in selected_sheet:
         cat_order = org_clean['Категорија'].tolist()
         col1, col2 = st.columns(2)
 
-        # Прв график: ОКГ - horizontal bar chart, 2024 vs 2023, со data labels
         with col1:
             st.write("**ОКГ: 2024 vs 2023 година**")
             melted_okg = org_clean.rename(columns={'ОКГ 2024': '2024 година', 'ОКГ 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -224,7 +216,6 @@ elif "Организиран" in selected_sheet:
             text_okg = base_okg.mark_text(align='left', dx=3).encode(text='Број:Q')
             st.altair_chart((bars_okg + text_okg).properties(height=400), use_container_width=True)
 
-        # Втор график: Членови на криминални групи - horizontal bar chart, 2024 vs 2023, со data labels
         with col2:
             st.write("**Членови на криминални групи: 2024 vs 2023 година**")
             melted_mem = org_clean.rename(columns={'Членови 2024': '2024 година', 'Членови 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -248,10 +239,10 @@ elif "Вкупен" in selected_sheet:
     for col in valid_rows.columns[1:]: valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
     sector_order = valid_rows[sector_col].tolist()
 
-    kd_col = valid_rows.columns[2]        # Кривични дела
-    storiteli_col = valid_rows.columns[6]  # Сторители
-    stapka_col = valid_rows.columns[7]     # Стапка на криминал
-    efikasnost_col = valid_rows.columns[8]  # Вкупна ефикасност 2024
+    kd_col = valid_rows.columns[2]          
+    storiteli_col = valid_rows.columns[6]  
+    stapka_col = valid_rows.columns[7]     
+    efikasnost_col = valid_rows.columns[8]  
 
     col1, col2 = st.columns(2)
     with col1:
@@ -295,7 +286,7 @@ elif "Вкупен" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА УБИСТВА
+# 4.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА УБИСТВА (ХОРИЗОНТАЛЕН ГРАФИК + LOLLIPOP ЗА ПРОМЕНА %)
 elif "Убиства" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -313,6 +304,8 @@ elif "Убиства" in selected_sheet:
     else:
         header_row = raw.iloc[header_row_idx]
         year_cols = [col for col in raw.columns if str(header_row[col]).strip() in ['2024 година', '2023 година']]
+        change_col = next((col for col in raw.columns if 'Промена' in str(header_row[col]) or 'Промена' in str(raw.columns[col])), raw.columns[4])
+        
         col_2024, col_2023 = year_cols[0], year_cols[1]
 
         data_rows = raw.iloc[header_row_idx + 1:].copy()
@@ -323,21 +316,48 @@ elif "Убиства" in selected_sheet:
             'СВР': data_rows[label_col].values,
             '2024 година': pd.to_numeric(data_rows[col_2024], errors='coerce').fillna(0),
             '2023 година': pd.to_numeric(data_rows[col_2023], errors='coerce').fillna(0),
+            'Промена': pd.to_numeric(data_rows[change_col], errors='coerce')
         }).dropna(subset=['СВР'])
 
+        ubistva_clean['Промена текст'] = ubistva_clean['Промена'].apply(
+            lambda x: f"{x*100:.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else str(x)
+        )
+        ubistva_clean['zero'] = 0
         sector_order = ubistva_clean['СВР'].tolist()
 
-        st.write("**Убиства: 2024 vs 2023 година**")
-        melted_u = ubistva_clean.melt(id_vars=['СВР'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
-        base_u = alt.Chart(melted_u).encode(
-            x=alt.X('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)),
-            y=alt.Y('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
-            xOffset='Година:N'
-        )
-        bars_u = base_u.mark_bar()
-        text_u = base_u.mark_text(align='center', dy=-8).encode(text='Број:Q')
-        st.altair_chart((bars_u + text_u).properties(height=380), use_container_width=True)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("**Убиства: 2024 vs 2023 година**")
+            melted_u = ubistva_clean.melt(id_vars=['СВР'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
+            
+            base_u = alt.Chart(melted_u).encode(
+                y=alt.Y('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelLimit=280)),
+                x=alt.X('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                yOffset='Година:N'
+            )
+            bars_u = base_u.mark_bar()
+            text_u = base_u.mark_text(align='left', dx=3, baseline='middle').encode(text='Број:Q')
+            st.altair_chart((bars_u + text_u).properties(height=380), use_container_width=True)
+
+        with col2:
+            st.write("**Промена на убиства (%) - Lollipop Chart**")
+            base_loll = alt.Chart(ubistva_clean).encode(
+                y=alt.Y('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=0, labelLimit=280))
+            )
+            rule_loll = base_loll.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
+                x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена (%)'),
+                x2='zero:Q'
+            )
+            circle_loll = base_loll.mark_circle(size=200, color=BLUE_COLOR).encode(
+                x=alt.X('Промена:Q', axis=alt.Axis(format='%'))
+            )
+            text_loll = base_loll.mark_text(align='left', dx=10, fontSize=11).encode(
+                x=alt.X('Промена:Q'),
+                text='Промена текст:N'
+            )
+            st.altair_chart((rule_loll + circle_loll + text_loll).properties(height=380), use_container_width=True)
 
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
