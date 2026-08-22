@@ -332,6 +332,13 @@ elif "Убиства" in selected_sheet:
         else:
             ubistva_clean['Промена'] = float('nan')
 
+        # Прекалкулираме директно од 2024/2023 бидејќи изворната колона за промена
+        # содржи неконзистентни вредности (некои се дадени како проценти, некои како дропки)
+        prev_year = ubistva_clean['2023 година']
+        curr_year = ubistva_clean['2024 година']
+        ubistva_clean['Промена'] = ((curr_year - prev_year) / prev_year.replace(0, pd.NA)).astype(float)
+        ubistva_clean['Промена'] = ubistva_clean['Промена'].fillna(0)
+
         ubistva_clean['Промена текст'] = ubistva_clean['Промена'].apply(
             lambda x: f"{x*100:.1f}%" if pd.notnull(x) else "-"
         )
