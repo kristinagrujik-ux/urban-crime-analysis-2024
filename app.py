@@ -431,9 +431,7 @@ elif "Насилство" in selected_sheet:
                 color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
                 xOffset='Година:N'
             )
-            bars_n = base_n.mark_bar()
-            text_n = base_n.mark_text(align='center', dy=-8).encode(text='Број:Q')
-            st.altair_chart((bars_n + text_n).properties(height=380), use_container_width=True)
+            st.altair_chart(base_n.mark_bar().properties(height=380), use_container_width=True)
 
         with col2:
             st.write("**Насилство - Промена (%) - Diverging Bar Chart**")
