@@ -365,15 +365,15 @@ elif "Убиства" in selected_sheet:
             st.write("**Убиства - Промена (%) - Lollipop Chart**")
             ubistva_clean['zero'] = 0
             base_lolli = alt.Chart(ubistva_clean).encode(
-                y=alt.Y('СВР:N', title=None, sort=sector_order)
+                x=alt.X('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270))
             )
             rule_u = base_lolli.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
-                x=alt.X('Промена (плот):Q', axis=alt.Axis(format='%'), title='Промена'),
-                x2='zero:Q'
+                y=alt.Y('Промена (плот):Q', axis=alt.Axis(format='%'), title='Промена'),
+                y2='zero:Q'
             )
-            circle_u = base_lolli.mark_circle(size=200, color=BLUE_COLOR).encode(x='Промена (плот):Q')
-            text_lolli = base_lolli.mark_text(align='left', dx=12, fontSize=11).encode(
-                x='Промена (плот):Q', text='Промена текст:N'
+            circle_u = base_lolli.mark_circle(size=200, color=BLUE_COLOR).encode(y='Промена (плот):Q')
+            text_lolli = base_lolli.mark_text(align='center', dy=-14, fontSize=11).encode(
+                y='Промена (плот):Q', text='Промена текст:N'
             )
             st.altair_chart((rule_u + circle_u + text_lolli).properties(height=380), use_container_width=True)
 
@@ -383,4 +383,3 @@ elif "Убиства" in selected_sheet:
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
-
