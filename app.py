@@ -380,6 +380,77 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
+# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО
+elif "Насилство" in selected_sheet:
+    raw = df.copy()
+    label_col = raw.columns[0]
+
+    header_row_idx = None
+    for i in range(min(5, len(raw))):
+        row_vals = raw.iloc[i].astype(str)
+        if row_vals.str.contains('2024', na=False).any() and row_vals.str.contains('2023', na=False).any():
+            header_row_idx = i
+            break
+
+    if header_row_idx is None:
+        st.error("Не можат да се пронајдат заглавијата за оваа табела.")
+        st.dataframe(df, use_container_width=True)
+    else:
+        header_row = raw.iloc[header_row_idx]
+        year_cols = [col for col in raw.columns if str(header_row[col]).strip() in ['2024 година', '2023 година']]
+        col_2024, col_2023 = year_cols[0], year_cols[1]
+        promena_col = next((col for col in raw.columns if 'Промена' in str(header_row[col])), None)
+
+        data_rows = raw.iloc[header_row_idx + 1:].copy()
+        data_rows = data_rows[data_rows[label_col].notna()]
+        data_rows = data_rows[~data_rows[label_col].astype(str).str.contains('Вкупно', na=False)]
+
+        nasilstvo_clean = pd.DataFrame({
+            'СВР': data_rows[label_col].values,
+            '2024 година': pd.to_numeric(data_rows[col_2024], errors='coerce').fillna(0),
+            '2023 година': pd.to_numeric(data_rows[col_2023], errors='coerce').fillna(0),
+        }).dropna(subset=['СВР'])
+
+        if promena_col is not None:
+            nasilstvo_clean['Промена'] = pd.to_numeric(data_rows[promena_col], errors='coerce').fillna(0).values
+        else:
+            nasilstvo_clean['Промена'] = 0.0
+
+        nasilstvo_clean['Промена текст'] = nasilstvo_clean['Промена'].apply(lambda x: f"{x*100:.1f}%")
+        nasilstvo_clean['Насока'] = nasilstvo_clean['Промена'].apply(lambda x: 'Пораст' if x >= 0 else 'Пад')
+
+        sector_order = nasilstvo_clean['СВР'].tolist()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Насилство: 2024 vs 2023 година**")
+            melted_n = nasilstvo_clean.melt(id_vars=['СВР'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
+            base_n = alt.Chart(melted_n).encode(
+                x=alt.X('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)),
+                y=alt.Y('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
+                xOffset='Година:N'
+            )
+            bars_n = base_n.mark_bar()
+            text_n = base_n.mark_text(align='center', dy=-8).encode(text='Број:Q')
+            st.altair_chart((bars_n + text_n).properties(height=380), use_container_width=True)
+
+        with col2:
+            st.write("**Насилство - Промена (%) - Diverging Bar Chart**")
+            base_div = alt.Chart(nasilstvo_clean).encode(
+                y=alt.Y('СВР:N', title=None, sort=sector_order)
+            )
+            bars_div = base_div.mark_bar().encode(
+                x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена'),
+                color=alt.Color('Насока:N', scale=alt.Scale(domain=['Пораст', 'Пад'], range=['#d62728', '#2ca02c']), legend=alt.Legend(title=None))
+            )
+            text_pos = base_div.transform_filter(alt.datum.Промена >= 0).mark_text(align='left', dx=5).encode(x='Промена:Q', text='Промена текст:N')
+            text_neg = base_div.transform_filter(alt.datum.Промена < 0).mark_text(align='right', dx=-5).encode(x='Промена:Q', text='Промена текст:N')
+            st.altair_chart((bars_div + text_pos + text_neg).properties(height=380), use_container_width=True)
+
+        st.subheader("📋 Детална табела")
+        st.dataframe(df, use_container_width=True)
+
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
