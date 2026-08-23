@@ -352,13 +352,13 @@ elif "Убиства" in selected_sheet:
             st.write("**Убиства: 2024 vs 2023 година**")
             melted_u = ubistva_clean.melt(id_vars=['СВР'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
             base_u = alt.Chart(melted_u).encode(
-                x=alt.X('СВР:N', title=None, sort=sector_order, axis=alt.Axis(labelAngle=270)),
-                y=alt.Y('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
+                y=alt.Y('СВР:N', title=None, sort=sector_order),
+                x=alt.X('Број:Q', title='Број', axis=alt.Axis(format='d', tickMinStep=1)),
                 color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
-                xOffset='Година:N'
+                yOffset='Година:N'
             )
             bars_u = base_u.mark_bar()
-            text_u = base_u.mark_text(align='center', dy=-8).encode(text='Број:Q')
+            text_u = base_u.mark_text(align='left', dx=3).encode(text='Број:Q')
             st.altair_chart((bars_u + text_u).properties(height=380), use_container_width=True)
 
         with col2:
