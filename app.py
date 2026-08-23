@@ -336,7 +336,8 @@ elif "Убиства" in selected_sheet:
         # содржи неконзистентни вредности (некои се дадени како проценти, некои како дропки)
         prev_year = ubistva_clean['2023 година']
         curr_year = ubistva_clean['2024 година']
-        ubistva_clean['Промена'] = ((curr_year - prev_year) / prev_year.replace(0, pd.NA)).astype(float)
+        prev_year_safe = prev_year.replace(0, float('nan'))
+        ubistva_clean['Промена'] = (curr_year - prev_year) / prev_year_safe
         ubistva_clean['Промена'] = ubistva_clean['Промена'].fillna(0)
 
         ubistva_clean['Промена текст'] = ubistva_clean['Промена'].apply(
@@ -382,3 +383,4 @@ elif "Убиства" in selected_sheet:
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
+
