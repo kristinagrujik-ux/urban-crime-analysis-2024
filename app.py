@@ -434,17 +434,21 @@ elif "Насилство" in selected_sheet:
             st.altair_chart(base_n.mark_bar().properties(height=380), use_container_width=True)
 
         with col2:
-            st.write("**Насилство - Промена (%) - Diverging Bar Chart**")
+            st.write("**Насилство - Промена (%) - Lollipop Chart**")
+            nasilstvo_clean['zero'] = 0
             base_div = alt.Chart(nasilstvo_clean).encode(
                 y=alt.Y('СВР:N', title=None, sort=sector_order)
             )
-            bars_div = base_div.mark_bar().encode(
+            color_enc = alt.Color('Насока:N', scale=alt.Scale(domain=['Пораст', 'Пад'], range=['#d62728', '#2ca02c']), legend=alt.Legend(title=None))
+            rule_div = base_div.mark_rule(strokeWidth=2).encode(
                 x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена'),
-                color=alt.Color('Насока:N', scale=alt.Scale(domain=['Пораст', 'Пад'], range=['#d62728', '#2ca02c']), legend=alt.Legend(title=None))
+                x2='zero:Q',
+                color=color_enc
             )
-            text_pos = base_div.transform_filter(alt.datum.Промена >= 0).mark_text(align='left', dx=5).encode(x='Промена:Q', text='Промена текст:N')
-            text_neg = base_div.transform_filter(alt.datum.Промена < 0).mark_text(align='right', dx=-5).encode(x='Промена:Q', text='Промена текст:N')
-            st.altair_chart((bars_div + text_pos + text_neg).properties(height=380), use_container_width=True)
+            circle_div = base_div.mark_circle(size=200).encode(x='Промена:Q', color=color_enc)
+            text_pos = base_div.transform_filter(alt.datum.Промена >= 0).mark_text(align='left', dx=8).encode(x='Промена:Q', text='Промена текст:N')
+            text_neg = base_div.transform_filter(alt.datum.Промена < 0).mark_text(align='right', dx=-8).encode(x='Промена:Q', text='Промена текст:N')
+            st.altair_chart((rule_div + circle_div + text_pos + text_neg).properties(height=380), use_container_width=True)
 
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
