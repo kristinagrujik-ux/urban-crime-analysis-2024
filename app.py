@@ -52,11 +52,10 @@ if "Кривични дела против државата" in selected_sheet:
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ И ТРГОВИЈА СО ДЕЦА
-elif "Трговија со луѓе" in selected_sheet:
+elif "трговија со луѓе" in selected_sheet.lower() or "трговија со луге" in selected_sheet.lower():
     raw = df.copy()
     
     # 1. Читање на податоци за Трговија со луѓе (Првите редови)
-    # Редовите 2 до 5 ги содржат податоците (акциски контроли, угостителски објекти, странски државјани)
     th_luge_df = raw.iloc[2:5, [0, 3, 5, 7]].copy()
     th_luge_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
     
@@ -66,7 +65,6 @@ elif "Трговија со луѓе" in selected_sheet:
     cat_order_luge = th_luge_df['Категорија'].tolist()
     
     # 2. Читање на податоци за Трговија со деца (Долните редови)
-    # Редовите 13 до 16 ги содржат податоците за деца
     th_deca_df = raw.iloc[13:16, [0, 3, 5, 7]].copy()
     th_deca_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
     
@@ -157,7 +155,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     st.dataframe(df, use_container_width=True)
 
 # 4. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
-elif "трговија" in selected_sheet:
+elif "трговија" in selected_sheet.lower() and "дрога" in selected_sheet.lower():
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
 
