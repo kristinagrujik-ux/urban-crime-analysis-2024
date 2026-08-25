@@ -51,7 +51,62 @@ if "Кривични дела против државата" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
+# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ И ТРГОВИЈА СО ДЕЦА
+elif "Трговија со луѓе" in selected_sheet:
+    raw = df.copy()
+    
+    # 1. Читање на податоци за Трговија со луѓе (Првите редови)
+    # Редовите 2 до 5 ги содржат податоците (акциски контроли, угостителски објекти, странски државјани)
+    th_luge_df = raw.iloc[2:5, [0, 3, 5, 7]].copy()
+    th_luge_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
+    
+    for col in ['2024 година', '2023 година', '2022 година']:
+        th_luge_df[col] = pd.to_numeric(th_luge_df[col], errors='coerce').fillna(0)
+        
+    cat_order_luge = th_luge_df['Категорија'].tolist()
+    
+    # 2. Читање на податоци за Трговија со деца (Долните редови)
+    # Редовите 13 до 16 ги содржат податоците за деца
+    th_deca_df = raw.iloc[13:16, [0, 3, 5, 7]].copy()
+    th_deca_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
+    
+    for col in ['2024 година', '2023 година', '2022 година']:
+        th_deca_df[col] = pd.to_numeric(th_deca_df[col], errors='coerce').fillna(0)
+        
+    cat_order_deca = th_deca_df['Категорија'].tolist()
+
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### Трговија со луѓе")
+        melted_luge = th_luge_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
+        
+        chart_luge = alt.Chart(melted_luge).mark_bar().encode(
+            x=alt.X('Категорија:N', title=None, sort=cat_order_luge, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+            y=alt.Y('Број:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
+            xOffset='Година:N'
+        ).properties(height=380)
+        
+        st.altair_chart(chart_luge, use_container_width=True)
+
+    with col2:
+        st.markdown("### Трговија со деца")
+        melted_deca = th_deca_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
+        
+        chart_deca = alt.Chart(melted_deca).mark_bar().encode(
+            x=alt.X('Категорија:N', title=None, sort=cat_order_deca, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+            y=alt.Y('Број:Q', title='Број'),
+            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
+            xOffset='Година:N'
+        ).properties(height=380)
+        
+        st.altair_chart(chart_deca, use_container_width=True)
+
+    st.subheader("📋 Детална табела")
+    st.dataframe(df, use_container_width=True)
+
+# 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
     mig_df = df.iloc[:4, :].copy()
     cat_col = mig_df.columns[0]
@@ -101,7 +156,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
+# 4. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
 elif "трговија" in selected_sheet:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
@@ -165,7 +220,7 @@ elif "трговија" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
+# 5. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -231,7 +286,7 @@ elif "Организиран" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4. ГРАФИКОНИ ЗА ВКУПЕН КРИМИНАЛИТЕТ
+# 6. ГРАФИКОНИ ЗА ВКУПЕН КРИМИНАЛИТЕТ
 elif "Вкупен" in selected_sheet:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
@@ -285,7 +340,7 @@ elif "Вкупен" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА УБИСТВА
+# 7. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА УБИСТВА
 elif "Убиства" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -362,7 +417,7 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (Ажурирано со ВЕРТИКАЛЕН LOLLIPOP график)
+# 8. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО
 elif "Насилство" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -435,6 +490,7 @@ elif "Насилство" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
+# 9. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
+
