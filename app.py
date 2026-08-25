@@ -55,60 +55,67 @@ if "Кривични дела против државата" in selected_sheet:
 elif "трговија" in selected_sheet.lower() and ("луѓе" in selected_sheet.lower() or "луге" in selected_sheet.lower()):
     raw = df.copy()
     
-    # 1. Податоци за Трговија со луѓе (редови 2 до 4, колони 0, 3, 5, 7)
-    th_luge_df = raw.iloc[2:5, [0, 3, 5, 7]].copy()
-    th_luge_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
-    for col in ['2024 година', '2023 година', '2022 година']:
-        th_luge_df[col] = pd.to_numeric(th_luge_df[col], errors='coerce').fillna(0)
-    cat_order_luge = th_luge_df['Категорија'].tolist()
+    luge_indices = []
+    deca_indices = []
     
-    # 2. Податоци за Трговија со деца (редови 13 до 15, колони 0, 3, 5, 7)
-    th_deca_df = raw.iloc[13:16, [0, 3, 5, 7]].copy()
-    th_deca_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
-    for col in ['2024 година', '2023 година', '2022 година']:
-        th_deca_df[col] = pd.to_numeric(th_deca_df[col], errors='coerce').fillna(0)
-    cat_order_deca = th_deca_df['Категорија'].tolist()
+    for idx, row in raw.iterrows():
+        row_text = str(row.values).lower()
+        if any(keyword in row_text for keyword in ['акциски контроли', 'угостителски објекти', 'странски државјани']):
+            luge_indices.append(idx)
+        if any(keyword in row_text for keyword in ['кривични дела', 'сторители', 'жртви']) and idx > 5:
+            deca_indices.append(idx)
+
+    if len(luge_indices) < 2:
+        luge_indices = [2, 4, 6]
+    if len(deca_indices) < 2:
+        deca_indices = [13, 14, 15]
+
+    th_luge_df = raw.iloc[luge_indices, [0, 3, 5, 7]].copy() if len(luge_indices) > 0 else pd.DataFrame()
+    if not th_luge_df.empty:
+        th_luge_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
+        for col in ['2024 година', '2023 година', '2022 година']:
+            th_luge_df[col] = pd.to_numeric(th_luge_df[col], errors='coerce').fillna(0)
+        cat_order_luge = th_luge_df['Категорија'].tolist()
+
+    th_deca_df = raw.iloc[deca_indices, [0, 3, 5, 7]].copy() if len(deca_indices) > 0 else pd.DataFrame()
+    if not th_deca_df.empty:
+        th_deca_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
+        for col in ['2024 година', '2023 година', '2022 година']:
+            th_deca_df[col] = pd.to_numeric(th_deca_df[col], errors='coerce').fillna(0)
+        cat_order_deca = th_deca_df['Категорија'].tolist()
 
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("### Трговија со луѓе")
-        melted_luge = th_luge_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
-        
-        chart_luge = alt.Chart(melted_luge).mark_bar().encode(
-            x=alt.X('Категорија:N', title=None, sort=cat_order_luge, axis=alt.Axis(labelAngle=0, labelLimit=200)),
-            y=alt.Y('Број:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
-            xOffset='Година:N'
-        ).properties(height=380)
-        
-        st.altair_chart(chart_luge, use_container_width=True)
+        if not th_luge_df.empty:
+            melted_luge = th_luge_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
+            chart_luge = alt.Chart(melted_luge).mark_bar().encode(
+                x=alt.X('Категорија:N', title=None, sort=cat_order_luge, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+                y=alt.Y('Број:Q', title='Број'),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
+                xOffset='Година:N'
+            ).properties(height=380)
+            st.altair_chart(chart_luge, use_container_width=True)
+        else:
+            st.info("Нема податоци за графикон.")
 
     with col2:
         st.markdown("### Трговија со деца")
-        melted_deca = th_deca_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
-        
-        chart_deca = alt.Chart(melted_deca).mark_bar().encode(
-            x=alt.X('Категорија:N', title=None, sort=cat_order_deca, axis=alt.Axis(labelAngle=0, labelLimit=200)),
-            y=alt.Y('Број:Q', title='Број'),
-            color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
-            xOffset='Година:N'
-        ).properties(height=380)
-        
-        st.altair_chart(chart_deca, use_container_width=True)
+        if not th_deca_df.empty:
+            melted_deca = th_deca_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
+            chart_deca = alt.Chart(melted_deca).mark_bar().encode(
+                x=alt.X('Категорија:N', title=None, sort=cat_order_deca, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+                y=alt.Y('Број:Q', title='Број'),
+                color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=['#7ca651', '#41729f', '#d9822b']), legend=alt.Legend(title="Година")),
+                xOffset='Година:N'
+            ).properties(height=380)
+            st.altair_chart(chart_deca, use_container_width=True)
+        else:
+            st.info("Нема податоци за графикон.")
 
-    # 3. Детални табели идентични со Excel
     st.subheader("📋 Детални табели од Excel")
-    
-    table_luge_exact = raw.iloc[0:8, :9].copy()
-    table_luge_exact.columns = ['Кривични дела', 'Unnamed: 1', 'Unnamed: 2', '2024 година', 'Unnamed: 4', '2023 година', 'Unnamed: 6', '2022 година', 'Unnamed: 8']
-    st.dataframe(table_luge_exact, use_container_width=True, hide_index=True)
-    
-    st.markdown("---")
-    
-    table_deca_exact = raw.iloc[11:17, :9].copy()
-    table_deca_exact.columns = ['Кривични дела', 'Unnamed: 1', 'Unnamed: 2', '2024 година', 'Unnamed: 4', '2023 година', 'Unnamed: 6', '2022 година', 'Unnamed: 8']
-    st.dataframe(table_deca_exact, use_container_width=True, hide_index=True)
+    st.dataframe(raw, use_container_width=True)
 
 # 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
