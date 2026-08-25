@@ -52,10 +52,10 @@ if "Кривични дела против државата" in selected_sheet:
     st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ И ТРГОВИЈА СО ДЕЦА
-elif "трговија со луѓе" in selected_sheet.lower() or "трговија со луге" in selected_sheet.lower():
+elif "трговија" in selected_sheet.lower() and ("луѓе" in selected_sheet.lower() or "луге" in selected_sheet.lower()):
     raw = df.copy()
     
-    # 1. Читање на податоци за Трговија со луѓе (Првите редови)
+    # 1. Читање на податоци за Трговија со луѓе (Првите редови) за графикон
     th_luge_df = raw.iloc[2:5, [0, 3, 5, 7]].copy()
     th_luge_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
     
@@ -64,7 +64,7 @@ elif "трговија со луѓе" in selected_sheet.lower() or "тргови
         
     cat_order_luge = th_luge_df['Категорија'].tolist()
     
-    # 2. Читање на податоци за Трговија со деца (Долните редови)
+    # 2. Читање на податоци за Трговија со деца (Долните редови) за графикон
     th_deca_df = raw.iloc[13:16, [0, 3, 5, 7]].copy()
     th_deca_df.columns = ['Категорија', '2024 година', '2023 година', '2022 година']
     
@@ -101,8 +101,18 @@ elif "трговија со луѓе" in selected_sheet.lower() or "тргови
         
         st.altair_chart(chart_deca, use_container_width=True)
 
-    st.subheader("📋 Детална табела")
-    st.dataframe(df, use_container_width=True)
+    # 3. ИДЕНТИЧЕН ПРИКАЗ НА ТАБЕЛИТЕ КАКО ВО EXCEL
+    st.subheader("📋 Детални табели од Excel")
+    
+    table_luge_exact = raw.iloc[0:8, :9].copy()
+    table_luge_exact.columns = ['Кривични дела', 'Unnamed: 1', 'Unnamed: 2', '2024 година', 'Unnamed: 4', '2023 година', 'Unnamed: 6', '2022 година', 'Unnamed: 8']
+    st.dataframe(table_luge_exact, use_container_width=True, hide_index=True)
+    
+    st.markdown("---")
+    
+    table_deca_exact = raw.iloc[11:17, :9].copy()
+    table_deca_exact.columns = ['Кривични дела', 'Unnamed: 1', 'Unnamed: 2', '2024 година', 'Unnamed: 4', '2023 година', 'Unnamed: 6', '2022 година', 'Unnamed: 8']
+    st.dataframe(table_deca_exact, use_container_width=True, hide_index=True)
 
 # 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
@@ -491,4 +501,3 @@ elif "Насилство" in selected_sheet:
 # 9. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
-
