@@ -441,7 +441,7 @@ elif "Трговија со луѓе" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
 
-    # Најди ги СИТЕ редови што претставуваат заглавие (содржат 2024, 2023 и 2022)
+    # Пронаоѓање на сите блокови (на пр. Трговија со луѓе и Трговија со деца)
     header_indices = []
     for i in range(len(raw)):
         row_vals = raw.iloc[i].astype(str)
@@ -485,13 +485,12 @@ elif "Трговија со луѓе" in selected_sheet:
 
             blocks.append((clean_title, block_df))
 
-        # Прикажуваме два графикона еден до друг во две колони
+        # Графикони
         num_cols = min(len(blocks), 2)
         cols = st.columns(num_cols)
-
         color_palettes = [
-            ['#7ca651', '#41729f', '#d9822b'], # Зелена/Сина/Портокалова шема за првиот график
-            ['#41729f', '#d9822b', '#7ca651'], # Варијација за вториот
+            ['#7ca651', '#41729f', '#d9822b'],
+            ['#41729f', '#d9822b', '#7ca651'],
         ]
 
         for i, (title, block_df) in enumerate(blocks):
@@ -511,13 +510,51 @@ elif "Трговија со луѓе" in selected_sheet:
                     bars = base.mark_bar()
                     text = base.mark_text(dy=-8).encode(text='Број:Q')
                     st.altair_chart((bars + text).properties(height=380), use_container_width=True)
-                else:
-                    st.info(f"Нема податоци за {title}.")
 
         st.subheader("📋 Детална табела")
-        st.dataframe(df, use_container_width=True)
+
+        # ЧИСТЕЊЕ НА ТАБЕЛАТА ЗА ДА НЕМА "None" И "Unnamed" колони
+        cleaned_tables = []
+        for idx, header_row_idx in enumerate(header_indices):
+            header_row = raw.iloc[header_row_idx]
+            end_idx = header_indices[idx + 1] if idx + 1 < len(header_indices) else len(raw)
+            sub_df = raw.iloc[header_row_idx:end_idx].copy()
+
+            # Најди ги точните индекси на колоните каде има податоци (исклучи ги празните Unnamed колони)
+            valid_col_indices = []
+            for col_idx, col_name in enumerate(sub_df.columns):
+                col_vals = sub_df.iloc[:, col_idx].dropna().astype(str).tolist()
+                # Провери дали колоната содржи текстови како акциски контроли или броеви
+                if col_idx == 0 or any(any(k in v for k in ['Број', 'на', '2024', '2023', '2022', 'контроли', 'објекти', 'државјани', 'кривични', 'сторители', 'жртви']) for v in col_vals):
+                    valid_col_indices.append(col_idx)
+
+            if not valid_col_indices:
+                valid_col_indices = [0, 3, 5, 7] # Fallback индекс позиции врз основа на Excel
+
+            cleaned_sub = sub_df.iloc[:, valid_col_indices].copy()
+            
+            # Редефинирај ги имињата на колоните строго по желба:
+            # 1. Кривични дела, 2. Број на акциски контроли, 3. Број на угостителски објекти, 4. Број на странски државјани (или според блокот)
+            cols_count = len(cleaned_sub.columns)
+            if idx == 0:
+                new_col_names = ["Кривични дела", "2024 година", "2023 година", "2022 година"][:cols_count]
+            else:
+                new_col_names = ["Кривични дела", "2024 година", "2023 година", "2022 година"][:cols_count]
+            
+            cleaned_sub.columns = new_col_names
+            
+            # Тргни го првиот ред ако е само повторување на заглавието или го содржи насловот на табелата
+            cleaned_sub = cleaned_sub.dropna(how='all')
+            cleaned_tables.append(cleaned_sub)
+
+        # Спој ги чистите под-табели во една единствена прегледна табела без ниедно "None" или "Unnamed"
+        final_clean_table = pd.concat(cleaned_tables, ignore_index=True)
+        # Исчисти ги редовите кои содржат само NaN или празни вредности во сите колони
+        final_clean_table = final_clean_table.dropna(how='all')
+        
+        # Прикажи ја табелата чисто и уредно со скриен индекс
+        st.dataframe(final_clean_table, use_container_width=True, hide_index=True)
 
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
     st.dataframe(df, use_container_width=True)
-   
