@@ -53,9 +53,12 @@ if "Кривични дела против државата" in selected_sheet:
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
+    # Земаме само редовите со категориите (без "Број на ОКГ")
     mig_df = df.iloc[:4, :].copy()
+
     cat_col = mig_df.columns[0]
 
+    # Наоѓаме ги колоните по име наместо по фиксен индекс (поробусно)
     col_2024 = next(c for c in mig_df.columns if '2024' in str(c))
     col_2023 = next(c for c in mig_df.columns if '2023' in str(c))
     col_change = next(c for c in mig_df.columns if 'Промена' in str(c))
@@ -74,6 +77,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     col1, col2 = st.columns(2)
     cat_order = mig_clean['Категорија'].tolist()
 
+    # Прв график: Column chart за 2024 vs 2023 - столбови групирани по година, БЕЗ data labels
     with col1:
         st.write("**Споредба по категории: 2024 vs 2023**")
         melted_mig = mig_clean.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -84,11 +88,13 @@ elif "Криумчарење на мигранти" in selected_sheet:
             color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година'], range=['#1f77b4', '#aec7e8']), legend=alt.Legend(title="Година")),
             xOffset='Година:N'
         )
+
         st.altair_chart(chart_col.properties(height=380), use_container_width=True)
 
+    # Втор график: Horizontal bar chart за Промена (%)
     with col2:
         st.write("**Промена (%) според категорија**")
-        cat_order_reversed = cat_order[::-1]
+        cat_order_reversed = cat_order[::-1]  # За да биде "Број на криумчарени мигранти" прв (горе)
         bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
             y=alt.Y('Категорија:N', sort=cat_order_reversed, title=None, axis=alt.Axis(labelLimit=280, labelFontSize=11, labelPadding=10)),
             x=alt.X('Промена:Q', axis=alt.Axis(format='%'), title='Промена')
@@ -103,7 +109,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     st.dataframe(df, use_container_width=True)
 
 # 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
-elif "трговија" in selected_sheet and "дрога" in selected_sheet.lower():
+elif "трговија" in selected_sheet:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
 
@@ -171,6 +177,7 @@ elif "Организиран" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
 
+    # Наоѓаме го редот со подзаглавија ("2024 година" / "2023 година")
     header_row_idx = None
     for i in range(min(5, len(raw))):
         row_vals = raw.iloc[i].astype(str)
@@ -203,6 +210,7 @@ elif "Организиран" in selected_sheet:
         cat_order = org_clean['Категорија'].tolist()
         col1, col2 = st.columns(2)
 
+        # Прв график: ОКГ - horizontal bar chart, 2024 vs 2023, со data labels
         with col1:
             st.write("**ОКГ: 2024 vs 2023 година**")
             melted_okg = org_clean.rename(columns={'ОКГ 2024': '2024 година', 'ОКГ 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -216,6 +224,7 @@ elif "Организиран" in selected_sheet:
             text_okg = base_okg.mark_text(align='left', dx=3).encode(text='Број:Q')
             st.altair_chart((bars_okg + text_okg).properties(height=400), use_container_width=True)
 
+        # Втор график: Членови на криминални групи - horizontal bar chart, 2024 vs 2023, со data labels
         with col2:
             st.write("**Членови на криминални групи: 2024 vs 2023 година**")
             melted_mem = org_clean.rename(columns={'Членови 2024': '2024 година', 'Членови 2023': '2023 година'}).melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година'], var_name='Година', value_name='Број')
@@ -239,10 +248,10 @@ elif "Вкупен" in selected_sheet:
     for col in valid_rows.columns[1:]: valid_rows[col] = pd.to_numeric(valid_rows[col], errors='coerce')
     sector_order = valid_rows[sector_col].tolist()
 
-    kd_col = valid_rows.columns[2]
-    storiteli_col = valid_rows.columns[6]
-    stapka_col = valid_rows.columns[7]
-    efikasnost_col = valid_rows.columns[8]
+    kd_col = valid_rows.columns[2]        # Кривични дела
+    storiteli_col = valid_rows.columns[6]  # Сторители
+    stapka_col = valid_rows.columns[7]     # Стапка на криминал
+    efikasnost_col = valid_rows.columns[8]  # Вкупна ефикасност 2024
 
     col1, col2 = st.columns(2)
     with col1:
@@ -317,6 +326,14 @@ elif "Убиства" in selected_sheet:
             '2023 година': pd.to_numeric(data_rows[col_2023], errors='coerce').fillna(0),
         }).dropna(subset=['СВР'])
 
+        if promena_col is not None:
+            promena_raw = pd.to_numeric(data_rows[promena_col], errors='coerce')
+            ubistva_clean['Промена'] = promena_raw.values
+        else:
+            ubistva_clean['Промена'] = float('nan')
+
+        # Прекалкулираме директно од 2024/2023 бидејќи изворната колона за промена
+        # содржи неконзистентни вредности (некои се дадени како проценти, некои како дропки)
         prev_year = ubistva_clean['2023 година']
         curr_year = ubistva_clean['2024 година']
         prev_year_safe = prev_year.replace(0, float('nan'))
@@ -436,11 +453,12 @@ elif "Насилство" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ (И ДЕЦА)
+# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ
 elif "Трговија со луѓе" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
 
+    # Најди ги СИТЕ редови што личат на заглавие (содржат 2024, 2023 и 2022 истовремено)
     header_indices = []
     for i in range(len(raw)):
         row_vals = raw.iloc[i].astype(str)
@@ -463,6 +481,7 @@ elif "Трговија со луѓе" in selected_sheet:
             col_2023 = col_map.get('2023 година')
             col_2022 = col_map.get('2022 година')
 
+            # Блокот трае до следното заглавие (или до крајот на листот)
             end_idx = header_indices[idx + 1] if idx + 1 < len(header_indices) else len(raw)
             data_rows = raw.iloc[header_row_idx + 1:end_idx].copy()
             data_rows = data_rows[data_rows[label_col].notna()]
@@ -475,6 +494,7 @@ elif "Трговија со луѓе" in selected_sheet:
                 '2022 година': pd.to_numeric(data_rows[col_2022], errors='coerce').fillna(0),
             }).dropna(subset=['Категорија'])
 
+            # Насловот на блокот го земаме од самата ќелија со заглавие (лево)
             raw_title = str(header_row[label_col]).strip()
             if raw_title.lower() in ['nan', 'none', '']:
                 raw_title = "Трговија со луѓе" if idx == 0 else "Трговија со деца"
@@ -484,24 +504,25 @@ elif "Трговија со луѓе" in selected_sheet:
 
             blocks.append((clean_title, block_df))
 
-        # Графикони
+        # Прикажуваме по еден график во колона за секој пронајден блок (макс. 2 во ред)
         num_cols = min(len(blocks), 2)
         cols = st.columns(num_cols)
+
         color_palettes = [
-            ['#7ca651', '#41729f', '#d9822b'],
-            ['#41729f', '#d9822b', '#7ca651'],
+            ['#1f77b4', '#6baed6', '#c6dbef'],
+            ['#d62728', '#f4a582', '#fddbc7'],
         ]
 
         for i, (title, block_df) in enumerate(blocks):
             target_col = cols[i % num_cols]
             with target_col:
-                st.write(f"**{title}**")
+                st.write(f"**{title}: 2024 vs 2023 vs 2022 година**")
                 if not block_df.empty:
                     order = block_df['Категорија'].tolist()
                     melted = block_df.melt(id_vars=['Категорија'], value_vars=['2024 година', '2023 година', '2022 година'], var_name='Година', value_name='Број')
                     palette = color_palettes[i % len(color_palettes)]
-                    base = alt.Chart(melted).mark_bar().encode(
-                        x=alt.X('Категорија:N', title=None, sort=order, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+                    base = alt.Chart(melted).encode(
+                        x=alt.X('Категорија:N', title=None, sort=order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
                         y=alt.Y('Број:Q', title='Број'),
                         color=alt.Color('Година:N', scale=alt.Scale(domain=['2024 година', '2023 година', '2022 година'], range=palette), legend=alt.Legend(title="Година")),
                         xOffset='Година:N'
@@ -509,29 +530,16 @@ elif "Трговија со луѓе" in selected_sheet:
                     bars = base.mark_bar()
                     text = base.mark_text(dy=-8).encode(text='Број:Q')
                     st.altair_chart((bars + text).properties(height=380), use_container_width=True)
+                else:
+                    st.info(f"Нема податоци за {title}.")
 
         st.subheader("📋 Детална табела")
-
-        # КРЕИРАЊЕ НА ЧИСТИ ТАБЕЛИ ДИРЕКТНО ОД ПОДАТОЦИТЕ (БЕЗ UNNAMED И NONE)
-        table1_data = [
-            {"Кривични дела": "Број на акциски контроли", "2024 година": 46, "2023 година": 38, "2022 година": 27},
-            {"Кривични дела": "Број на угостителски објекти", "2024 година": 67, "2023 година": 71, "2022 година": 38},
-            {"Кривични дела": "Број на странски државјани", "2024 година": 207, "2023 година": 185, "2022 година": 311}
-        ]
-        df_table1 = pd.DataFrame(table1_data)
-
-        table2_data = [
-            {"Кривични дела": "Број на кривични дела", "2024 година": 2, "2023 година": 8, "2022 година": 7},
-            {"Кривични дела": "Број на сторители", "2024 година": 2, "2023 година": 31, "2022 година": 15},
-            {"Кривични дела": "Број на жртви", "2024 година": 2, "2023 година": 4, "2022 година": 5}
-        ]
-        df_table2 = pd.DataFrame(table2_data)
-
-        st.markdown("**Трговија со луѓе**")
-        st.dataframe(df_table1, use_container_width=True, hide_index=True)
-
-        st.markdown("**Трговија со деца**")
-        st.dataframe(df_table2, use_container_width=True, hide_index=True)
+        for title, block_df in blocks:
+            st.write(f"**{title}**")
+            display_df = block_df.rename(columns={'Категорија': 'Кривични дела'}).copy()
+            for col in ['2024 година', '2023 година', '2022 година']:
+                display_df[col] = display_df[col].astype(int)
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
 
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
