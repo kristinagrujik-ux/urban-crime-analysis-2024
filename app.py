@@ -102,7 +102,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     st.dataframe(df, use_container_width=True)
 
 # 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
-elif "трговија со дрога" in selected_sheet.lower():
+elif "трговија" in selected_sheet:
     valid_rows = df[df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)].copy()
     sector_col = valid_rows.columns[0]
 
@@ -442,7 +442,7 @@ elif "Насилство" in selected_sheet:
         st.dataframe(df, use_container_width=True)
 
 # 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ
-elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
+elif "Трговија со луѓе" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
 
