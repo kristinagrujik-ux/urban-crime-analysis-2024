@@ -14,7 +14,7 @@ def get_sheets():
   return pd.ExcelFile(file_path).sheet_names
 
 
-selected_sheet = st.sidebar.selectbox("Избери категорија:", get_sheets())
+selected_sheet = st.sidebar.selectbox("Izber kategorijata:", get_sheets())
 st.title(f"📊 {selected_sheet}")
 
 
@@ -26,7 +26,7 @@ def load_data(sheet):
 df = load_data(selected_sheet)
 BLUE_COLOR = "#1f77b4"
 
-# 1. СПЕЦИЈАЛЕН СЛУЧАЈ: Табела за Кривични дела против државата
+# 1. SPECIJALEN SLUČAJ: Tabelata za Krivični dela protiv državata
 if "Кривични дела против државата" in selected_sheet:
   table_data = [
       {
@@ -115,7 +115,7 @@ if "Кривични дела против државата" in selected_sheet:
   st.subheader("📋 Детална табела")
   st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
+# 2. SPECIJALIZIRAN PRIKAZ ZA KRIUMČARENJE NA MIGRANTI
 elif "Криумчарење на мигранти" in selected_sheet:
   mig_df = df.iloc[:4, :].copy()
   cat_col = mig_df.columns[0]
@@ -197,7 +197,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
   st.subheader("📋 Детална табела")
   st.dataframe(df, use_container_width=True)
 
-# 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
+# 3. SPECIJALIZIRAN PRIKAZ ZA NEDOZVOLENA TRGOVIJA SO DROGA
 elif "трговија со дрога" in selected_sheet.lower():
   valid_rows = df[
       df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)
@@ -355,7 +355,7 @@ elif "трговија со дрога" in selected_sheet.lower():
   st.subheader("📋 Детална табела")
   st.dataframe(df, use_container_width=True)
 
-# 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
+# 3.5 SPECIJALIZIRAN PRIKAZ ZA ORGANIZIRAN KRIMINAL
 elif "Организиран" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -490,7 +490,7 @@ elif "Организиран" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4. ГРАФИКОНИ ЗА ВКУПЕН КРИМИНАЛИТЕТ
+# 4. GRAFIKONI ZA VKUPEN KRIMINALITET
 elif "Вкупен" in selected_sheet:
   valid_rows = df[
       df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)
@@ -568,7 +568,7 @@ elif "Вкупен" in selected_sheet:
   st.subheader("📋 Детална табела")
   st.dataframe(df, use_container_width=True)
 
-# 4.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА УБИСТВА
+# 4.5 SPECIJALIZIRAN PRIKAZ ZA UBISTVA
 elif "Убиства" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -703,7 +703,7 @@ elif "Убиства" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (СО ВЕРТИКАЛЕН LOLLIPOP ГРАФИК)
+# 4.6 SPECIJALIZIRAN PRIKAZ ZA NASILSTVO (SO VERTIKALEN LOLLIPOP GRAFIK)
 elif "Насилство" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -848,7 +848,7 @@ elif "Насилство" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ХОРИЗОНТАЛЕН БАР ГРАФИК СО УСЛОВНИ БОИ)
+# 4.6.5 SPECIJALIZIRAN PRIKAZ ZA TEŠKI KRAЖBI (PRAV HISTOGRAM NA PROMENATA)
 elif "Тешки кражби" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -910,17 +910,8 @@ elif "Тешки кражби" in selected_sheet:
           (teski_clean["2024 година"] - teski_clean["2023 година"]) / prev_y
       ).fillna(0)
 
-    teski_clean["Промена текст"] = teski_clean["Промена"].apply(
-        lambda x: f"{x*100:.1f}%"
-    )
-    teski_clean["Насока"] = teski_clean["Промена"].apply(
-        lambda x: "Пораст" if x >= 0 else "Пад"
-    )
-
+    teski_clean["Промена %"] = teski_clean["Промена"] * 100
     sector_order_original = teski_clean["СВР"].tolist()
-    sector_order_reversed = sector_order_original[
-        ::-1
-    ]  # Обратен редослед за правилен приказ на врв во хоризонтален график
 
     col1, col2 = st.columns(2)
     with col1:
@@ -949,47 +940,43 @@ elif "Тешки кражби" in selected_sheet:
               ),
               legend=alt.Legend(title="Година"),
           ),
-          xOffset="Година:N",
+          yOffset="Година:N",
       )
       st.altair_chart(
           base_t.mark_bar().properties(height=380), use_container_width=True
       )
 
     with col2:
-      st.write("**Тешки кражби - Промена (%)**")
-      base_cond = alt.Chart(teski_clean).encode(
-          y=alt.Y(
-              "СВР:N",
-              sort=sector_order_reversed,
-              title=None,
-              axis=alt.Axis(labelLimit=280),
+      st.write("**Тешки кражби - Хистограм на Промена (%)**")
+      hist_chart = (
+          alt.Chart(teski_clean)
+          .mark_bar(color="#4c78a8")
+          .encode(
+              x=alt.X(
+                  "Промена %:Q",
+                  bin=alt.Bin(maxbins=6),
+                  title="Интервал на Промена (%)",
+                  axis=alt.Axis(format=".1f"),
+              ),
+              y=alt.Y(
+                  "count():Q",
+                  title="Број на СВР (Фреквенција)",
+                  axis=alt.Axis(tickMinStep=1),
+              ),
           )
       )
-      color_enc_custom = alt.Color(
-          "Насока:N",
-          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#d62728", "#2ca02c"]),
-          legend=alt.Legend(title=None),
+      text_hist = hist_chart.mark_text(align="center", dy=-8).encode(
+          text="count():Q"
       )
-
-      # Целосно хоризонтален бар график: X е Промена, Y е СВР
-      bars_cond = base_cond.mark_bar().encode(
-          x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
-          color=color_enc_custom,
-      )
-
-      text_cond = base_cond.mark_text(align="left", dx=5).encode(
-          x="Промена:Q", text="Промена текст:N"
-      )
-
       st.altair_chart(
-          (bars_cond + text_cond).properties(height=380),
+          (hist_chart + text_hist).properties(height=380),
           use_container_width=True,
       )
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ (И ДЕЦА)
+# 4.7 SPECIJALIZIRAN PRIKAZ ZA TRGOVIJA SO LUĞE (I DECA)
 elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
   st.write("### 📊 Анализа за Трговија со луѓе и деца")
 
@@ -1118,6 +1105,6 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
   st.markdown("**Трговија со деца**")
   st.dataframe(df_table2, use_container_width=True, hide_index=True)
 
-# 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
+# 5. STANDARDEN PRIKAZ ZA DRUGI LISTOVI
 else:
   st.dataframe(df, use_container_width=True)
