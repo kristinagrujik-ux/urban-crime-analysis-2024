@@ -969,18 +969,12 @@ elif "Тешки кражби" in selected_sheet:
       )
 
       bars_cond = base_cond.mark_bar().encode(
-          x=alt.X(
-              "Промена:Q",
-              axis=alt.Axis(format="%"),
-              title="Промена",
-              scale=alt.Scale(zero=True),
-          ),
+          x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
           color=color_enc_custom,
       )
 
       text_cond = base_cond.mark_text(align="left", dx=5).encode(
-          x=alt.X("Промена:Q", scale=alt.Scale(zero=True)),
-          text="Промена текст:N",
+          x="Промена:Q", text="Промена текст:N"
       )
 
       st.altair_chart(
@@ -1123,3 +1117,4 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
   st.dataframe(df, use_container_width=True)
+
