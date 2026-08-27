@@ -848,7 +848,7 @@ elif "Насилство" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ИСТО СВР ПОРЕДУВАЊЕ ЗА ДВАТА ГРАФИКОНИ)
+# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ХОРИЗОНТАЛЕН БАР ГРАФИК СО УСЛОВНИ БОИ)
 elif "Тешки кражби" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -917,7 +917,6 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    # Ист редослед за двата графикона (прво СВР Скопје, последно СВР Штип)
     sector_order_original = teski_clean["СВР"].tolist()
 
     col1, col2 = st.columns(2)
@@ -954,8 +953,8 @@ elif "Тешки кражби" in selected_sheet:
       )
 
     with col2:
-      st.write("**Тешки кражби - Промена (%) - Diverging Bar Chart**")
-      base_div = alt.Chart(teski_clean).encode(
+      st.write("**Тешки кражби - Промена (%)**")
+      base_cond = alt.Chart(teski_clean).encode(
           y=alt.Y(
               "СВР:N",
               sort=sector_order_original,
@@ -969,24 +968,17 @@ elif "Тешки кражби" in selected_sheet:
           legend=alt.Legend(title=None),
       )
 
-      bars_div = base_div.mark_bar().encode(
+      bars_cond = base_cond.mark_bar().encode(
           x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
           color=color_enc_custom,
       )
 
-      text_pos = (
-          base_div.transform_filter(alt.datum.Промена >= 0)
-          .mark_text(align="left", dx=5)
-          .encode(x="Промена:Q", text="Промена текст:N")
-      )
-      text_neg = (
-          base_div.transform_filter(alt.datum.Промена < 0)
-          .mark_text(align="right", dx=-5)
-          .encode(x="Промена:Q", text="Промена текст:N")
+      text_cond = base_cond.mark_text(align="left", dx=5).encode(
+          x="Промена:Q", text="Промена текст:N"
       )
 
       st.altair_chart(
-          (bars_div + text_pos + text_neg).properties(height=380),
+          (bars_cond + text_cond).properties(height=380),
           use_container_width=True,
       )
 
@@ -1125,4 +1117,3 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
   st.dataframe(df, use_container_width=True)
-   
