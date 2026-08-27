@@ -918,6 +918,9 @@ elif "Тешки кражби" in selected_sheet:
     )
 
     sector_order_original = teski_clean["СВР"].tolist()
+    sector_order_reversed = sector_order_original[
+        ::-1
+    ]  # Обратен редослед за правилен приказ на врв во хоризонтален график
 
     col1, col2 = st.columns(2)
     with col1:
@@ -957,7 +960,7 @@ elif "Тешки кражби" in selected_sheet:
       base_cond = alt.Chart(teski_clean).encode(
           y=alt.Y(
               "СВР:N",
-              sort=sector_order_original,
+              sort=sector_order_reversed,
               title=None,
               axis=alt.Axis(labelLimit=280),
           )
@@ -968,6 +971,7 @@ elif "Тешки кражби" in selected_sheet:
           legend=alt.Legend(title=None),
       )
 
+      # Целосно хоризонтален бар график: X е Промена, Y е СВР
       bars_cond = base_cond.mark_bar().encode(
           x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
           color=color_enc_custom,
@@ -1117,4 +1121,3 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
   st.dataframe(df, use_container_width=True)
-
