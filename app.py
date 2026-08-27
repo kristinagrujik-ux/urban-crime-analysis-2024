@@ -848,7 +848,7 @@ elif "Насилство" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (СО DIVERGING BAR CHART - ЦРВЕНА/ЗЕЛЕНА)
+# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (СО ИДЕНТИЧЕН DIVERGING BAR CHART)
 elif "Тешки кражби" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -917,6 +917,8 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
+    # Сортирање од најмала до најголема промена (како на втората слика)
+    teski_clean = teski_clean.sort_values(by="Промена", ascending=True)
     sector_order = teski_clean["СВР"].tolist()
 
     col1, col2 = st.columns(2)
@@ -932,7 +934,7 @@ elif "Тешки кражби" in selected_sheet:
           x=alt.X(
               "СВР:N",
               title=None,
-              sort=sector_order,
+              sort=teski_clean["СВР"].tolist(),
               axis=alt.Axis(labelAngle=270),
           ),
           y=alt.Y(
@@ -964,13 +966,24 @@ elif "Тешки кражби" in selected_sheet:
       )
       color_enc = alt.Color(
           "Насока:N",
+          scale=alt.Scale(
+              domain=["Пораст", "Пад"], range=["#2ca02c", "#2ca02c"]
+          ),  # зелени/црвени бои
+          legend=alt.Legend(title=None),
+      )
+      # За правилно боење (зелена за пад, црвена за пораст или обратно по ваша желба, овде ставаме стандардни бои: црвена за пораст, зелена за пад или по класика)
+      color_enc_custom = alt.Color(
+          "Насока:N",
           scale=alt.Scale(domain=["Пораст", "Пад"], range=["#d62728", "#2ca02c"]),
           legend=alt.Legend(title=None),
       )
+
       bars_div = base_div.mark_bar().encode(
           x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
-          color=color_enc,
+          color=color_enc_custom,
       )
+
+      # Динамично позиционирање на текстот (лево за негативни, десно за позитивни вредности)
       text_pos = (
           base_div.transform_filter(alt.datum.Промена >= 0)
           .mark_text(align="left", dx=5)
@@ -981,6 +994,7 @@ elif "Тешки кражби" in selected_sheet:
           .mark_text(align="right", dx=-5)
           .encode(x="Промена:Q", text="Промена текст:N")
       )
+
       st.altair_chart(
           (bars_div + text_pos + text_neg).properties(height=380),
           use_container_width=True,
