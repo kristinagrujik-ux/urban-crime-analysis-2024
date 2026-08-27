@@ -969,12 +969,18 @@ elif "Тешки кражби" in selected_sheet:
       )
 
       bars_cond = base_cond.mark_bar().encode(
-          x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
+          x=alt.X(
+              "Промена:Q",
+              axis=alt.Axis(format="%"),
+              title="Промена",
+              scale=alt.Scale(zero=True),
+          ),
           color=color_enc_custom,
       )
 
       text_cond = base_cond.mark_text(align="left", dx=5).encode(
-          x="Промена:Q", text="Промена текст:N"
+          x=alt.X("Промена:Q", scale=alt.Scale(zero=True)),
+          text="Промена текст:N",
       )
 
       st.altair_chart(
