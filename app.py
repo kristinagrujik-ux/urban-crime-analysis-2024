@@ -848,7 +848,7 @@ elif "Насилство" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ПРВО СВР СКОПЈЕ, ПОСЛЕДНО СВР ШТИП + DIVERGING BAR CHART)
+# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ИСТО СВР ПОРЕДУВАЊЕ ЗА ДВАТА ГРАФИКОНИ)
 elif "Тешки кражби" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -917,12 +917,8 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    # 1. Оригинален редослед за првиот график (Прво СВР Скопје, последно СВР Штип)
+    # Ист редослед за двата графикона (прво СВР Скопје, последно СВР Штип)
     sector_order_original = teski_clean["СВР"].tolist()
-
-    # 2. Сортиран редослед за вториот (Diverging) график од најмала до најголема промена
-    teski_sorted = teski_clean.sort_values(by="Промена", ascending=True)
-    sector_order_sorted = teski_sorted["СВР"].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -959,10 +955,10 @@ elif "Тешки кражби" in selected_sheet:
 
     with col2:
       st.write("**Тешки кражби - Промена (%) - Diverging Bar Chart**")
-      base_div = alt.Chart(teski_sorted).encode(
+      base_div = alt.Chart(teski_clean).encode(
           y=alt.Y(
               "СВР:N",
-              sort=sector_order_sorted,
+              sort=sector_order_original,
               title=None,
               axis=alt.Axis(labelLimit=280),
           )
@@ -1129,3 +1125,4 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 # 5. СТАНДАРДЕН ПРИКАЗ ЗА ДРУГИ ЛИСТОВИ
 else:
   st.dataframe(df, use_container_width=True)
+   
