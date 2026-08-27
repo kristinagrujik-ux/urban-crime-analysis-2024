@@ -848,7 +848,7 @@ elif "Насилство" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (СО ИДЕНТИЧЕН DIVERGING BAR CHART)
+# 4.6.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (ПРВО СВР СКОПЈЕ, ПОСЛЕДНО СВР ШТИП + DIVERGING BAR CHART)
 elif "Тешки кражби" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -917,9 +917,12 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    # Сортирање од најмала до најголема промена (како на втората слика)
-    teski_clean = teski_clean.sort_values(by="Промена", ascending=True)
-    sector_order = teski_clean["СВР"].tolist()
+    # 1. Оригинален редослед за првиот график (Прво СВР Скопје, последно СВР Штип)
+    sector_order_original = teski_clean["СВР"].tolist()
+
+    # 2. Сортиран редослед за вториот (Diverging) график од најмала до најголема промена
+    teski_sorted = teski_clean.sort_values(by="Промена", ascending=True)
+    sector_order_sorted = teski_sorted["СВР"].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -934,7 +937,7 @@ elif "Тешки кражби" in selected_sheet:
           x=alt.X(
               "СВР:N",
               title=None,
-              sort=teski_clean["СВР"].tolist(),
+              sort=sector_order_original,
               axis=alt.Axis(labelAngle=270),
           ),
           y=alt.Y(
@@ -956,22 +959,14 @@ elif "Тешки кражби" in selected_sheet:
 
     with col2:
       st.write("**Тешки кражби - Промена (%) - Diverging Bar Chart**")
-      base_div = alt.Chart(teski_clean).encode(
+      base_div = alt.Chart(teski_sorted).encode(
           y=alt.Y(
               "СВР:N",
-              sort=sector_order,
+              sort=sector_order_sorted,
               title=None,
               axis=alt.Axis(labelLimit=280),
           )
       )
-      color_enc = alt.Color(
-          "Насока:N",
-          scale=alt.Scale(
-              domain=["Пораст", "Пад"], range=["#2ca02c", "#2ca02c"]
-          ),  # зелени/црвени бои
-          legend=alt.Legend(title=None),
-      )
-      # За правилно боење (зелена за пад, црвена за пораст или обратно по ваша желба, овде ставаме стандардни бои: црвена за пораст, зелена за пад или по класика)
       color_enc_custom = alt.Color(
           "Насока:N",
           scale=alt.Scale(domain=["Пораст", "Пад"], range=["#d62728", "#2ca02c"]),
@@ -983,7 +978,6 @@ elif "Тешки кражби" in selected_sheet:
           color=color_enc_custom,
       )
 
-      # Динамично позиционирање на текстот (лево за негативни, десно за позитивни вредности)
       text_pos = (
           base_div.transform_filter(alt.datum.Промена >= 0)
           .mark_text(align="left", dx=5)
