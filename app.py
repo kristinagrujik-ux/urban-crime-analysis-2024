@@ -151,7 +151,12 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     bars_h = base_h_bar.mark_bar().encode(
-        x=alt.X("promena_procent:Q", axis=alt.Axis(format="%"), title="Промена"),
+        x=alt.X(
+            "promena_procent:Q",
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            title="Промена",
+            scale=alt.Scale(domain=[-1.1, 3.2], zero=True),
+        ),
         color=color_enc,
     )
 
@@ -243,7 +248,12 @@ elif "Криумчарење на мигранти" in selected_sheet:
             title=None,
             axis=alt.Axis(labelLimit=280, labelFontSize=11, labelPadding=10),
         ),
-        x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
+        x=alt.X(
+            "Промена:Q",
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            title="Промена",
+            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+        ),
     )
     text_change = bar_change.mark_text(align="left", dx=3).encode(
         text="Промена текст:N"
@@ -343,7 +353,10 @@ elif "трговија со дрога" in selected_sheet.lower():
     )
     rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
         y=alt.Y(
-            "Промена КД %:Q", axis=alt.Axis(format="%"), title="Промена"
+            "Промена КД %:Q",
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            title="Промена",
+            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
         ),
         y2="zero:Q",
     )
@@ -398,7 +411,10 @@ elif "трговија со дрога" in selected_sheet.lower():
     )
     rule_stor = base_stor.mark_rule(color="#d62728", strokeWidth=2).encode(
         y=alt.Y(
-            "Промена Сторители %:Q", axis=alt.Axis(format="%"), title="Промена"
+            "Промена Сторители %:Q",
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            title="Промена",
+            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
         ),
         y2="zero:Q",
     )
@@ -746,7 +762,10 @@ elif "Убиства" in selected_sheet:
       )
       rule_u = base_lolli.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
           y=alt.Y(
-              "Промена (плот):Q", axis=alt.Axis(format="%"), title="Промена"
+              "Промена (плот):Q",
+              axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+              title="Промена",
+              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
           ),
           y2="zero:Q",
       )
@@ -883,7 +902,10 @@ elif "Насилство" in selected_sheet:
       )
       rule_v = base_v_lolli.mark_rule(strokeWidth=2).encode(
           y=alt.Y(
-              "Промена:Q", axis=alt.Axis(format="%"), title="Промена (%)"
+              "Промена:Q",
+              axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+              title="Промена (%)",
+              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
           ),
           y2="zero:Q",
           color=color_enc,
@@ -1033,7 +1055,12 @@ elif "Тешки кражби" in selected_sheet:
       )
 
       bars_cond = base_cond.mark_bar().encode(
-          x=alt.X("Промена:Q", axis=alt.Axis(format="%"), title="Промена"),
+          x=alt.X(
+              "Промена:Q",
+              axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+              title="Промена",
+              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+          ),
           color=color_enc_custom,
       )
 
