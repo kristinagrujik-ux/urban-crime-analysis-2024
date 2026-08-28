@@ -40,22 +40,22 @@ if "Кривични дела против државата" in selected_sheet:
           "Кривични дела": "Учество во странска војска и полиција",
           "2024 година": 2,
           "2023 година": 0,
-          "Промена %": None,
-          "Промена текст": "N/A",
+          "Промена %": 2.0,
+          "Промена текст": "200% ↗",
       },
       {
           "Кривични дела": "Неовластено навлегување и цртање на воени објекти",
           "2024 година": 2,
           "2023 година": 0,
-          "Промена %": None,
-          "Промена текст": "N/A",
+          "Промена %": 2.0,
+          "Промена текст": "200% ↗",
       },
       {
           "Кривични дела": "Служба во непријателска војска",
           "2024 година": 0,
           "2023 година": 1,
           "Промена %": -1.0,
-          "Промена текст": "-100% ↘",
+          "Промена текст": "-",
       },
       {
           "Кривични дела": "Расна и друга дискриминација",
@@ -87,6 +87,7 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
+  cat_order_kd_reversed = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
@@ -129,105 +130,45 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Хоризонтален Lollipop**")
-    chart_data["zero"] = 0
+    st.write("**Промена (%) - Хоризонтален лентаст графикон**")
     chart_data["Насока"] = chart_data["promena_procent"].apply(
-        lambda x: "Пораст"
-        if pd.notnull(x) and x >= 0
-        else ("Пад" if pd.notnull(x) and x < 0 else "Немерливо")
+        lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    valid_chart_data = chart_data.dropna(subset=["promena_procent"])
-
-    base_h_lolli = alt.Chart(chart_data).encode(
+    base_h_bar = alt.Chart(chart_data).encode(
         y=alt.Y(
             "Кривични дела:N",
             title=None,
-            sort=cat_order_kd,
+            sort=cat_order_kd_reversed,
             axis=alt.Axis(labelLimit=280),
         )
     )
 
     color_enc = alt.Color(
         "Насока:N",
-        scale=alt.Scale(
-            domain=["Пораст", "Пад", "Немерливо"],
-            range=["#2ca02c", "#d62728", "#7f7f7f"],
-        ),
+        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
         legend=alt.Legend(title=None),
     )
 
-    base_valid = alt.Chart(valid_chart_data).encode(
-        y=alt.Y("Кривични дела:N", sort=cat_order_kd)
-    )
-
-    rule_h = base_valid.mark_rule(strokeWidth=2).encode(
-        x=alt.X(
-            "promena_procent:Q",
-            scale=alt.Scale(domain=[-1.5, 4.5]),
-            axis=alt.Axis(format="%"),
-            title="Промена (%)",
-        ),
-        x2="zero:Q",
+    bars_h = base_h_bar.mark_bar().encode(
+        x=alt.X("promena_procent:Q", axis=alt.Axis(format="%"), title="Промена"),
         color=color_enc,
     )
 
-    circle_h = base_valid.mark_circle(size=200).encode(
-        x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
-        color=color_enc,
-    )
-
-    text_h_pos = (
-        base_h_lolli.transform_filter(
-            (alt.datum.promena_procent >= 0)
-            & (alt.datum.promena_procent != None)
-            & (alt.expr.isValid(alt.datum.promena_procent))
-        )
-        .mark_text(align="left", dx=8, fontSize=11)
-        .encode(
-            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
-            text="Промена текст:N",
-        )
-    )
-
-    text_h_neg = (
-        base_h_lolli.transform_filter(
-            (alt.datum.promena_procent < 0)
-            & (alt.datum.promena_procent != None)
-            & (alt.expr.isValid(alt.datum.promena_procent))
-        )
-        .mark_text(align="right", dx=-8, fontSize=11)
-        .encode(
-            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
-            text="Промена текст:N",
-        )
-    )
-
-    text_h_na = (
-        base_h_lolli.transform_filter(
-            (alt.datum.promena_procent == None)
-            | (~alt.expr.isValid(alt.datum.promena_procent))
-        )
-        .mark_text(align="left", dx=10, fontSize=11, fontStyle="italic")
-        .encode(
-            x=alt.X("zero:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
-            text="Промена текст:N",
-        )
+    text_h = base_h_bar.mark_text(align="left", dx=5, fontSize=11).encode(
+        x="promena_procent:Q", text="Промена текст:N"
     )
 
     st.altair_chart(
-        (rule_h + circle_h + text_h_pos + text_h_neg + text_h_na).properties(
-            height=350
-        ),
-        use_container_width=True,
+        (bars_h + text_h).properties(height=350), use_container_width=True
     )
 
   st.subheader("📋 Детална табела")
   df_table_show = df_display.copy()
   df_table_show["Промена %"] = [
       "пет пати ↗",
-      "N/A",
-      "N/A",
+      "200% ↗",
+      "200% ↗",
       "-",
       "-",
       "три и пол пати ↗",
@@ -1112,28 +1053,6 @@ elif "Тешки кражби" in selected_sheet:
 elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
   st.write("### 📊 Анализа за Трговија со луѓе и деца")
 
-  table1_data = [
-      {
-          "Кривични дела": "Број на акциски контроли",
-          "2024 година": 46,
-          "2023 година": 38,
-          "2022 година": 27,
-      },
-      {
-          "Кривични дела": "Број на угостителски објекти",
-          "2024 година": 67,
-          "2023 година": 71,
-          "2022 година": 38,
-      },
-      {
-          "Кривични дела": "Број на странски државјани",
-          "2024 година": 207,
-          "2023 година": 185,
-          "2022 година": 311,
-      },
-  ]
-  df_table1 = pd.DataFrame(table1_data)
-
   table2_data = [
       {
           "Кривични дела": "Број на кривични дела",
@@ -1156,55 +1075,36 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
   ]
   df_table2 = pd.DataFrame(table2_data)
 
-  col1, col2 = st.columns(2)
+  st.write("**Кривични дела, сторители и жртви (2022 - 2024)**")
+  melted_t2 = df_table2.melt(
+      id_vars=["Кривични дела"],
+      value_vars=["2024 година", "2023 година", "2022 година"],
+      var_name="Година",
+      value_name="Број",
+  )
+  chart_t2 = (
+      alt.Chart(melted_t2)
+      .mark_bar()
+      .encode(
+          x=alt.X(
+              "Кривични дела:N",
+              title=None,
+              axis=alt.Axis(labelAngle=0, labelLimit=250),
+          ),
+          y=alt.Y(
+              "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
+          ),
+          color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
+          xOffset="Година:N",
+      )
+  )
+  st.altair_chart(
+      chart_t2.properties(height=380), use_container_width=True
+  )
 
-  with col1:
-    st.write("**Оперативни показатели (2022 - 2024)**")
-    melted_t1 = df_table1.melt(
-        id_vars=["Кривични дела"],
-        value_vars=["2024 година", "2023 година", "2022 година"],
-        var_name="Година",
-        value_name="Број",
-    )
-    chart_t1 = (
-        alt.Chart(melted_t1)
-        .mark_bar()
-        .encode(
-            x=alt.X("Кривични дела:N", title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Број:Q", title="Број"),
-            color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
-            xOffset="Година:N",
-        )
-    )
-    st.altair_chart(chart_t1.properties(height=350), use_container_width=True)
-
-  with col2:
-    st.write("**Кривични дела, сторители и жртви**")
-    melted_t2 = df_table2.melt(
-        id_vars=["Кривични дела"],
-        value_vars=["2024 година", "2023 година", "2022 година"],
-        var_name="Година",
-        value_name="Број",
-    )
-    chart_t2 = (
-        alt.Chart(melted_t2)
-        .mark_bar()
-        .encode(
-            x=alt.X("Кривични дела:N", title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Број:Q", title="Број"),
-            color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
-            xOffset="Година:N",
-        )
-    )
-    st.altair_chart(chart_t2.properties(height=380), use_container_width=True)
-
-  st.subheader("📋 Детални табели")
-  st.write("Оперативни активности:")
-  st.dataframe(df_table1, use_container_width=True, hide_index=True)
-  st.write("Кривична статистика:")
+  st.subheader("📋 Детална табела")
   st.dataframe(df_table2, use_container_width=True, hide_index=True)
 
 else:
   st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
   st.dataframe(df, use_container_width=True)
-
