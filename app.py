@@ -146,7 +146,7 @@ if "Кривични дела против државата" in selected_sheet:
 
     color_enc = alt.Color(
         "Насока:N",
-        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#228B22", "#d62728"]),
         legend=alt.Legend(title=None),
     )
 
@@ -155,9 +155,9 @@ if "Кривични дела против државата" in selected_sheet:
         color=color_enc,
     )
 
-    text_h = base_h_bar.mark_text(align="left", dx=5, fontSize=11).encode(
-        x="promena_procent:Q", text="Промена текст:N"
-    )
+    text_h = base_h_bar.mark_text(
+        align="left", dx=5, baseline="middle", fontSize=11
+    ).encode(x="promena_procent:Q", text="Промена текст:N")
 
     st.altair_chart(
         (bars_h + text_h).properties(height=350), use_container_width=True
