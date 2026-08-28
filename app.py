@@ -118,49 +118,41 @@ if "Кривични дела против државата" in selected_sheet:
 # 1.2 SPECIJALIZIRAN PRIKAZ ZA VKUPEN KRIMINALITET
 elif "Вкупен криминалитет" in selected_sheet or "вкупен криминалитет" in selected_sheet.lower():
   raw = df.copy()
-  
-  # Pronaoganje kade pocnuvaat podatocite (barame redovi so SVR)
-  header_idx = None
+
+  # Безбедно наоѓање на редот каде што се појавуваат СВР податоците
+  header_idx = 2  експлицитно порамнување според изгледот на табелата
   for i in range(len(raw)):
-    row_str = " ".join(raw.iloc[i].astype(str).values)
+    row_str = " ".join(raw.iloc[i].fillna("").astype(str).values)
     if "СВР" in row_str or "ОСОСК" in row_str:
-      header_idx = i - 1  # Redot nad SVR obicno gi sodrzi zaglavijata
+      header_idx = i - 1
       break
 
-  if header_idx is None or header_idx < 0:
-    header_idx = 2  # Standardno ako ne najde
+  if header_idx < 0:
+    header_idx = 2
 
-  # Gi zemame iminjata na kolonite od soodvetniot red
-  col_names = raw.iloc[header_idx].fillna("").astype(str).values
-  # Kreirame clean dataframe
-  vk_clean = raw.iloc[header_idx + 1:].copy()
-  
-  # Pronaoganje na tocni koloni spored sodrzina
-  svr_col = vk_clean.columns[0]
-  
-  # Trazime kolona za vkupno кривични дела (obicno treta ili cetwta)
-  kd_col = None
-  stor_col = None
-  
-  for c in vk_clean.columns:
-    val_str = str(raw.iloc[header_idx][c]) + " " + str(raw.iloc[header_idx-1][c] if header_idx > 0 else "")
-    if "Кривични дела" in val_str or "КД со" in val_str or "решил" in val_str:
-      pass
-
-  # Koristime standardni pozicii baza na slikata: Kolona 1=SVR, Kolona 3=Krivichni dela, Kolona 8=Storiteli
   try:
     vk_df = pd.DataFrame({
-        "СВР": vk_clean.iloc[:, 0].values,
-        "Кривични дела": pd.to_numeric(vk_clean.iloc[:, 2], errors="coerce").fillna(0),
-        "Сторители": pd.to_numeric(vk_clean.iloc[:, 8] if vk_clean.shape[1] > 8 else vk_clean.iloc[:, -1], errors="coerce").fillna(0)
+        "СВР": raw.iloc[header_idx + 1 :, 0].values,
+        "Кривични дела": pd.to_numeric(
+            raw.iloc[header_idx + 1 :, 2], errors="coerce"
+        ).fillna(0),
+        "Сторители": pd.to_numeric(
+            raw.iloc[header_idx + 1 :, 8]
+            if raw.shape[1] > 8
+            else raw.iloc[header_idx + 1 :, -1],
+            errors="coerce",
+        ).fillna(0),
     }).dropna(subset=["СВР"])
   except Exception:
-    vk_df = vk_clean.iloc[:, [0, 2, 4]].copy()
+    vk_df = raw.iloc[:, [0, 2, 4]].copy()
     vk_df.columns = ["СВР", "Кривични дела", "Сторители"]
-    vk_df["Кривични дела"] = pd.to_numeric(vk_df["Кривични дела"], errors="coerce").fillna(0)
-    vk_df["Сторители"] = pd.to_numeric(vk_df["Сторители"], errors="coerce").fillna(0)
+    vk_df["Кривични дела"] = pd.to_numeric(
+        vk_df["Кривични дела"], errors="coerce"
+    ).fillna(0)
+    vk_df["Сторители"] = pd.to_numeric(
+        vk_df["Сторители"], errors="coerce"
+    ).fillna(0)
 
-  # Otstranuvanje na redovi koi ne se SVR (kako "Вкупно" ako postoi na krajot)
   vk_df = vk_df[vk_df["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)]
   svr_order = vk_df["СВР"].tolist()
 
@@ -169,22 +161,48 @@ elif "Вкупен криминалитет" in selected_sheet or "вкупен 
   with col1:
     st.write("**Вкупен криминалитет - Кривични дела по СВР**")
     base_vk_kd = alt.Chart(vk_df).encode(
-        x=alt.X("СВР:N", title=None, sort=svr_order, axis=alt.Axis(labelAngle=270)),
-        y=alt.Y("Кривични дела:Q", title="Број на кривични дела", axis=alt.Axis(format="d", tickMinStep=1))
+        x=alt.X(
+            "СВР:N",
+            title=None,
+            sort=svr_order,
+            axis=alt.Axis(labelAngle=270),
+        ),
+        y=alt.Y(
+            "Кривични дела:Q",
+            title="Број на кривични дела",
+            axis=alt.Axis(format="d", tickMinStep=1),
+        ),
     )
     bars_vk_kd = base_vk_kd.mark_bar(color=BLUE_COLOR)
-    text_vk_kd = base_vk_kd.mark_text(align="center", dy=-8, fontSize=10).encode(text="Кривични дела:Q")
-    st.altair_chart((bars_vk_kd + text_vk_kd).properties(height=380), use_container_width=True)
+    text_vk_kd = base_vk_kd.mark_text(
+        align="center", dy=-8, fontSize=10
+    ).encode(text="Кривични дела:Q")
+    st.altair_chart(
+        (bars_vk_kd + text_vk_kd).properties(height=380), use_container_width=True
+    )
 
   with col2:
     st.write("**Вкупен криминалитет - Сторители по СВР**")
     base_vk_st = alt.Chart(vk_df).encode(
-        x=alt.X("СВР:N", title=None, sort=svr_order, axis=alt.Axis(labelAngle=270)),
-        y=alt.Y("Сторители:Q", title="Број на сторители", axis=alt.Axis(format="d", tickMinStep=1))
+        x=alt.X(
+            "СВР:N",
+            title=None,
+            sort=svr_order,
+            axis=alt.Axis(labelAngle=270),
+        ),
+        y=alt.Y(
+            "Сторители:Q",
+            title="Број на сторители",
+            axis=alt.Axis(format="d", tickMinStep=1),
+        ),
     )
     bars_vk_st = base_vk_st.mark_bar(color="#2ca02c")
-    text_vk_st = base_vk_st.mark_text(align="center", dy=-8, fontSize=10).encode(text="Сторители:Q")
-    st.altair_chart((bars_vk_st + text_vk_st).properties(height=380), use_container_width=True)
+    text_vk_st = base_vk_st.mark_text(
+        align="center", dy=-8, fontSize=10
+    ).encode(text="Сторители:Q")
+    st.altair_chart(
+        (bars_vk_st + text_vk_st).properties(height=380), use_container_width=True
+    )
 
   st.subheader("📋 Детална табела")
   st.dataframe(df, use_container_width=True)
@@ -195,7 +213,7 @@ elif "Тешки кражби" in selected_sheet:
 
   header_row_idx = None
   for i in range(min(5, len(raw))):
-    row_vals = raw.iloc[i].astype(str)
+    row_vals = raw.iloc[i].fillna("").astype(str)
     if row_vals.str.contains("2024", na=False).any() and row_vals.str.contains(
         "2023", na=False
     ).any():
