@@ -33,42 +33,47 @@ if "Кривични дела против државата" in selected_sheet:
           "Кривични дела": "Предизвикување омраза и нетрпеливост",
           "2024 година": 10,
           "2023 година": 2,
-          "Промена %": "пет пати ↗",
+          "Промена %": 4.0,
+          "Промена текст": "пет пати ↗",
       },
       {
           "Кривични дела": "Учество во странска војска и полиција",
           "2024 година": 2,
-          "2023 година": "-",
-          "Промена %": "200% ↗",
+          "2023 година": 0,
+          "Промена %": 2.0,
+          "Промена текст": "200% ↗",
       },
       {
           "Кривични дела": "Неовластено навлегување и цртање на воени објекти",
           "2024 година": 2,
-          "2023 година": "-",
-          "Промена %": "200% ↗",
+          "2023 година": 0,
+          "Промена %": 2.0,
+          "Промена текст": "200% ↗",
       },
       {
           "Кривични дела": "Служба во непријателска војска",
-          "2024 година": "-",
+          "2024 година": 0,
           "2023 година": 1,
-          "Промена %": "-",
+          "Промена %": -1.0,
+          "Промена текст": "-100% ↘",
       },
       {
           "Кривични дела": "Расна и друга дискриминација",
           "2024 година": 1,
           "2023 година": 1,
-          "Промена %": "-",
+          "Промена %": 0.0,
+          "Промена текст": "-",
       },
       {
           "Кривични дела": "Вкупно кривични дела",
           "2024 година": 15,
           "2023 година": 4,
-          "Промена %": "три и пол пати ↗",
+          "Промена %": 2.75,
+          "Промена текст": "три и пол пати ↗",
       },
   ]
   df_display = pd.DataFrame(table_data)
 
-  st.write("**Кривични дела: 2024 vs 2023 година**")
   chart_data = df_display[
       df_display["Кривични дела"] != "Вкупно кривични дела"
   ].copy()
@@ -85,34 +90,101 @@ if "Кривични дела против државата" in selected_sheet:
       var_name="Година",
       value_name="Број",
   )
-  base_kd_state = alt.Chart(melted_kd).encode(
-      y=alt.Y(
-          "Кривични дела:N",
-          sort=cat_order_kd,
-          title=None,
-          axis=alt.Axis(labelLimit=320),
-      ),
-      x=alt.X("Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)),
-      color=alt.Color(
-          "Година:N",
-          scale=alt.Scale(
-              domain=["2024 година", "2023 година"], range=["#228B22", "#50C878"]
-          ),
-          legend=alt.Legend(title="Година"),
-      ),
-      yOffset="Година:N",
-  )
-  bars_kd_state = base_kd_state.mark_bar()
-  text_kd_state = base_kd_state.mark_text(
-      align="left", dx=3, baseline="middle"
-  ).encode(text="Број:Q")
-  st.altair_chart(
-      (bars_kd_state + text_kd_state).properties(height=350),
-      use_container_width=True,
-  )
+
+  col1, col2 = st.columns(2)
+
+  with col1:
+    st.write("**Споредба по кривични дела (2024 vs 2023)**")
+    base_kd_state = alt.Chart(melted_kd).encode(
+        y=alt.Y(
+            "Кривични дела:N",
+            sort=cat_order_kd,
+            title=None,
+            axis=alt.Axis(labelLimit=320),
+        ),
+        x=alt.X(
+            "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
+        ),
+        color=alt.Color(
+            "Година:N",
+            scale=alt.Scale(
+                domain=["2024 година", "2023 година"],
+                range=["#228B22", "#50C878"],
+            ),
+            legend=alt.Legend(title="Година"),
+        ),
+        yOffset="Година:N",
+    )
+    bars_kd_state = base_kd_state.mark_bar()
+    text_kd_state = base_kd_state.mark_text(
+        align="left", dx=3, baseline="middle"
+    ).encode(text="Број:Q")
+    st.altair_chart(
+        (bars_kd_state + text_kd_state).properties(height=350),
+        use_container_width=True,
+    )
+
+  with col2:
+    st.write("**Промена (%) - Вертикален Lollipop**")
+    chart_data["zero"] = 0
+    chart_data["Насока"] = chart_data["Промена %"].apply(
+        lambda x: "Пораст" if x >= 0 else "Пад"
+    )
+
+    base_v_lolli = alt.Chart(chart_data).encode(
+        x=alt.X(
+            "Кривични дела:N",
+            title=None,
+            sort=cat_order_kd,
+            axis=alt.Axis(labelAngle=270, labelLimit=250),
+        )
+    )
+
+    color_enc = alt.Color(
+        "Насока:N",
+        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+        legend=alt.Legend(title=None),
+    )
+
+    rule_v = base_v_lolli.mark_rule(strokeWidth=2).encode(
+        y=alt.Y("Промена %:Q", axis=alt.Axis(format="%"), title="Промена (%)"),
+        y2="zero:Q",
+        color=color_enc,
+    )
+
+    circle_v = base_v_lolli.mark_circle(size=200).encode(
+        y="Промена %:Q", color=color_enc
+    )
+
+    text_v_pos = (
+        base_v_lolli.transform_filter(alt.datum["Промена %"] >= 0)
+        .mark_text(align="center", dy=-12, fontSize=11)
+        .encode(y="Промена %:Q", text="Промена текст:N")
+    )
+
+    text_v_neg = (
+        base_v_lolli.transform_filter(alt.datum["Промена %"] < 0)
+        .mark_text(align="center", dy=15, fontSize=11)
+        .encode(y="Промена %:Q", text="Промена текст:N")
+    )
+
+    st.altair_chart(
+        (rule_v + circle_v + text_v_pos + text_v_neg).properties(height=350),
+        use_container_width=True,
+    )
 
   st.subheader("📋 Детална табела")
-  st.dataframe(df_display, use_container_width=True, hide_index=True)
+  df_table_show = df_display.copy()
+  df_table_show["Промена %"] = [
+      "пет пати ↗",
+      "200% ↗",
+      "200% ↗",
+      "-",
+      "-",
+      "три и пол пати ↗",
+  ]
+  df_table_show = df_table_show.drop(columns=["Промена текст"])
+  st.dataframe(df_table_show, use_container_width=True, hide_index=True)
 
 # 2. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КРИУМЧАРЕЊЕ НА МИГРАНТИ
 elif "Криумчарење на мигранти" in selected_sheet:
@@ -814,7 +886,6 @@ elif "Насилство" in selected_sheet:
               axis=alt.Axis(labelAngle=270),
           )
       )
-      # Поставено: #2ca02c (зелена) за Пораст, #d62728 (црвена) за Пад
       color_enc = alt.Color(
           "Насока:N",
           scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
