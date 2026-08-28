@@ -87,8 +87,9 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  # За вториот графикон (хоризонтален бар), за да биде прв најгоре, користиме обратен редослед
-  cat_order_kd_reversed = cat_order_kd[::-1]
+  # Со користење на истиот редослед (cat_order_kd) и за вториот графикон, 
+  # прв елемент ќе биде Предизвикување омраза и нетрпеливост на врвот.
+  cat_order_kd_reversed = cat_order_kd
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
