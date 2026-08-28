@@ -87,7 +87,6 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  cat_order_kd_rev = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
@@ -144,7 +143,7 @@ if "Кривични дела против државата" in selected_sheet:
         y=alt.Y(
             "Кривични дела:N",
             title=None,
-            sort=cat_order_kd_rev,
+            sort=cat_order_kd,
             axis=alt.Axis(labelLimit=280),
         )
     )
@@ -159,13 +158,13 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     base_valid = alt.Chart(valid_chart_data).encode(
-        y=alt.Y("Кривични дела:N", sort=cat_order_kd_rev)
+        y=alt.Y("Кривични дела:N", sort=cat_order_kd)
     )
 
     rule_h = base_valid.mark_rule(strokeWidth=2).encode(
         x=alt.X(
             "promena_procent:Q",
-            scale=alt.Scale(domain=[-150, 450]),
+            scale=alt.Scale(domain=[-1.5, 4.5]),
             axis=alt.Axis(format="%"),
             title="Промена (%)",
         ),
@@ -174,10 +173,10 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     circle_h = base_valid.mark_circle(size=200).encode(
-        x="promena_procent:Q", color=color_enc
+        x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
+        color=color_enc,
     )
 
-    # ПОПРАВЕН ДЕЛ: Користење на алтернативен синтаксички израз за филтрирање во Altair без AttributeError
     text_h_pos = (
         base_h_lolli.transform_filter(
             (alt.datum.promena_procent >= 0)
@@ -186,7 +185,7 @@ if "Кривични дела против државата" in selected_sheet:
         )
         .mark_text(align="left", dx=8, fontSize=11)
         .encode(
-            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-150, 450])),
+            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
             text="Промена текст:N",
         )
     )
@@ -199,7 +198,7 @@ if "Кривични дела против државата" in selected_sheet:
         )
         .mark_text(align="right", dx=-8, fontSize=11)
         .encode(
-            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-150, 450])),
+            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
             text="Промена текст:N",
         )
     )
@@ -211,7 +210,7 @@ if "Кривични дела против државата" in selected_sheet:
         )
         .mark_text(align="left", dx=10, fontSize=11, fontStyle="italic")
         .encode(
-            x=alt.X("zero:Q", scale=alt.Scale(domain=[-150, 450])),
+            x=alt.X("zero:Q", scale=alt.Scale(domain=[-1.5, 4.5])),
             text="Промена текст:N",
         )
     )
@@ -1208,3 +1207,4 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 else:
   st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
   st.dataframe(df, use_container_width=True)
+
