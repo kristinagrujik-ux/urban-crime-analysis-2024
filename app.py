@@ -115,11 +115,14 @@ if "Кривични дела против државата" in selected_sheet:
   st.subheader("📋 Детална табела")
   st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-# 1.5 SPECIJALIZIRAN PRIKAZ ZA TEŠKI KRAŽBI (POPRAVEN VTORSKI GRAFIK)
-elif "Тешки кражби" in selected_sheet:
+# 1.2 SPECIJALIZIRAN PRIKAZ ZA VKUPEN KRIMINALITET I TEŠKI KRAŽBI
+elif (
+    "Тешки кражби" in selected_sheet
+    or "Вкупен криминалитет" in selected_sheet
+    or "вкупен криминалитет" in selected_sheet.lower()
+):
   raw = df.copy()
 
-  # Baranje na redot so zaglavija (kade stoi 2024 godina / 2023 godina)
   header_row_idx = None
   for i in range(min(5, len(raw))):
     row_vals = raw.iloc[i].astype(str)
@@ -136,7 +139,6 @@ elif "Тешки кражби" in selected_sheet:
     header_row = raw.iloc[header_row_idx]
     label_col = raw.columns[0]
 
-    # Identifikacija na kolonite
     col_2024 = next(
         col for col in raw.columns if "2024" in str(header_row[col])
     )
@@ -149,7 +151,6 @@ elif "Тешки кражби" in selected_sheet:
 
     data_rows = raw.iloc[header_row_idx + 1 :].copy()
     data_rows = data_rows[data_rows[label_col].notna()]
-    # Go otstranuvame redot "Вкупно" za da ostanat samo SVR
     data_rows_svr = data_rows[
         ~data_rows[label_col].astype(str).str.contains("Вкупно", na=False)
     ]
@@ -184,7 +185,7 @@ elif "Тешки кражби" in selected_sheet:
     col1, col2 = st.columns(2)
 
     with col1:
-      st.write("**Тешки кражби: 2024 vs 2023 година**")
+      st.write(f"**{selected_sheet}: 2024 vs 2023 година**")
       melted_tk = tk_clean.melt(
           id_vars=["СВР"],
           value_vars=["2024 година", "2023 година"],
@@ -220,7 +221,7 @@ elif "Тешки кражби" in selected_sheet:
       )
 
     with col2:
-      st.write("**Тешки кражби - Промена (%)**")
+      st.write(f"**{selected_sheet} - Промена (%)**")
       tk_clean["zero"] = 0
       base_lolli_tk = alt.Chart(tk_clean).encode(
           x=alt.X(
@@ -492,4 +493,7 @@ elif "трговија со дрога" in selected_sheet.lower():
   st.subheader("📋 Детална табела")
   st.dataframe(df, use_container_width=True)
 
-# Останатите листови (Убиства, Насилство, Организиран криминал, Вкупен криминалитет...) остануваат како претходно.
+# 4. DEFAULT PRIKAZ ZA OSTANATITE LISTOVI
+else:
+  st.subheader("📋 Детална табела")
+  st.dataframe(df, use_container_width=True)
