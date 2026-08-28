@@ -83,6 +83,10 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data["2023 година"] = pd.to_numeric(
       chart_data["2023 година"], errors="coerce"
   ).fillna(0)
+
+  # ПОПРАВКА: Преименување за да се избегне грешка во Altair со специјални карактери
+  chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
+
   cat_order_kd = chart_data["Кривични дела"].tolist()
   cat_order_kd_rev = cat_order_kd[::-1]
 
@@ -129,13 +133,13 @@ if "Кривични дела против државата" in selected_sheet:
   with col2:
     st.write("**Промена (%) - Хоризонтален Lollipop**")
     chart_data["zero"] = 0
-    chart_data["Насока"] = chart_data["Промена %"].apply(
+    chart_data["Насока"] = chart_data["promena_procent"].apply(
         lambda x: "Пораст"
         if pd.notnull(x) and x >= 0
         else ("Пад" if pd.notnull(x) and x < 0 else "Немерливо")
     )
 
-    valid_chart_data = chart_data.dropna(subset=["Промена %"])
+    valid_chart_data = chart_data.dropna(subset=["promena_procent"])
 
     base_h_lolli = alt.Chart(chart_data).encode(
         y=alt.Y(
@@ -161,7 +165,7 @@ if "Кривични дела против државата" in selected_sheet:
 
     rule_h = base_valid.mark_rule(strokeWidth=2).encode(
         x=alt.X(
-            "Промена %:Q",
+            "promena_procent:Q",
             scale=alt.Scale(domain=[-150, 450]),
             axis=alt.Axis(format="%"),
             title="Промена (%)",
@@ -171,33 +175,35 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     circle_h = base_valid.mark_circle(size=200).encode(
-        x="Промена %:Q", color=color_enc
+        x="promena_procent:Q", color=color_enc
     )
 
     text_h_pos = (
         base_h_lolli.transform_filter(
-            (alt.datum["Промена %"] >= 0) & (alt.datum["Промена %"].notnull())
+            (alt.datum["promena_procent"] >= 0)
+            & (alt.datum["promena_procent"].notnull())
         )
         .mark_text(align="left", dx=8, fontSize=11)
         .encode(
-            x=alt.X("Промена %:Q", scale=alt.Scale(domain=[-150, 450])),
+            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-150, 450])),
             text="Промена текст:N",
         )
     )
 
     text_h_neg = (
         base_h_lolli.transform_filter(
-            (alt.datum["Промена %"] < 0) & (alt.datum["Промена %"].notnull())
+            (alt.datum["promena_procent"] < 0)
+            & (alt.datum["promena_procent"].notnull())
         )
         .mark_text(align="right", dx=-8, fontSize=11)
         .encode(
-            x=alt.X("Промена %:Q", scale=alt.Scale(domain=[-150, 450])),
+            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-150, 450])),
             text="Промена текст:N",
         )
     )
 
     text_h_na = (
-        base_h_lolli.transform_filter(alt.datum["Промена %"].isnull())
+        base_h_lolli.transform_filter(alt.datum["promena_procent"].isnull())
         .mark_text(align="left", dx=10, fontSize=11, fontStyle="italic")
         .encode(
             x=alt.X("zero:Q", scale=alt.Scale(domain=[-150, 450])),
