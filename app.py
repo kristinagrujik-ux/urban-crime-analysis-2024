@@ -84,6 +84,9 @@ if "Кривични дела против државата" in selected_sheet:
       chart_data["2023 година"], errors="coerce"
   ).fillna(0)
   cat_order_kd = chart_data["Кривични дела"].tolist()
+  # За хоризонтален график, категориите од одозгора надолу соодветствуваат на обратен редослед при сортирање во Altair Y оска
+  cat_order_kd_rev = cat_order_kd[::-1]
+
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
       value_vars=["2024 година", "2023 година"],
@@ -125,18 +128,18 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Вертикален Lollipop**")
+    st.write("**Промена (%) - Хоризонтален Lollipop**")
     chart_data["zero"] = 0
     chart_data["Насока"] = chart_data["Промена %"].apply(
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    base_v_lolli = alt.Chart(chart_data).encode(
-        x=alt.X(
+    base_h_lolli = alt.Chart(chart_data).encode(
+        y=alt.Y(
             "Кривични дела:N",
             title=None,
-            sort=cat_order_kd,
-            axis=alt.Axis(labelAngle=270, labelLimit=250),
+            sort=cat_order_kd_rev,
+            axis=alt.Axis(labelLimit=280),
         )
     )
 
@@ -146,30 +149,30 @@ if "Кривични дела против државата" in selected_sheet:
         legend=alt.Legend(title=None),
     )
 
-    rule_v = base_v_lolli.mark_rule(strokeWidth=2).encode(
-        y=alt.Y("Промена %:Q", axis=alt.Axis(format="%"), title="Промена (%)"),
-        y2="zero:Q",
+    rule_h = base_h_lolli.mark_rule(strokeWidth=2).encode(
+        x=alt.X("Промена %:Q", axis=alt.Axis(format="%"), title="Промена (%)"),
+        x2="zero:Q",
         color=color_enc,
     )
 
-    circle_v = base_v_lolli.mark_circle(size=200).encode(
-        y="Промена %:Q", color=color_enc
+    circle_h = base_h_lolli.mark_circle(size=200).encode(
+        x="Промена %:Q", color=color_enc
     )
 
-    text_v_pos = (
-        base_v_lolli.transform_filter(alt.datum["Промена %"] >= 0)
-        .mark_text(align="center", dy=-12, fontSize=11)
-        .encode(y="Промена %:Q", text="Промена текст:N")
+    text_h_pos = (
+        base_h_lolli.transform_filter(alt.datum["Промена %"] >= 0)
+        .mark_text(align="left", dx=8, fontSize=11)
+        .encode(x="Промена %:Q", text="Промена текст:N")
     )
 
-    text_v_neg = (
-        base_v_lolli.transform_filter(alt.datum["Промена %"] < 0)
-        .mark_text(align="center", dy=15, fontSize=11)
-        .encode(y="Промена %:Q", text="Промена текст:N")
+    text_h_neg = (
+        base_h_lolli.transform_filter(alt.datum["Промена %"] < 0)
+        .mark_text(align="right", dx=-8, fontSize=11)
+        .encode(x="Промена %:Q", text="Промена текст:N")
     )
 
     st.altair_chart(
-        (rule_v + circle_v + text_v_pos + text_v_neg).properties(height=350),
+        (rule_h + circle_h + text_h_pos + text_h_neg).properties(height=350),
         use_container_width=True,
     )
 
@@ -774,7 +777,7 @@ elif "Убиства" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (СО ВЕРТИКАЛЕН LOLLIPOP ГРАФИК)
+# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО
 elif "Насилство" in selected_sheet:
   raw = df.copy()
   label_col = raw.columns[0]
@@ -1147,7 +1150,7 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
             xOffset="Година:N",
         )
     )
-    st.altair_chart(chart_t2.properties(height=350), use_container_width=True)
+    st.altair_chart(chart_t2.properties(height=380), use_container_width=True)
 
   st.subheader("📋 Детални табели")
   st.write("Оперативни активности:")
