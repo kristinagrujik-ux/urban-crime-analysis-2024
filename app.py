@@ -116,30 +116,21 @@ if "Кривични дела против државата" in selected_sheet:
   st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 # 1.2 SPECIJALIZIRAN PRIKAZ ZA VKUPEN KRIMINALITET
-elif "Вкупен криминалитет" in selected_sheet or "вкупен криминалитет" in selected_sheet.lower():
+elif (
+    "Вкупен криминалитет" in selected_sheet
+    or "вкупен криминалитет" in selected_sheet.lower()
+):
   raw = df.copy()
 
-  # Безбедно наоѓање на редот каде што се појавуваат СВР податоците
-  header_idx = 2  експлицитно порамнување според изгледот на табелата
-  for i in range(len(raw)):
-    row_str = " ".join(raw.iloc[i].fillna("").astype(str).values)
-    if "СВР" in row_str or "ОСОСК" in row_str:
-      header_idx = i - 1
-      break
-
-  if header_idx < 0:
-    header_idx = 2
-
+  # Безбедно мапирање на податоците директно од табелата
   try:
     vk_df = pd.DataFrame({
-        "СВР": raw.iloc[header_idx + 1 :, 0].values,
+        "СВР": raw.iloc[1:, 0].values,
         "Кривични дела": pd.to_numeric(
-            raw.iloc[header_idx + 1 :, 2], errors="coerce"
+            raw.iloc[1:, 2], errors="coerce"
         ).fillna(0),
         "Сторители": pd.to_numeric(
-            raw.iloc[header_idx + 1 :, 8]
-            if raw.shape[1] > 8
-            else raw.iloc[header_idx + 1 :, -1],
+            raw.iloc[1:, 8] if raw.shape[1] > 8 else raw.iloc[1:, -1],
             errors="coerce",
         ).fillna(0),
     }).dropna(subset=["СВР"])
