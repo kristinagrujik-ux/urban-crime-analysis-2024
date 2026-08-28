@@ -814,10 +814,10 @@ elif "Насилство" in selected_sheet:
               axis=alt.Axis(labelAngle=270),
           )
       )
-      # Променето: #d62728 за Пораст (црвена), #2ca02c за Пад (зелена)
+      # Поставено: #2ca02c (зелена) за Пораст, #d62728 (црвена) за Пад
       color_enc = alt.Color(
           "Насока:N",
-          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#d62728", "#2ca02c"]),
+          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
           legend=alt.Legend(title=None),
       )
       rule_v = base_v_lolli.mark_rule(strokeWidth=2).encode(
@@ -967,7 +967,7 @@ elif "Тешки кражби" in selected_sheet:
       )
       color_enc_custom = alt.Color(
           "Насока:N",
-          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#d62728", "#2ca02c"]),
+          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
           legend=alt.Legend(title=None),
       )
 
