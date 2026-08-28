@@ -40,15 +40,15 @@ if "Кривични дела против државата" in selected_sheet:
           "Кривични дела": "Учество во странска војска и полиција",
           "2024 година": 2,
           "2023 година": 0,
-          "Промена %": 2.0,
-          "Промена текст": "200% ↗",
+          "Промена %": None,
+          "Промена текст": "N/A",
       },
       {
           "Кривични дела": "Неовластено навлегување и цртање на воени објекти",
           "2024 година": 2,
           "2023 година": 0,
-          "Промена %": 2.0,
-          "Промена текст": "200% ↗",
+          "Промена %": None,
+          "Промена текст": "N/A",
       },
       {
           "Кривични дела": "Служба во непријателска војска",
@@ -84,7 +84,6 @@ if "Кривични дела против државата" in selected_sheet:
       chart_data["2023 година"], errors="coerce"
   ).fillna(0)
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  # За хоризонтален график, категориите од одозгора надолу соодветствуваат на обратен редослед при сортирање во Altair Y оска
   cat_order_kd_rev = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
@@ -131,8 +130,12 @@ if "Кривични дела против државата" in selected_sheet:
     st.write("**Промена (%) - Хоризонтален Lollipop**")
     chart_data["zero"] = 0
     chart_data["Насока"] = chart_data["Промена %"].apply(
-        lambda x: "Пораст" if x >= 0 else "Пад"
+        lambda x: "Пораст"
+        if pd.notnull(x) and x >= 0
+        else ("Пад" if pd.notnull(x) and x < 0 else "Немерливо")
     )
+
+    valid_chart_data = chart_data.dropna(subset=["Промена %"])
 
     base_h_lolli = alt.Chart(chart_data).encode(
         y=alt.Y(
@@ -145,34 +148,67 @@ if "Кривични дела против државата" in selected_sheet:
 
     color_enc = alt.Color(
         "Насока:N",
-        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+        scale=alt.Scale(
+            domain=["Пораст", "Пад", "Немерливо"],
+            range=["#2ca02c", "#d62728", "#7f7f7f"],
+        ),
         legend=alt.Legend(title=None),
     )
 
-    rule_h = base_h_lolli.mark_rule(strokeWidth=2).encode(
-        x=alt.X("Промена %:Q", axis=alt.Axis(format="%"), title="Промена (%)"),
+    base_valid = alt.Chart(valid_chart_data).encode(
+        y=alt.Y("Кривични дела:N", sort=cat_order_kd_rev)
+    )
+
+    rule_h = base_valid.mark_rule(strokeWidth=2).encode(
+        x=alt.X(
+            "Промена %:Q",
+            scale=alt.Scale(domain=[-150, 450]),
+            axis=alt.Axis(format="%"),
+            title="Промена (%)",
+        ),
         x2="zero:Q",
         color=color_enc,
     )
 
-    circle_h = base_h_lolli.mark_circle(size=200).encode(
+    circle_h = base_valid.mark_circle(size=200).encode(
         x="Промена %:Q", color=color_enc
     )
 
     text_h_pos = (
-        base_h_lolli.transform_filter(alt.datum["Промена %"] >= 0)
+        base_h_lolli.transform_filter(
+            (alt.datum["Промена %"] >= 0) & (alt.datum["Промена %"].notnull())
+        )
         .mark_text(align="left", dx=8, fontSize=11)
-        .encode(x="Промена %:Q", text="Промена текст:N")
+        .encode(
+            x=alt.X("Промена %:Q", scale=alt.Scale(domain=[-150, 450])),
+            text="Промена текст:N",
+        )
     )
 
     text_h_neg = (
-        base_h_lolli.transform_filter(alt.datum["Промена %"] < 0)
+        base_h_lolli.transform_filter(
+            (alt.datum["Промена %"] < 0) & (alt.datum["Промена %"].notnull())
+        )
         .mark_text(align="right", dx=-8, fontSize=11)
-        .encode(x="Промена %:Q", text="Промена текст:N")
+        .encode(
+            x=alt.X("Промена %:Q", scale=alt.Scale(domain=[-150, 450])),
+            text="Промена текст:N",
+        )
+    )
+
+    text_h_na = (
+        base_h_lolli.transform_filter(alt.datum["Промена %"].isnull())
+        .mark_text(align="left", dx=10, fontSize=11, fontStyle="italic")
+        .encode(
+            x=alt.X("zero:Q", scale=alt.Scale(domain=[-150, 450])),
+            text="Промена текст:N",
+        )
     )
 
     st.altair_chart(
-        (rule_h + circle_h + text_h_pos + text_h_neg).properties(height=350),
+        (rule_h + circle_h + text_h_pos + text_h_neg + text_h_na).properties(
+            height=350
+        ),
         use_container_width=True,
     )
 
@@ -180,8 +216,8 @@ if "Кривични дела против државата" in selected_sheet:
   df_table_show = df_display.copy()
   df_table_show["Промена %"] = [
       "пет пати ↗",
-      "200% ↗",
-      "200% ↗",
+      "N/A",
+      "N/A",
       "-",
       "-",
       "три и пол пати ↗",
