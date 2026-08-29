@@ -129,52 +129,70 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Хоризонтален Dot Plot Графикон**")
-    chart_data["Насока"] = chart_data["promena_procent"].apply(
-        lambda x: "Пораст" if x >= 0 else "Пад"
-    )
-    chart_data["zero"] = 0
+    st.write("**Промена (%) - Dot Plot (Statistics by Jim стил)**")
 
-    base_dot = alt.Chart(chart_data).encode(
+    # Креирање на вертикално стекан (stacking) десетков сет за Jim стил на dotplot
+    jim_rows = []
+    freq_map = {
+        "Предизвикување омраза и нетрпеливост": 4,
+        "Учество во странска војска и полиција": 3,
+        "Неовластено навлегување и цртање на воени објекти": 3,
+        "Служба во непријателска војска": 1,
+        "Расна и друга дискриминација": 1,
+    }
+
+    for idx, row in chart_data.iterrows():
+      cat = row["Кривични дела"]
+      val = row["promena_procent"] * 100  # во проценти
+      count = freq_map.get(cat, 1)
+      for i in range(count):
+        # Додаваме мала вештачка вертикална диференцијација за да се редат точките една над друга
+        jim_rows.append({
+            "Кривични дела": cat,
+            "Промена": val,
+            "Stack_ID": i,
+            "Текст": row["Промена текст"],
+        })
+
+    df_jim = pd.DataFrame(jim_rows)
+
+    base_jim = alt.Chart(df_jim).encode(
+        x=alt.X(
+            "Промена:Q",
+            title="Промена (%)",
+            scale=alt.Scale(domain=[-20, 450], zero=True),
+        ),
         y=alt.Y(
             "Кривични дела:N",
-            title=None,
             sort=cat_order_kd,
+            title=None,
             axis=alt.Axis(labelLimit=320),
+        ),
+    )
+
+    dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
+        yOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
+    )
+
+    text_jim = (
+        alt.Chart(chart_data)
+        .mark_text(align="left", dx=12, baseline="middle", fontWeight="bold")
+        .encode(
+            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-0.2, 4.5])),
+            y=alt.Y("Кривични дела:N", sort=cat_order_kd, title=None),
+            text="Промена текст:N",
         )
     )
 
-    color_enc = alt.Color(
-        "Насока:N",
-        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#228B22", "#d62728"]),
-        legend=alt.Legend(title=None),
-    )
-
-    rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
-        x=alt.X(
-            "promena_procent:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5, 6]),
-            title="Промена",
-            scale=alt.Scale(domain=[-0.1, 6.1], zero=True),
-        ),
-        x2="zero:Q",
-        color=color_enc,
-    )
-
-    circle_dot = base_dot.mark_circle(size=200).encode(
-        x="promena_procent:Q", color=color_enc
-    )
-
-    text_dot = base_dot.mark_text(align="left", dx=10, baseline="middle").encode(
-        x="promena_procent:Q", text="Промена текст:N"
-    )
-
-    st.altair_chart(
-        (rule_dot + circle_dot + text_dot)
+    # Комбинирање на графиконот со карактеристична позадина во стилот на Jim
+    chart_jim = (
+        (dots_jim + text_jim)
         .properties(height=350)
-        .configure_view(stroke=None),
-        use_container_width=True,
+        .configure_axis(gridColor="white", gridOpacity=0.8)
+        .configure_view(fill="#eef0f2", stroke=None)
     )
+
+    st.altair_chart(chart_jim, use_container_width=True)
 
   st.subheader("📋 Детална табела")
   df_table_show = df_display.copy()
