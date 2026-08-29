@@ -87,7 +87,7 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  cat_order_kd_reversed = cat_order_kd
+  cat_order_kd_reversed = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
@@ -130,12 +130,13 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Хоризонтален лентаст графикон**")
+    st.write("**Промена (%) - Dot Plot Графикон**")
     chart_data["Насока"] = chart_data["promena_procent"].apply(
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
+    chart_data["zero"] = 0
 
-    base_h_bar = alt.Chart(chart_data).encode(
+    base_dot = alt.Chart(chart_data).encode(
         y=alt.Y(
             "Кривични дела:N",
             title=None,
@@ -150,22 +151,27 @@ if "Кривични дела против државата" in selected_sheet:
         legend=alt.Legend(title=None),
     )
 
-    bars_h = base_h_bar.mark_bar().encode(
+    rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
         x=alt.X(
             "promena_procent:Q",
             axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5]),
             title="Промена",
             scale=alt.Scale(domain=[0, 5.5], zero=True),
         ),
+        x2="zero:Q",
         color=color_enc,
     )
 
-    text_h = base_h_bar.mark_text(
-        align="left", dx=5, baseline="middle", fontSize=11
-    ).encode(x="promena_procent:Q", text="Промена текст:N")
+    circle_dot = base_dot.mark_circle(size=200).encode(
+        x="promena_procent:Q", color=color_enc
+    )
+
+    text_dot = base_dot.mark_text(align="left", dx=10, fontSize=11).encode(
+        x="promena_procent:Q", text="Промена текст:N"
+    )
 
     st.altair_chart(
-        (bars_h + text_h)
+        (rule_dot + circle_dot + text_dot)
         .properties(height=350)
         .configure_view(stroke=None),
         use_container_width=True,
@@ -1017,7 +1023,6 @@ elif "Тешки кражби" in selected_sheet:
           (teski_clean["2024 година"] - teski_clean["2023 година"]) / prev_y
       ).fillna(0)
 
-    # Претворање во проценти со 1 децимала (пр. -0.1725 -> "-17.3%")
     teski_clean["Промена текст"] = teski_clean["Промена"].apply(
         lambda x: f"{x*100:.1f}%"
     )
@@ -1084,9 +1089,7 @@ elif "Тешки кражби" in selected_sheet:
                   format="%", values=[-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]
               ),
               title="Промена",
-              scale=alt.Scale(
-                  domain=[-0.35, 0.35], zero=True
-              ),  # Поставена соодветна скала од -35% до +35% за да одговара на податоците
+              scale=alt.Scale(domain=[-0.35, 0.35], zero=True),
           ),
           color=color_enc_custom,
       )
