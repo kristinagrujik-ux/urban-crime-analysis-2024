@@ -250,13 +250,13 @@ elif "Криумчарење на мигранти" in selected_sheet:
         ),
         x=alt.X(
             "Промена:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            axis=alt.Axis(format="%", values=[-1, 0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+            scale=alt.Scale(domain=[-0.8, 0.1], zero=False),
         ),
     )
     text_change = bar_change.mark_text(align="left", dx=3).encode(
-        text="Промена текст:N"
+        x="Промена:Q", text="Промена текст:N"
     )
     st.altair_chart(
         (bar_change + text_change).properties(
@@ -354,9 +354,9 @@ elif "трговија со дрога" in selected_sheet.lower():
     rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
         y=alt.Y(
             "Промена КД %:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            axis=alt.Axis(format="%", values=[0, 0.5, 1.0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+            scale=alt.Scale(domain=[-0.2, 1.1], zero=True),
         ),
         y2="zero:Q",
     )
@@ -412,9 +412,9 @@ elif "трговија со дрога" in selected_sheet.lower():
     rule_stor = base_stor.mark_rule(color="#d62728", strokeWidth=2).encode(
         y=alt.Y(
             "Промена Сторители %:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            axis=alt.Axis(format="%", values=[0, 0.5, 1.0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+            scale=alt.Scale(domain=[-0.4, 1.1], zero=True),
         ),
         y2="zero:Q",
     )
@@ -711,6 +711,9 @@ elif "Убиства" in selected_sheet:
         lambda x: f"{x*100:.1f}%" if pd.notnull(x) else "-"
     )
     ubistva_clean["Промена (плот)"] = ubistva_clean["Промена"].fillna(0)
+    ubistva_clean["Насока"] = ubistva_clean["Промена"].apply(
+        lambda x: "Пораст" if x >= 0 else "Пад"
+    )
 
     sector_order = ubistva_clean["СВР"].tolist()
 
@@ -760,23 +763,38 @@ elif "Убиства" in selected_sheet:
               axis=alt.Axis(labelAngle=270),
           )
       )
-      rule_u = base_lolli.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
+      color_enc_u = alt.Color(
+          "Насока:N",
+          scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+          legend=alt.Legend(title=None),
+      )
+      rule_u = base_lolli.mark_rule(strokeWidth=2).encode(
           y=alt.Y(
               "Промена (плот):Q",
               axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
               title="Промена",
-              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+              scale=alt.Scale(domain=[-1.2, 3.2], zero=True),
           ),
           y2="zero:Q",
+          color=color_enc_u,
       )
-      circle_u = base_lolli.mark_circle(size=200, color=BLUE_COLOR).encode(
-          y="Промена (плот):Q"
+      circle_u = base_lolli.mark_circle(size=200).encode(
+          y="Промена (плот):Q", color=color_enc_u
       )
-      text_lolli = base_lolli.mark_text(
-          align="center", dy=-14, fontSize=11
-      ).encode(y="Промена (плот):Q", text="Промена текст:N")
+      text_u_pos = (
+          base_lolli.transform_filter(alt.datum["Промена (плот)"] >= 0)
+          .mark_text(align="center", dy=-16, fontSize=11)
+          .encode(y="Промена (плот):Q", text="Промена текст:N")
+      )
+      text_u_neg = (
+          base_lolli.transform_filter(alt.datum["Промена (плот)"] < 0)
+          .mark_text(align="center", dy=18, fontSize=11)
+          .encode(y="Промена (плот):Q", text="Промена текст:N")
+      )
       st.altair_chart(
-          (rule_u + circle_u + text_lolli).properties(height=380),
+          (rule_u + circle_u + text_u_pos + text_u_neg).properties(
+              height=380
+          ),
           use_container_width=True,
       )
 
@@ -903,9 +921,9 @@ elif "Насилство" in selected_sheet:
       rule_v = base_v_lolli.mark_rule(strokeWidth=2).encode(
           y=alt.Y(
               "Промена:Q",
-              axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+              axis=alt.Axis(format="%", values=[0, 1, 2]),
               title="Промена (%)",
-              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+              scale=alt.Scale(domain=[-0.2, 2.1], zero=True),
           ),
           y2="zero:Q",
           color=color_enc,
@@ -1057,9 +1075,9 @@ elif "Тешки кражби" in selected_sheet:
       bars_cond = base_cond.mark_bar().encode(
           x=alt.X(
               "Промена:Q",
-              axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+              axis=alt.Axis(format="%", values=[0, 1, 2]),
               title="Промена",
-              scale=alt.Scale(domain=[-0.2, 3.2], zero=True),
+              scale=alt.Scale(domain=[-0.3, 2.1], zero=True),
           ),
           color=color_enc_custom,
       )
