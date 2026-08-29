@@ -129,9 +129,8 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Dot Plot (Statistics by Jim стил)**")
+    st.write("**Промена (%) - Вертикален Dot Plot**")
 
-    # Креирање на вертикално стекан (stacking) десетков сет за Jim стил на dotplot
     jim_rows = []
     freq_map = {
         "Предизвикување омраза и нетрпеливост": 4,
@@ -143,10 +142,9 @@ if "Кривични дела против државата" in selected_sheet:
 
     for idx, row in chart_data.iterrows():
       cat = row["Кривични дела"]
-      val = row["promena_procent"] * 100  # во проценти
+      val = row["promena_procent"] * 100
       count = freq_map.get(cat, 1)
       for i in range(count):
-        # Додаваме мала вештачка вертикална диференцијација за да се редат точките една над друга
         jim_rows.append({
             "Кривични дела": cat,
             "Промена": val,
@@ -156,35 +154,39 @@ if "Кривични дела против државата" in selected_sheet:
 
     df_jim = pd.DataFrame(jim_rows)
 
+    # Вертикален систем: X е категоријата, Y е процентот
     base_jim = alt.Chart(df_jim).encode(
         x=alt.X(
-            "Промена:Q",
-            title="Промена (%)",
-            scale=alt.Scale(domain=[-20, 450], zero=True),
-        ),
-        y=alt.Y(
             "Кривични дела:N",
             sort=cat_order_kd,
             title=None,
-            axis=alt.Axis(labelLimit=320),
+            axis=alt.Axis(labelAngle=270, labelLimit=250),
+        ),
+        y=alt.Y(
+            "Промена:Q",
+            title="Промена (%)",
+            scale=alt.Scale(domain=[-20, 480], zero=True),
         ),
     )
 
     dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
-        yOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
+        xOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
     )
 
     text_jim = (
         alt.Chart(chart_data)
-        .mark_text(align="left", dx=12, baseline="middle", fontWeight="bold")
+        .mark_text(align="center", dy=-12, fontWeight="bold", fontSize=11)
         .encode(
-            x=alt.X("promena_procent:Q", scale=alt.Scale(domain=[-0.2, 4.5])),
-            y=alt.Y("Кривични дела:N", sort=cat_order_kd, title=None),
+            x=alt.X("Кривични дела:N", sort=cat_order_kd, title=None),
+            y=alt.Y(
+                "promena_procent:Q",
+                scale=alt.Scale(domain=[-0.2, 4.8]),
+                title=None,
+            ),
             text="Промена текст:N",
         )
     )
 
-    # Комбинирање на графиконот со карактеристична позадина во стилот на Jim
     chart_jim = (
         (dots_jim + text_jim)
         .properties(height=350)
