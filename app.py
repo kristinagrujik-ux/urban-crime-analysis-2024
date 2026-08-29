@@ -87,7 +87,6 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  cat_order_kd_reversed = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
@@ -140,7 +139,7 @@ if "Кривични дела против државата" in selected_sheet:
         y=alt.Y(
             "Кривични дела:N",
             title=None,
-            sort=cat_order_kd_reversed,
+            sort=cat_order_kd,
             axis=alt.Axis(labelLimit=320),
         )
     )
