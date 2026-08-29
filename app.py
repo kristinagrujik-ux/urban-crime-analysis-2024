@@ -153,9 +153,9 @@ if "Кривични дела против државата" in selected_sheet:
     rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
         x=alt.X(
             "promena_procent:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5, 6]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.1, 3.1], zero=True),
+            scale=alt.Scale(domain=[-0.1, 6.1], zero=True),
         ),
         x2="zero:Q",
         color=color_enc,
