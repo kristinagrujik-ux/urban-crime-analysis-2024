@@ -240,7 +240,11 @@ elif "Криумчарење на мигранти" in selected_sheet:
 
   with col2:
     st.write("**Промена (%) според категорија**")
+    # Го користиме истиот редослед (cat_order) за да одговараат на столбовите,
+    # а Altair стандардно ги прикажува оските од долу нагоре, па ги реверзираме
+    # само вредностите за sort за да бидат исто како левиот графикон.
     cat_order_reversed = cat_order[::-1]
+
     bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
         y=alt.Y(
             "Категорија:N",
@@ -250,12 +254,12 @@ elif "Криумчарење на мигранти" in selected_sheet:
         ),
         x=alt.X(
             "Промена:Q",
-            axis=alt.Axis(format="%", values=[-1, 0]),
+            axis=alt.Axis(format="%", values=[-0.8, -0.6, -0.4, -0.2, 0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.8, 0.1], zero=False),
+            scale=alt.Scale(domain=[-0.75, 0.05], zero=False),
         ),
     )
-    text_change = bar_change.mark_text(align="left", dx=3).encode(
+    text_change = bar_change.mark_text(align="left", dx=5).encode(
         x="Промена:Q", text="Промена текст:N"
     )
     st.altair_chart(
@@ -1143,9 +1147,7 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
           xOffset="Година:N",
       )
   )
-  st.altair_chart(
-      chart_t2.properties(height=380), use_container_width=True
-  )
+  st.altair_chart(chart_t2.properties(height=380), use_container_width=True)
 
   st.subheader("📋 Детална табела")
   st.dataframe(df_table2, use_container_width=True, hide_index=True)
