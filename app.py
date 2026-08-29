@@ -144,7 +144,6 @@ if "Кривични дела против државата" in selected_sheet:
         )
     )
 
-    # Пораст = Зелено, Пад = Црвено
     color_enc = alt.Color(
         "Насока:N",
         scale=alt.Scale(domain=["Пораст", "Пад"], range=["#228B22", "#d62728"]),
@@ -156,9 +155,7 @@ if "Кривични дела против државата" in selected_sheet:
             "promena_procent:Q",
             axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5]),
             title="Промена",
-            scale=alt.Scale(
-                domain=[0, 5.5], zero=True
-            ),  # Тргната нулата од средина, почнува од 0 до 5.5 за простор десно
+            scale=alt.Scale(domain=[0, 5.5], zero=True),
         ),
         color=color_enc,
     )
@@ -1020,6 +1017,7 @@ elif "Тешки кражби" in selected_sheet:
           (teski_clean["2024 година"] - teski_clean["2023 година"]) / prev_y
       ).fillna(0)
 
+    # Претворање во проценти со 1 децимала (пр. -0.1725 -> "-17.3%")
     teski_clean["Промена текст"] = teski_clean["Промена"].apply(
         lambda x: f"{x*100:.1f}%"
     )
@@ -1082,9 +1080,13 @@ elif "Тешки кражби" in selected_sheet:
       bars_cond = base_cond.mark_bar().encode(
           x=alt.X(
               "Промена:Q",
-              axis=alt.Axis(format="%", values=[0, 1, 2]),
+              axis=alt.Axis(
+                  format="%", values=[-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]
+              ),
               title="Промена",
-              scale=alt.Scale(domain=[-0.3, 2.1], zero=True),
+              scale=alt.Scale(
+                  domain=[-0.35, 0.35], zero=True
+              ),  # Поставена соодветна скала од -35% до +35% за да одговара на податоците
           ),
           color=color_enc_custom,
       )
@@ -1158,4 +1160,3 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 else:
   st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
   st.dataframe(df, use_container_width=True)
- 
