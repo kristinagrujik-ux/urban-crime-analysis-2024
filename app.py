@@ -155,7 +155,7 @@ if "Кривични дела против државата" in selected_sheet:
             "promena_procent:Q",
             axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
             title="Промена",
-            scale=alt.Scale(domain=[-1.1, 3.2], zero=True),
+            scale=alt.Scale(domain=[-1.1, 3.1], zero=True),
         ),
         color=color_enc,
     )
@@ -240,9 +240,6 @@ elif "Криумчарење на мигранти" in selected_sheet:
 
   with col2:
     st.write("**Промена (%) според категорија**")
-    # Го користиме истиот редослед (cat_order) за да одговараат на столбовите,
-    # а Altair стандардно ги прикажува оските од долу нагоре, па ги реверзираме
-    # само вредностите за sort за да бидат исто како левиот графикон.
     cat_order_reversed = cat_order[::-1]
 
     bar_change = alt.Chart(mig_clean).mark_bar(color=BLUE_COLOR).encode(
@@ -1155,3 +1152,4 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 else:
   st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
   st.dataframe(df, use_container_width=True)
+ 
