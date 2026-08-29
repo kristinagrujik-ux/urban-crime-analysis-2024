@@ -1029,8 +1029,7 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    sector_order_original = teski_clean["СВР"].tolist()
-    sector_order_reversed = sector_order_original[::-1]
+    sector_order = teski_clean["СВР"].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -1045,7 +1044,7 @@ elif "Тешки кражби" in selected_sheet:
           x=alt.X(
               "СВР:N",
               title=None,
-              sort=sector_order_original,
+              sort=sector_order,
               axis=alt.Axis(labelAngle=270),
           ),
           y=alt.Y(
@@ -1066,99 +1065,55 @@ elif "Тешки кражби" in selected_sheet:
       )
 
     with col2:
-      st.write("**Тешки кражби - Промена (%)**")
-      base_cond = alt.Chart(teski_clean).encode(
-          y=alt.Y(
+      st.write("**Тешки кражби - Промена (%) - Вертикален Lollipop**")
+      teski_clean["zero"] = 0
+      base_t_lolli = alt.Chart(teski_clean).encode(
+          x=alt.X(
               "СВР:N",
-              sort=sector_order_reversed,
               title=None,
-              axis=alt.Axis(labelLimit=280),
+              sort=sector_order,
+              axis=alt.Axis(labelAngle=270),
           )
       )
-      color_enc_custom = alt.Color(
+      color_enc = alt.Color(
           "Насока:N",
           scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
           legend=alt.Legend(title=None),
       )
-
-      bars_cond = base_cond.mark_bar().encode(
-          x=alt.X(
+      rule_t = base_t_lolli.mark_rule(strokeWidth=2).encode(
+          y=alt.Y(
               "Промена:Q",
-              axis=alt.Axis(
-                  format="%", values=[-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]
-              ),
-              title="Промена",
-              scale=alt.Scale(domain=[-0.35, 0.35], zero=True),
+              axis=alt.Axis(format="%"),
+              title="Промена (%)",
+              scale=alt.Scale(zero=True),
           ),
-          color=color_enc_custom,
+          y2="zero:Q",
+          color=color_enc,
       )
-
-      text_cond = base_cond.mark_text(align="left", dx=5).encode(
-          x="Промена:Q", text="Промена текст:N"
+      circle_t = base_t_lolli.mark_circle(size=200).encode(
+          y="Промена:Q", color=color_enc
       )
-
+      text_t_pos = (
+          base_t_lolli.transform_filter(alt.datum.Промена >= 0)
+          .mark_text(align="center", dy=-12)
+          .encode(y="Промена:Q", text="Промена текст:N")
+      )
+      text_t_neg = (
+          base_t_lolli.transform_filter(alt.datum.Промена < 0)
+          .mark_text(align="center", dy=15)
+          .encode(y="Промена:Q", text="Промена текст:N")
+      )
       st.altair_chart(
-          (bars_cond + text_cond).properties(height=380),
+          (rule_t + circle_t + text_t_pos + text_t_neg).properties(
+              height=380
+          ),
           use_container_width=True,
       )
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ (И ДЕЦА)
-elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
-  st.write("### 📊 Анализа за Трговија со луѓе и деца")
-
-  table2_data = [
-      {
-          "Кривични дела": "Број на кривични дела",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-      {
-          "Кривични дела": "Број на сторители",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-      {
-          "Кривични дела": "Број на жртви",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-  ]
-  df_table2 = pd.DataFrame(table2_data)
-
-  st.write("**Кривични дела, сторители и жртви (2022 - 2024)**")
-  melted_t2 = df_table2.melt(
-      id_vars=["Кривични дела"],
-      value_vars=["2024 година", "2023 година", "2022 година"],
-      var_name="Година",
-      value_name="Број",
-  )
-  chart_t2 = (
-      alt.Chart(melted_t2)
-      .mark_bar()
-      .encode(
-          x=alt.X(
-              "Кривични дела:N",
-              title=None,
-              axis=alt.Axis(labelAngle=0, labelLimit=250),
-          ),
-          y=alt.Y(
-              "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
-          ),
-          color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
-          xOffset="Година:N",
-      )
-  )
-  st.altair_chart(chart_t2.properties(height=380), use_container_width=True)
-
-  st.subheader("📋 Детална табела")
-  st.dataframe(df_table2, use_container_width=True, hide_index=True)
-
+# ОСНОВЕН ПРИКАЗ ЗА ОСТАНАТИ ЛИСТОВИ (ПО ДЕФОЛТ)
 else:
-  st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
+  st.write("Приказ на податоци за избраниот лист:")
   st.dataframe(df, use_container_width=True)
