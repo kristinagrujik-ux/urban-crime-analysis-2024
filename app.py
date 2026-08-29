@@ -144,6 +144,7 @@ if "Кривични дела против државата" in selected_sheet:
         )
     )
 
+    # Пораст = Зелено, Пад = Црвено
     color_enc = alt.Color(
         "Насока:N",
         scale=alt.Scale(domain=["Пораст", "Пад"], range=["#228B22", "#d62728"]),
@@ -153,9 +154,11 @@ if "Кривични дела против државата" in selected_sheet:
     bars_h = base_h_bar.mark_bar().encode(
         x=alt.X(
             "promena_procent:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5]),
             title="Промена",
-            scale=alt.Scale(domain=[-1.1, 3.1], zero=True),
+            scale=alt.Scale(
+                domain=[0, 5.5], zero=True
+            ),  # Тргната нулата од средина, почнува од 0 до 5.5 за простор десно
         ),
         color=color_enc,
     )
@@ -165,7 +168,10 @@ if "Кривични дела против државата" in selected_sheet:
     ).encode(x="promena_procent:Q", text="Промена текст:N")
 
     st.altair_chart(
-        (bars_h + text_h).properties(height=350), use_container_width=True
+        (bars_h + text_h)
+        .properties(height=350)
+        .configure_view(stroke=None),
+        use_container_width=True,
     )
 
   st.subheader("📋 Детална табела")
