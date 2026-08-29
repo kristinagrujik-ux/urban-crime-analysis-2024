@@ -54,7 +54,7 @@ if "Кривични дела против државата" in selected_sheet:
           "Кривични дела": "Служба во непријателска војска",
           "2024 година": 0,
           "2023 година": 1,
-          "Промена %": -1.0,
+          "Промена %": 0.0,
           "Промена текст": "0",
       },
       {
@@ -87,7 +87,6 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  # За хоризонтален графикон ги редиме од долу нагоре или обратно преку обратен редослед за y-оската
   cat_order_kd_reversed = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
@@ -155,9 +154,9 @@ if "Кривични дела против државата" in selected_sheet:
     rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
         x=alt.X(
             "promena_procent:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5]),
+            axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.5, 5.5], zero=True),
+            scale=alt.Scale(domain=[-0.1, 3.1], zero=True),
         ),
         x2="zero:Q",
         color=color_enc,
