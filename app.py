@@ -87,7 +87,6 @@ if "Кривични дела против државата" in selected_sheet:
   chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
   cat_order_kd = chart_data["Кривични дела"].tolist()
-  cat_order_kd_reversed = cat_order_kd[::-1]
 
   melted_kd = chart_data.melt(
       id_vars=["Кривични дела"],
@@ -130,18 +129,18 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Dot Plot Графикон**")
+    st.write("**Промена (%) - Вертикален Dot Plot Графикон**")
     chart_data["Насока"] = chart_data["promena_procent"].apply(
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
     chart_data["zero"] = 0
 
     base_dot = alt.Chart(chart_data).encode(
-        y=alt.Y(
+        x=alt.X(
             "Кривични дела:N",
             title=None,
-            sort=cat_order_kd_reversed,
-            axis=alt.Axis(labelLimit=280),
+            sort=cat_order_kd,
+            axis=alt.Axis(labelAngle=290, labelLimit=220),
         )
     )
 
@@ -152,22 +151,22 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
-        x=alt.X(
+        y=alt.Y(
             "promena_procent:Q",
             axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5]),
             title="Промена",
-            scale=alt.Scale(domain=[0, 5.5], zero=True),
+            scale=alt.Scale(domain=[-0.5, 5.5], zero=True),
         ),
-        x2="zero:Q",
+        y2="zero:Q",
         color=color_enc,
     )
 
     circle_dot = base_dot.mark_circle(size=200).encode(
-        x="promena_procent:Q", color=color_enc
+        y="promena_procent:Q", color=color_enc
     )
 
-    text_dot = base_dot.mark_text(align="left", dx=10, fontSize=11).encode(
-        x="promena_procent:Q", text="Промена текст:N"
+    text_dot = base_dot.mark_text(align="center", dy=-15, fontSize=11).encode(
+        y="promena_procent:Q", text="Промена текст:N"
     )
 
     st.altair_chart(
