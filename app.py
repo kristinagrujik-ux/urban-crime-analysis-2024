@@ -986,9 +986,7 @@ elif "Насилство" in selected_sheet:
               "Промена:Q",
               axis=alt.Axis(format="%", values=[0, 1, 2]),
               title="Промена (%)",
-              scale=alt.Scale(
-                  domain=[-0.6, 2.1], zero=True
-              ),  # Проширено долу за повеќе простор
+              scale=alt.Scale(domain=[-0.6, 2.1], zero=True),
           ),
           y2="zero:Q",
           color=color_enc,
@@ -1003,9 +1001,7 @@ elif "Насилство" in selected_sheet:
       )
       text_v_neg = (
           base_v_lolli.transform_filter(alt.datum.Промена < 0)
-          .mark_text(
-              align="center", dy=22
-          )  # Зголемено растојание за да не е залепено до СВР Охрид
+          .mark_text(align="center", dy=22)
           .encode(y="Промена:Q", text="Промена текст:N")
       )
       st.altair_chart(
@@ -1141,9 +1137,11 @@ elif "Тешки кражби" in selected_sheet:
       rule_t = base_t_lolli.mark_rule(strokeWidth=2).encode(
           y=alt.Y(
               "Промена:Q",
-              axis=alt.Axis(format="%"),
+              axis=alt.Axis(
+                  format="%", values=[-1.0, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0]
+              ),
               title="Промена (%)",
-              scale=alt.Scale(zero=True),
+              scale=alt.Scale(domain=[-1.0, 1.0], zero=True),
           ),
           y2="zero:Q",
           color=color_enc,
