@@ -1138,10 +1138,10 @@ elif "Тешки кражби" in selected_sheet:
           y=alt.Y(
               "Промена:Q",
               axis=alt.Axis(
-                  format="%", values=[-1.0, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0]
+                  format="%", values=[-0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5]
               ),
               title="Промена (%)",
-              scale=alt.Scale(domain=[-1.0, 1.0], zero=True),
+              scale=alt.Scale(domain=[-0.5, 0.5], zero=True),
           ),
           y2="zero:Q",
           color=color_enc,
