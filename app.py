@@ -129,7 +129,7 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Вертикален Dot Plot**")
+    st.write("**Промена (%) - Хоризонтален Dot Plot**")
 
     jim_rows = []
     freq_map = {
@@ -153,15 +153,16 @@ if "Кривични дела против државата" in selected_sheet:
         })
 
     df_jim = pd.DataFrame(jim_rows)
+    cat_order_reversed = cat_order_kd[::-1]
 
     base_jim = alt.Chart(df_jim).encode(
-        x=alt.X(
-            "Кривични дела:N",
-            sort=cat_order_kd,
-            title=None,
-            axis=alt.Axis(labelAngle=270, labelLimit=250),
-        ),
         y=alt.Y(
+            "Кривични дела:N",
+            sort=cat_order_reversed,
+            title=None,
+            axis=alt.Axis(labelLimit=320),
+        ),
+        x=alt.X(
             "Промена:Q",
             title="Промена (%)",
             scale=alt.Scale(domain=[-20, 480], zero=True),
@@ -169,15 +170,15 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
-        xOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
+        yOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
     )
 
     text_jim = (
         alt.Chart(chart_data)
-        .mark_text(align="center", dx=-12, fontWeight="bold", fontSize=11)
+        .mark_text(align="left", dx=12, fontWeight="bold", fontSize=11)
         .encode(
-            x=alt.X("Кривични дела:N", sort=cat_order_kd, title=None),
-            y=alt.Y(
+            y=alt.Y("Кривични дела:N", sort=cat_order_reversed, title=None),
+            x=alt.X(
                 "promena_procent:Q",
                 scale=alt.Scale(domain=[-0.2, 4.8]),
                 title=None,
@@ -1138,7 +1139,20 @@ elif "Тешки кражби" in selected_sheet:
           y=alt.Y(
               "Промена:Q",
               axis=alt.Axis(
-                  format="%", values=[-0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5]
+                  format="%",
+                  values=[
+                      -0.5,
+                      -0.4,
+                      -0.3,
+                      -0.2,
+                      -0.1,
+                      0,
+                      0.1,
+                      0.2,
+                      0.3,
+                      0.4,
+                      0.5,
+                  ],
               ),
               title="Промена (%)",
               scale=alt.Scale(domain=[-0.5, 0.5], zero=True),
