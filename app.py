@@ -129,52 +129,71 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Хоризонтален Dot Plot Графикон**")
-    chart_data["Насока"] = chart_data["promena_procent"].apply(
-        lambda x: "Пораст" if x >= 0 else "Пад"
-    )
-    chart_data["zero"] = 0
+    st.write("**Промена (%) - Вертикален Dot Plot**")
 
-    base_dot = alt.Chart(chart_data).encode(
-        y=alt.Y(
+    jim_rows = []
+    freq_map = {
+        "Предизвикување омраза и нетрпеливост": 4,
+        "Учество во странска војска и полиција": 3,
+        "Неовластено навлегување и цртање на воени објекти": 3,
+        "Служба во непријателска војска": 1,
+        "Расна и друга дискриминација": 1,
+    }
+
+    for idx, row in chart_data.iterrows():
+      cat = row["Кривични дела"]
+      val = row["promena_procent"] * 100
+      count = freq_map.get(cat, 1)
+      for i in range(count):
+        jim_rows.append({
+            "Кривични дела": cat,
+            "Промена": val,
+            "Stack_ID": i,
+            "Текст": row["Промена текст"],
+        })
+
+    df_jim = pd.DataFrame(jim_rows)
+
+    base_jim = alt.Chart(df_jim).encode(
+        x=alt.X(
             "Кривични дела:N",
-            title=None,
             sort=cat_order_kd,
-            axis=alt.Axis(labelLimit=320),
+            title=None,
+            axis=alt.Axis(labelAngle=270, labelLimit=250),
+        ),
+        y=alt.Y(
+            "Промена:Q",
+            title="Промена (%)",
+            scale=alt.Scale(domain=[-20, 480], zero=True),
+        ),
+    )
+
+    dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
+        xOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
+    )
+
+    text_jim = (
+        alt.Chart(chart_data)
+        .mark_text(align="center", dx=-12, fontWeight="bold", fontSize=11)
+        .encode(
+            x=alt.X("Кривични дела:N", sort=cat_order_kd, title=None),
+            y=alt.Y(
+                "promena_procent:Q",
+                scale=alt.Scale(domain=[-0.2, 4.8]),
+                title=None,
+            ),
+            text="Промена текст:N",
         )
     )
 
-    color_enc = alt.Color(
-        "Насока:N",
-        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#228B22", "#d62728"]),
-        legend=alt.Legend(title=None),
-    )
-
-    rule_dot = base_dot.mark_rule(strokeWidth=2).encode(
-        x=alt.X(
-            "promena_procent:Q",
-            axis=alt.Axis(format="%", values=[0, 1, 2, 3, 4, 5, 6]),
-            title="Промена",
-            scale=alt.Scale(domain=[-0.1, 6.1], zero=True),
-        ),
-        x2="zero:Q",
-        color=color_enc,
-    )
-
-    circle_dot = base_dot.mark_circle(size=200).encode(
-        x="promena_procent:Q", color=color_enc
-    )
-
-    text_dot = base_dot.mark_text(align="left", dx=10, baseline="middle").encode(
-        x="promena_procent:Q", text="Промена текст:N"
-    )
-
-    st.altair_chart(
-        (rule_dot + circle_dot + text_dot)
+    chart_jim = (
+        (dots_jim + text_jim)
         .properties(height=350)
-        .configure_view(stroke=None),
-        use_container_width=True,
+        .configure_axis(gridColor="white", gridOpacity=0.8)
+        .configure_view(fill="#eef0f2", stroke=None)
     )
+
+    st.altair_chart(chart_jim, use_container_width=True)
 
   st.subheader("📋 Детална табела")
   df_table_show = df_display.copy()
@@ -307,18 +326,28 @@ elif "трговија со дрога" in selected_sheet.lower():
   ]:
     valid_rows[col] = pd.to_numeric(valid_rows[col], errors="coerce")
 
+  # Конвертирај во реални децимали за графиконите (на пр. 0.057 за 5.7%)
+  valid_rows["Промена КД %"] = pd.to_numeric(
+      valid_rows["Промена КД %"], errors="coerce"
+  ).fillna(0)
+  valid_rows["Промена Сторители %"] = pd.to_numeric(
+      valid_rows["Промена Сторители %"], errors="coerce"
+  ).fillna(0)
+
   valid_rows["Промена КД % текст"] = valid_rows["Промена КД %"].apply(
       lambda x: f"{x*100:.1f}%"
-      if pd.notnull(x) and isinstance(x, (int, float))
-      else str(x)
   )
   valid_rows["Промена Сторители % текст"] = valid_rows[
       "Промена Сторители %"
-  ].apply(
-      lambda x: f"{x*100:.1f}%"
-      if pd.notnull(x) and isinstance(x, (int, float))
-      else str(x)
+  ].apply(lambda x: f"{x*100:.1f}%")
+
+  valid_rows["Насока КД"] = valid_rows["Промена КД %"].apply(
+      lambda x: "Пораст" if x >= 0 else "Пад"
   )
+  valid_rows["Насока Сторители"] = valid_rows["Промена Сторители %"].apply(
+      lambda x: "Пораст" if x >= 0 else "Пад"
+  )
+
   valid_rows["zero"] = 0
   sector_order = valid_rows[sector_col].tolist()
 
@@ -335,8 +364,8 @@ elif "трговија со дрога" in selected_sheet.lower():
         alt.Chart(df_melted_kd)
         .mark_bar()
         .encode(
-            y=alt.Y(f"{sector_col}:N", sort=sector_order),
-            x="Број:Q",
+            y=alt.Y(f"{sector_col}:N", sort=sector_order, title=None),
+            x=alt.X("Број:Q", title="Број"),
             color=alt.Color(
                 "Година:N",
                 scale=alt.Scale(
@@ -350,6 +379,7 @@ elif "трговија со дрога" in selected_sheet.lower():
         .properties(height=350),
         use_container_width=True,
     )
+
   with col2:
     st.write("**Недозволена трговија со дрога - Промена на кривични дела (%)**")
     base_kd = alt.Chart(valid_rows).encode(
@@ -360,23 +390,38 @@ elif "трговија со дрога" in selected_sheet.lower():
             axis=alt.Axis(labelAngle=270),
         )
     )
-    rule_kd = base_kd.mark_rule(color=BLUE_COLOR, strokeWidth=2).encode(
+    color_enc_kd = alt.Color(
+        "Насока КД:N",
+        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+        legend=alt.Legend(title=None),
+    )
+    rule_kd = base_kd.mark_rule(strokeWidth=2).encode(
         y=alt.Y(
             "Промена КД %:Q",
-            axis=alt.Axis(format="%", values=[0, 0.5, 1.0]),
+            axis=alt.Axis(format="%", values=[-0.2, 0, 0.5, 1.0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.2, 1.1], zero=True),
+            scale=alt.Scale(domain=[-0.3, 1.2], zero=True),
         ),
         y2="zero:Q",
+        color=color_enc_kd,
     )
-    circle_kd = base_kd.mark_circle(size=220, color=BLUE_COLOR).encode(
-        y="Промена КД %:Q"
+    circle_kd = base_kd.mark_circle(size=220).encode(
+        y="Промена КД %:Q", color=color_enc_kd
     )
-    text_kd_change = base_kd.mark_text(
-        align="center", dy=-16, fontSize=11
-    ).encode(y="Промена КД %:Q", text="Промена КД % текст:N")
+    text_kd_pos = (
+        base_kd.transform_filter(alt.datum["Промена КД %"] >= 0)
+        .mark_text(align="center", dy=-16, fontSize=11)
+        .encode(y="Промена КД %:Q", text="Промена КД % текст:N")
+    )
+    text_kd_neg = (
+        base_kd.transform_filter(alt.datum["Промена КД %"] < 0)
+        .mark_text(align="center", dy=18, fontSize=11)
+        .encode(y="Промена КД %:Q", text="Промена КД % текст:N")
+    )
     st.altair_chart(
-        (rule_kd + circle_kd + text_kd_change).properties(height=350),
+        (rule_kd + circle_kd + text_kd_pos + text_kd_neg).properties(
+            height=350
+        ),
         use_container_width=True,
     )
 
@@ -393,8 +438,8 @@ elif "трговија со дрога" in selected_sheet.lower():
         alt.Chart(df_melted_stor)
         .mark_bar()
         .encode(
-            y=alt.Y(f"{sector_col}:N", sort=sector_order),
-            x="Број:Q",
+            y=alt.Y(f"{sector_col}:N", sort=sector_order, title=None),
+            x=alt.X("Број:Q", title="Број"),
             color=alt.Color(
                 "Година:N",
                 scale=alt.Scale(
@@ -408,6 +453,7 @@ elif "трговија со дрога" in selected_sheet.lower():
         .properties(height=350),
         use_container_width=True,
     )
+
   with col4:
     st.write("**Недозволена трговија со дрога - Промена на сторители (%)**")
     base_stor = alt.Chart(valid_rows).encode(
@@ -418,23 +464,38 @@ elif "трговија со дрога" in selected_sheet.lower():
             axis=alt.Axis(labelAngle=270),
         )
     )
-    rule_stor = base_stor.mark_rule(color="#d62728", strokeWidth=2).encode(
+    color_enc_stor = alt.Color(
+        "Насока Сторители:N",
+        scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+        legend=alt.Legend(title=None),
+    )
+    rule_stor = base_stor.mark_rule(strokeWidth=2).encode(
         y=alt.Y(
             "Промена Сторители %:Q",
-            axis=alt.Axis(format="%", values=[0, 0.5, 1.0]),
+            axis=alt.Axis(format="%", values=[-0.4, 0, 0.5, 1.0]),
             title="Промена",
-            scale=alt.Scale(domain=[-0.4, 1.1], zero=True),
+            scale=alt.Scale(domain=[-0.5, 1.1], zero=True),
         ),
         y2="zero:Q",
+        color=color_enc_stor,
     )
-    circle_stor = base_stor.mark_circle(size=220, color="#d62728").encode(
-        y="Промена Сторители %:Q"
+    circle_stor = base_stor.mark_circle(size=220).encode(
+        y="Промена Сторители %:Q", color=color_enc_stor
     )
-    text_stor_change = base_stor.mark_text(
-        align="center", dy=-16, fontSize=11
-    ).encode(y="Промена Сторители %:Q", text="Промена Сторители % текст:N")
+    text_stor_pos = (
+        base_stor.transform_filter(alt.datum["Промена Сторители %"] >= 0)
+        .mark_text(align="center", dy=-16, fontSize=11)
+        .encode(y="Промена Сторители %:Q", text="Промена Сторители % текст:N")
+    )
+    text_stor_neg = (
+        base_stor.transform_filter(alt.datum["Промена Сторители %"] < 0)
+        .mark_text(align="center", dy=18, fontSize=11)
+        .encode(y="Промена Сторители %:Q", text="Промена Сторители % текст:N")
+    )
     st.altair_chart(
-        (rule_stor + circle_stor + text_stor_change).properties(height=350),
+        (rule_stor + circle_stor + text_stor_pos + text_stor_neg).properties(
+            height=350
+        ),
         use_container_width=True,
     )
 
@@ -703,12 +764,6 @@ elif "Убиства" in selected_sheet:
             data_rows[col_2023], errors="coerce"
         ).fillna(0),
     }).dropna(subset=["СВР"])
-
-    if promena_col is not None:
-      promena_raw = pd.to_numeric(data_rows[promena_col], errors="coerce")
-      ubistva_clean["Промена"] = promena_raw.values
-    else:
-      ubistva_clean["Промена"] = float("nan")
 
     prev_year = ubistva_clean["2023 година"]
     curr_year = ubistva_clean["2024 година"]
@@ -1029,8 +1084,7 @@ elif "Тешки кражби" in selected_sheet:
         lambda x: "Пораст" if x >= 0 else "Пад"
     )
 
-    sector_order_original = teski_clean["СВР"].tolist()
-    sector_order_reversed = sector_order_original[::-1]
+    sector_order = teski_clean["СВР"].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -1045,7 +1099,7 @@ elif "Тешки кражби" in selected_sheet:
           x=alt.X(
               "СВР:N",
               title=None,
-              sort=sector_order_original,
+              sort=sector_order,
               axis=alt.Axis(labelAngle=270),
           ),
           y=alt.Y(
@@ -1066,99 +1120,55 @@ elif "Тешки кражби" in selected_sheet:
       )
 
     with col2:
-      st.write("**Тешки кражби - Промена (%)**")
-      base_cond = alt.Chart(teski_clean).encode(
-          y=alt.Y(
+      st.write("**Тешки кражби - Промена (%) - Вертикален Lollipop**")
+      teski_clean["zero"] = 0
+      base_t_lolli = alt.Chart(teski_clean).encode(
+          x=alt.X(
               "СВР:N",
-              sort=sector_order_reversed,
               title=None,
-              axis=alt.Axis(labelLimit=280),
+              sort=sector_order,
+              axis=alt.Axis(labelAngle=270),
           )
       )
-      color_enc_custom = alt.Color(
+      color_enc = alt.Color(
           "Насока:N",
           scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
           legend=alt.Legend(title=None),
       )
-
-      bars_cond = base_cond.mark_bar().encode(
-          x=alt.X(
+      rule_t = base_t_lolli.mark_rule(strokeWidth=2).encode(
+          y=alt.Y(
               "Промена:Q",
-              axis=alt.Axis(
-                  format="%", values=[-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]
-              ),
-              title="Промена",
-              scale=alt.Scale(domain=[-0.35, 0.35], zero=True),
+              axis=alt.Axis(format="%"),
+              title="Промена (%)",
+              scale=alt.Scale(zero=True),
           ),
-          color=color_enc_custom,
+          y2="zero:Q",
+          color=color_enc,
       )
-
-      text_cond = base_cond.mark_text(align="left", dx=5).encode(
-          x="Промена:Q", text="Промена текст:N"
+      circle_t = base_t_lolli.mark_circle(size=200).encode(
+          y="Промена:Q", color=color_enc
       )
-
+      text_t_pos = (
+          base_t_lolli.transform_filter(alt.datum.Промена >= 0)
+          .mark_text(align="center", dy=-12)
+          .encode(y="Промена:Q", text="Промена текст:N")
+      )
+      text_t_neg = (
+          base_t_lolli.transform_filter(alt.datum.Промена < 0)
+          .mark_text(align="center", dy=15)
+          .encode(y="Промена:Q", text="Промена текст:N")
+      )
       st.altair_chart(
-          (bars_cond + text_cond).properties(height=380),
+          (rule_t + circle_t + text_t_pos + text_t_neg).properties(
+              height=380
+          ),
           use_container_width=True,
       )
 
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ (И ДЕЦА)
-elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
-  st.write("### 📊 Анализа за Трговија со луѓе и деца")
-
-  table2_data = [
-      {
-          "Кривични дела": "Број на кривични дела",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-      {
-          "Кривични дела": "Број на сторители",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-      {
-          "Кривични дела": "Број на жртви",
-          "2024 година": 2,
-          "2023 година": 8,
-          "2022 година": 7,
-      },
-  ]
-  df_table2 = pd.DataFrame(table2_data)
-
-  st.write("**Кривични дела, сторители и жртви (2022 - 2024)**")
-  melted_t2 = df_table2.melt(
-      id_vars=["Кривични дела"],
-      value_vars=["2024 година", "2023 година", "2022 година"],
-      var_name="Година",
-      value_name="Број",
-  )
-  chart_t2 = (
-      alt.Chart(melted_t2)
-      .mark_bar()
-      .encode(
-          x=alt.X(
-              "Кривични дела:N",
-              title=None,
-              axis=alt.Axis(labelAngle=0, labelLimit=250),
-          ),
-          y=alt.Y(
-              "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
-          ),
-          color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
-          xOffset="Година:N",
-      )
-  )
-  st.altair_chart(chart_t2.properties(height=380), use_container_width=True)
-
-  st.subheader("📋 Детална табела")
-  st.dataframe(df_table2, use_container_width=True, hide_index=True)
-
+# ОСНОВЕН ПРИКАЗ ЗА ОСТАНАТИ ЛИСТОВИ (ПО ДЕФОЛТ)
 else:
-  st.write(f"📊 Приказ за селектираната категорија: {selected_sheet}")
+  st.write("Приказ на податоци за избраниот лист:")
   st.dataframe(df, use_container_width=True)
