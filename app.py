@@ -326,7 +326,6 @@ elif "трговија со дрога" in selected_sheet.lower():
   ]:
     valid_rows[col] = pd.to_numeric(valid_rows[col], errors="coerce")
 
-  # Конвертирај во реални децимали за графиконите (на пр. 0.057 за 5.7%)
   valid_rows["Промена КД %"] = pd.to_numeric(
       valid_rows["Промена КД %"], errors="coerce"
   ).fillna(0)
@@ -987,7 +986,9 @@ elif "Насилство" in selected_sheet:
               "Промена:Q",
               axis=alt.Axis(format="%", values=[0, 1, 2]),
               title="Промена (%)",
-              scale=alt.Scale(domain=[-0.2, 2.1], zero=True),
+              scale=alt.Scale(
+                  domain=[-0.6, 2.1], zero=True
+              ),  # Проширено долу за повеќе простор
           ),
           y2="zero:Q",
           color=color_enc,
@@ -1002,7 +1003,9 @@ elif "Насилство" in selected_sheet:
       )
       text_v_neg = (
           base_v_lolli.transform_filter(alt.datum.Промена < 0)
-          .mark_text(align="center", dy=15)
+          .mark_text(
+              align="center", dy=22
+          )  # Зголемено растојание за да не е залепено до СВР Охрид
           .encode(y="Промена:Q", text="Промена текст:N")
       )
       st.altair_chart(
