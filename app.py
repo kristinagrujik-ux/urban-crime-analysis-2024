@@ -86,7 +86,7 @@ if "Кривични дела против државата" in selected_sheet:
 
     chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
-    # Редоследот заснован на оригиналниот редослед во листата
+    # Редослед за левиот график (од горе надолу: Предизвикување -> Расна)
     cat_order_kd = chart_data["Кривични дела"].tolist()
 
     melted_kd = chart_data.melt(
@@ -130,75 +130,41 @@ if "Кривични дела против државата" in selected_sheet:
         )
 
     with col2:
-        st.write("**Промена (%) - Хоризонтален Dot Plot**")
+        st.write("**Промена (%) - Вертикален Column Chart**")
 
-        jim_rows = []
-        freq_map = {
-            "Предизвикување омраза и нетрпеливост": 4,
-            "Учество во странска војска и полиција": 3,
-            "Неовластено навлегување и цртање на воени објекти": 3,
-            "Служба во непријателска војска": 1,
-            "Расна и друга дискриминација": 1,
-        }
+        # Редослед за десниот вертикален столбчен график (од лево надесно: Предизвикување -> Расна)
+        cat_order_vertical = chart_data["Кривични дела"].tolist()
 
-        for idx, row in chart_data.iterrows():
-            cat = row["Кривични дела"]
-            val = row["promena_procent"] * 100
-            count = freq_map.get(cat, 1)
-            for i in range(count):
-                jim_rows.append({
-                    "Кривични дела": cat,
-                    "Промена": val,
-                    "Stack_ID": i,
-                    "Текст": row["Промена текст"],
-                })
-
-        df_jim = pd.DataFrame(jim_rows)
-
-        # КОРИГИРАНО: Употреба на истиот редослед (cat_order_kd), без превртување,
-        # за да биде „Предизвикување омраза“ прво, а „Расна и друга дискриминација“ последно.
-        base_jim = alt.Chart(df_jim).encode(
-            y=alt.Y(
-                "Кривични дела:N",
-                sort=cat_order_kd,
-                title=None,
-                axis=alt.Axis(labelLimit=320),
-            ),
+        base_col = alt.Chart(chart_data).encode(
             x=alt.X(
-                "Промена:Q",
+                "Кривични дела:N",
+                sort=cat_order_vertical,
+                title=None,
+                axis=alt.Axis(
+                    labelAngle=-45, labelLimit=250, labelFontSize=10
+                ),
+            ),
+            y=alt.Y(
+                "promena_procent:Q",
                 title="Промена (%)",
-                scale=alt.Scale(domain=[-20, 500], zero=True),
+                axis=alt.Axis(format="%"),
+                scale=alt.Scale(domain=[-0.2, 5.0], zero=True),
             ),
         )
 
-        dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
-            yOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
-        )
+        bars_col = base_col.mark_bar(color=BLUE_COLOR)
+        text_col = base_col.mark_text(
+            align="center", baseline="bottom", dy=-5, fontSize=11, fontWeight="bold"
+        ).encode(text="Промена текст:N")
 
-        text_jim = (
-            alt.Chart(chart_data)
-            .mark_text(
-                align="left", dx=15, baseline="middle", fontWeight="bold", fontSize=11
-            )
-            .encode(
-                y=alt.Y("Кривични дела:N", sort=cat_order_kd, title=None),
-                x=alt.Y(
-                    "promena_procent:Q",
-                    scale=alt.Scale(domain=[-0.2, 5.0]),
-                    title=None,
-                ),
-                text="Промена текст:N",
-            )
-        )
-
-        chart_jim = (
-            (dots_jim + text_jim)
+        chart_vertical = (
+            (bars_col + text_col)
             .properties(height=350)
             .configure_axis(gridColor="white", gridOpacity=0.8)
             .configure_view(fill="#eef0f2", stroke=None)
         )
 
-        st.altair_chart(chart_jim, use_container_width=True)
+        st.altair_chart(chart_vertical, use_container_width=True)
 
     st.subheader("📋 Детална табела")
     df_table_show = df_display.copy()
