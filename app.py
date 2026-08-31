@@ -153,19 +153,18 @@ if "Кривични дела против државата" in selected_sheet:
                 })
 
         df_jim = pd.DataFrame(jim_rows)
-        cat_order_kd_reversed = cat_order_kd[::-1]
 
         base_jim = alt.Chart(df_jim).encode(
             y=alt.Y(
                 "Кривични дела:N",
-                sort=cat_order_kd_reversed,
+                sort=cat_order_kd,
                 title=None,
                 axis=alt.Axis(labelLimit=320),
             ),
             x=alt.X(
                 "Промена:Q",
                 title="Промена (%)",
-                scale=alt.Scale(domain=[-20, 480], zero=True),
+                scale=alt.Scale(domain=[-20, 500], zero=True),
             ),
         )
 
@@ -179,10 +178,10 @@ if "Кривични дела против државата" in selected_sheet:
                 align="left", dx=15, baseline="middle", fontWeight="bold", fontSize=11
             )
             .encode(
-                y=alt.Y("Кривични дела:N", sort=cat_order_kd_reversed, title=None),
+                y=alt.Y("Кривични дела:N", sort=cat_order_kd, title=None),
                 x=alt.Y(
                     "promena_procent:Q",
-                    scale=alt.Scale(domain=[-0.2, 4.8]),
+                    scale=alt.Scale(domain=[-0.2, 5.0]),
                     title=None,
                 ),
                 text="Промена текст:N",
@@ -1156,10 +1155,10 @@ elif "Тешки кражби" in selected_sheet:
                 .encode(y="Промена:Q", text="Промена текст:N")
             )
             text_t_neg = (
-                base_t_lolli.transform_filter(alt.datum.Промена < 0)
+                base_v_lolli.transform_filter(alt.datum.Промена < 0)
                 .mark_text(align="center", dy=22)
                 .encode(y="Промена:Q", text="Промена текст:N")
-            )
+            ) if 'base_v_lolli' in locals() else base_t_lolli.transform_filter(alt.datum.Промена < 0).mark_text(align="center", dy=22).encode(y="Промена:Q", text="Промена текст:N")
             st.altair_chart(
                 (rule_t + circle_t + text_t_pos + text_t_neg).properties(
                     height=380
@@ -1169,4 +1168,3 @@ elif "Тешки кражби" in selected_sheet:
 
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
-      
