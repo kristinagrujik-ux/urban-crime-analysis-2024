@@ -41,14 +41,14 @@ if "Кривични дела против државата" in selected_sheet:
             "2024 година": 2,
             "2023 година": 0,
             "Промена %": 2.0,
-            "Промена текст": "200% ↗",
+            "Промена текст": "↗",
         },
         {
             "Кривични дела": "Неовластено навлегување и цртање на воени објекти",
             "2024 година": 2,
             "2023 година": 0,
             "Промена %": 2.0,
-            "Промена текст": "200% ↗",
+            "Промена текст": "↗",
         },
         {
             "Кривични дела": "Служба во непријателска војска",
@@ -144,16 +144,16 @@ if "Кривични дела против државата" in selected_sheet:
                 "promena_procent:Q",
                 title="Промена (%)",
                 axis=alt.Axis(format="%"),
-                scale=alt.Scale(
-                    domain=[-0.2, 6.0], zero=True
-                ),  # Зголемен опсег за да го собере текстот
+                scale=alt.Scale(domain=[-0.2, 6.0], zero=True),
             ),
         )
 
         bars_horiz = base_horiz.mark_bar(color=BLUE_COLOR)
         text_horiz = base_horiz.mark_text(
             align="left", baseline="middle", dx=5, fontSize=11, fontWeight="bold"
-        ).encode(text="Промена текст:N")  # Го користи полето со „пет пати ↗“
+        ).encode(
+            text="Промена текст:N"
+        )  # Ги прикажува новите текстови („пет пати ↗“ и „↗“)
 
         chart_horizontal = (
             (bars_horiz + text_horiz)
