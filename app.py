@@ -131,8 +131,9 @@ if "Кривични дела против државата" in selected_sheet:
     with col2:
         st.write("**Промена (%) - Хоризонтален Column Chart**")
 
-        # Reverse the order so that the first item in chart_data appears at the top
-        cat_order_horizontal = chart_data["Кривични дела"].tolist()[::-1]
+        # Keep original order so "Предизвикување омраза и нетрпеливост" is at the top
+        # and "Расна и друга дискриминација" is at the bottom.
+        cat_order_horizontal = chart_data["Кривични дела"].tolist()
 
         base_horiz = alt.Chart(chart_data).encode(
             y=alt.Y(
@@ -979,7 +980,7 @@ elif "Насилство" in selected_sheet:
                 .encode(y="Промена:Q", text="Промена текст:N")
             )
             st.altair_chart(
-                (rule_n + circle_n + text_n_pos + text_n_neg).properties(
+                (rule_u + circle_u + text_u_pos + text_u_neg).properties(
                     height=380
                 ),
                 use_container_width=True,
