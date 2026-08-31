@@ -129,7 +129,7 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
   with col2:
-    st.write("**Промена (%) - Хоризонтален Dot Plot**")
+    st.write("**Промена (%) - Вертикален Dot Plot**")
 
     jim_rows = []
     freq_map = {
@@ -153,16 +153,15 @@ if "Кривични дела против државата" in selected_sheet:
         })
 
     df_jim = pd.DataFrame(jim_rows)
-    cat_order_reversed = cat_order_kd[::-1]
 
     base_jim = alt.Chart(df_jim).encode(
-        y=alt.Y(
-            "Кривични дела:N",
-            sort=cat_order_reversed,
-            title=None,
-            axis=alt.Axis(labelLimit=320),
-        ),
         x=alt.X(
+            "Кривични дела:N",
+            sort=cat_order_kd,
+            title=None,
+            axis=alt.Axis(labelAngle=270, labelLimit=320),
+        ),
+        y=alt.Y(
             "Промена:Q",
             title="Промена (%)",
             scale=alt.Scale(domain=[-20, 480], zero=True),
@@ -170,15 +169,15 @@ if "Кривични дела против државата" in selected_sheet:
     )
 
     dots_jim = base_jim.mark_circle(size=120, color="#1f77b4").encode(
-        yOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
+        xOffset="Stack_ID:Q", tooltip=["Кривични дела", "Промена", "Текст"]
     )
 
     text_jim = (
         alt.Chart(chart_data)
-        .mark_text(align="left", dx=12, fontWeight="bold", fontSize=11)
+        .mark_text(align="center", dy=-15, fontWeight="bold", fontSize=11)
         .encode(
-            y=alt.Y("Кривични дела:N", sort=cat_order_reversed, title=None),
-            x=alt.X(
+            x=alt.X("Кривични дела:N", sort=cat_order_kd, title=None),
+            y=alt.Y(
                 "promena_procent:Q",
                 scale=alt.Scale(domain=[-0.2, 4.8]),
                 title=None,
