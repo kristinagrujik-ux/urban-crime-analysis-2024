@@ -131,8 +131,6 @@ if "Кривични дела против државата" in selected_sheet:
     with col2:
         st.write("**Промена (%) - Хоризонтален Column Chart**")
 
-        # Keep original order so "Предизвикување омраза и нетрпеливост" is at the top
-        # and "Расна и друга дискриминација" is at the bottom.
         cat_order_horizontal = chart_data["Кривични дела"].tolist()
 
         base_horiz = alt.Chart(chart_data).encode(
@@ -146,14 +144,16 @@ if "Кривични дела против државата" in selected_sheet:
                 "promena_procent:Q",
                 title="Промена (%)",
                 axis=alt.Axis(format="%"),
-                scale=alt.Scale(domain=[-0.2, 5.0], zero=True),
+                scale=alt.Scale(
+                    domain=[-0.2, 6.0], zero=True
+                ),  # Зголемен опсег за да го собере текстот
             ),
         )
 
         bars_horiz = base_horiz.mark_bar(color=BLUE_COLOR)
         text_horiz = base_horiz.mark_text(
             align="left", baseline="middle", dx=5, fontSize=11, fontWeight="bold"
-        ).encode(text="Промена текст:N")
+        ).encode(text="Промена текст:N")  # Го користи полето со „пет пати ↗“
 
         chart_horizontal = (
             (bars_horiz + text_horiz)
