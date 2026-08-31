@@ -131,6 +131,7 @@ if "Кривични дела против државата" in selected_sheet:
     with col2:
         st.write("**Промена (%) - Хоризонтален Column Chart**")
 
+        # Reverse the order so that the first item in chart_data appears at the top
         cat_order_horizontal = chart_data["Кривични дела"].tolist()[::-1]
 
         base_horiz = alt.Chart(chart_data).encode(
