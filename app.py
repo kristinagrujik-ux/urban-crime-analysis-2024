@@ -86,6 +86,7 @@ if "Кривични дела против државата" in selected_sheet:
 
     chart_data = chart_data.rename(columns={"Промена %": "promena_procent"})
 
+    # Редоследот заснован на оригиналниот редослед во листата
     cat_order_kd = chart_data["Кривични дела"].tolist()
 
     melted_kd = chart_data.melt(
@@ -154,6 +155,8 @@ if "Кривични дела против државата" in selected_sheet:
 
         df_jim = pd.DataFrame(jim_rows)
 
+        # КОРИГИРАНО: Употреба на истиот редослед (cat_order_kd), без превртување,
+        # за да биде „Предизвикување омраза“ прво, а „Расна и друга дискриминација“ последно.
         base_jim = alt.Chart(df_jim).encode(
             y=alt.Y(
                 "Кривични дела:N",
@@ -1155,10 +1158,10 @@ elif "Тешки кражби" in selected_sheet:
                 .encode(y="Промена:Q", text="Промена текст:N")
             )
             text_t_neg = (
-                base_v_lolli.transform_filter(alt.datum.Промена < 0)
+                base_t_lolli.transform_filter(alt.datum.Промена < 0)
                 .mark_text(align="center", dy=22)
                 .encode(y="Промена:Q", text="Промена текст:N")
-            ) if 'base_v_lolli' in locals() else base_t_lolli.transform_filter(alt.datum.Промена < 0).mark_text(align="center", dy=22).encode(y="Промена:Q", text="Промена текст:N")
+            )
             st.altair_chart(
                 (rule_t + circle_t + text_t_pos + text_t_neg).properties(
                     height=380
