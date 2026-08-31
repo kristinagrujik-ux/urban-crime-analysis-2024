@@ -129,20 +129,18 @@ if "Кривични дела против државата" in selected_sheet:
         )
 
     with col2:
-        st.write("**Промена (%) - Вертикален Column Chart**")
+        st.write("**Промена (%) - Хоризонтален Column Chart**")
 
-        cat_order_vertical = chart_data["Кривични дела"].tolist()
+        cat_order_horizontal = chart_data["Кривични дела"].tolist()[::-1]
 
-        base_col = alt.Chart(chart_data).encode(
-            x=alt.X(
-                "Кривични дела:N",
-                sort=cat_order_vertical,
-                title=None,
-                axis=alt.Axis(
-                    labelAngle=-45, labelLimit=250, labelFontSize=10
-                ),
-            ),
+        base_horiz = alt.Chart(chart_data).encode(
             y=alt.Y(
+                "Кривични дела:N",
+                sort=cat_order_horizontal,
+                title=None,
+                axis=alt.Axis(labelLimit=320, labelFontSize=11),
+            ),
+            x=alt.X(
                 "promena_procent:Q",
                 title="Промена (%)",
                 axis=alt.Axis(format="%"),
@@ -150,19 +148,19 @@ if "Кривични дела против државата" in selected_sheet:
             ),
         )
 
-        bars_col = base_col.mark_bar(color=BLUE_COLOR)
-        text_col = base_col.mark_text(
-            align="center", baseline="bottom", dy=-5, fontSize=11, fontWeight="bold"
+        bars_horiz = base_horiz.mark_bar(color=BLUE_COLOR)
+        text_horiz = base_horiz.mark_text(
+            align="left", baseline="middle", dx=5, fontSize=11, fontWeight="bold"
         ).encode(text="Промена текст:N")
 
-        chart_vertical = (
-            (bars_col + text_col)
+        chart_horizontal = (
+            (bars_horiz + text_horiz)
             .properties(height=350)
             .configure_axis(gridColor="white", gridOpacity=0.8)
             .configure_view(fill="#eef0f2", stroke=None)
         )
 
-        st.altair_chart(chart_vertical, use_container_width=True)
+        st.altair_chart(chart_horizontal, use_container_width=True)
 
     st.subheader("📋 Детална табела")
     df_table_show = df_display.copy()
