@@ -151,9 +151,7 @@ if "Кривични дела против државата" in selected_sheet:
         bars_horiz = base_horiz.mark_bar(color=BLUE_COLOR)
         text_horiz = base_horiz.mark_text(
             align="left", baseline="middle", dx=5, fontSize=11, fontWeight="bold"
-        ).encode(
-            text="Промена текст:N"
-        )  # Ги прикажува текстовите („пет пати ↗“ и „200%“)
+        ).encode(text="Промена текст:N")
 
         chart_horizontal = (
             (bars_horiz + text_horiz)
@@ -980,7 +978,7 @@ elif "Насилство" in selected_sheet:
                 .encode(y="Промена:Q", text="Промена текст:N")
             )
             st.altair_chart(
-                (rule_u + circle_u + text_u_pos + text_u_neg).properties(
+                (rule_n + circle_n + text_n_pos + text_n_neg).properties(
                     height=380
                 ),
                 use_container_width=True,
