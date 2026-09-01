@@ -503,7 +503,6 @@ elif "Корупција" in selected_sheet:
     else:
         header_row = raw.iloc[header_row_idx]
 
-        # Наоѓање колони за Кривични дела (2024, 2023, промена) и Сторители (2024, 2023)
         year_cols = [
             col
             for col in raw.columns
@@ -567,7 +566,7 @@ elif "Корупција" in selected_sheet:
 
         sector_order = korupcija_clean["СВР"].tolist()
 
-        # График 1: Корупција 2024 vs 2023 (Column Chart)
+        # График 1: Корупција 2024 vs 2023 (Column Chart) - БЕЗ DATA LABELS
         st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
         melted_kd_k = korupcija_clean.melt(
             id_vars=["СВР"],
@@ -600,12 +599,9 @@ elif "Корупција" in selected_sheet:
             xOffset="Година:N",
         )
         bars_kd_k = base_kd_k.mark_bar()
-        text_kd_k = base_kd_k.mark_text(align="center", dy=-8).encode(
-            text="Број:Q"
-        )
+        # Исклучени се text labels за првиот график
         st.altair_chart(
-            (bars_kd_k + text_kd_k).properties(height=380),
-            use_container_width=True,
+            bars_kd_k.properties(height=380), use_container_width=True
         )
 
         # График 2: Dot plot / Lollipop график со податоци од промена
