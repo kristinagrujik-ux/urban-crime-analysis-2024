@@ -364,9 +364,12 @@ elif "трговија со дрога" in selected_sheet.lower():
         rule_kd = base_kd.mark_rule(strokeWidth=2).encode(
             y=alt.Y(
                 "Промена КД %:Q",
-                axis=alt.Axis(format="%", values=[-0.2, 0, 0.5, 1.0]),
+                axis=alt.Axis(
+                    format="%",
+                    values=[-0.25, -0.20, -0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15, 0.20]
+                ),
                 title="Промена",
-                scale=alt.Scale(domain=[-0.3, 1.2], zero=True),
+                scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
             ),
             y2="zero:Q",
             color=color_enc_kd,
@@ -438,9 +441,12 @@ elif "трговија со дрога" in selected_sheet.lower():
         rule_stor = base_stor.mark_rule(strokeWidth=2).encode(
             y=alt.Y(
                 "Промена Сторители %:Q",
-                axis=alt.Axis(format="%", values=[-0.4, 0, 0.5, 1.0]),
+                axis=alt.Axis(
+                    format="%",
+                    values=[-0.25, -0.20, -0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15, 0.20]
+                ),
                 title="Промена",
-                scale=alt.Scale(domain=[-0.5, 1.1], zero=True),
+                scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
             ),
             y2="zero:Q",
             color=color_enc_stor,
@@ -793,9 +799,12 @@ elif "Убиства" in selected_sheet:
             rule_u = base_lolli.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена (плот):Q",
-                    axis=alt.Axis(format="%", values=[0, 1, 2, 3]),
+                    axis=alt.Axis(
+                        format="%",
+                        values=[-0.25, -0.20, -0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15, 0.20]
+                    ),
                     title="Промена",
-                    scale=alt.Scale(domain=[-1.2, 3.2], zero=True),
+                    scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
                 ),
                 y2="zero:Q",
                 color=color_enc_u,
@@ -823,7 +832,7 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (Без броеви на првиот график и скала до 20% на вториот)
+# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ
 elif "Тешки кражби" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -905,7 +914,6 @@ elif "Тешки кражби" in selected_sheet:
                 var_name="Година",
                 value_name="Број",
             )
-            # Тргнати се text_tk (data labels) за да биде без броеви
             base_tk = alt.Chart(melted_tk).encode(
                 x=alt.X(
                     "СВР:N",
@@ -951,7 +959,6 @@ elif "Тешки кражби" in selected_sheet:
                 ),
                 legend=alt.Legend(title=None),
             )
-            # Скалата е поставена фиксно од -25% до 20% (domain од -0.25 до 0.20) за горната граница да биде строго на 20%
             rule_tk = base_lolli_tk.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена:Q",
@@ -988,7 +995,7 @@ elif "Тешки кражби" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.7 ОПШТ ПРИКАЗ ЗА СИТЕ ДРУГИ КАТЕГОРИИ
+# 4.7 ОПШТ ПРИКАЗ ЗА СИТЕ ДРУГИ КАТЕГОРИИ (Тука беше грешката)
 else:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -1106,9 +1113,12 @@ else:
                 rule_g = base_lolli_g.mark_rule(strokeWidth=2).encode(
                     y=alt.Y(
                         "Промена:Q",
-                        axis=alt.Axis(format="%"),
+                        axis=alt.Axis(
+                            format="%",
+                            values=[-0.25, -0.20, -0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15, 0.20]
+                        ),
                         title="Промена",
-                        scale=alt.Scale(zero=True),
+                        scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
                     ),
                     y2="zero:Q",
                     color=color_enc_g,
