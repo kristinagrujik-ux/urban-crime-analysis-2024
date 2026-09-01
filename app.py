@@ -483,7 +483,7 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА (ПОПРАВЕН)
+# 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА (САМО ПРВИОТ ГРАФИК)
 elif "Корупција" in selected_sheet:
     @st.cache_data
     def load_korupcija(sheet):
@@ -494,34 +494,19 @@ elif "Корупција" in selected_sheet:
         if len(raw_k.columns) > 0:
             raw_k = raw_k.dropna(subset=[raw_k.columns[0]])
 
+        # ИСПРАВЕНИ ИНДЕКСИ: Колоните 4 и 5 одговараат на КД 2024 и КД 2023
         korupcija_clean = pd.DataFrame({
             "СВР": raw_k.iloc[:, 0].values,
-            "КД 2024": pd.to_numeric(raw_k.iloc[:, 3], errors="coerce").fillna(0),
-            "КД 2023": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
-            "Промена": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
-            "Сторители 2024": pd.to_numeric(
-                raw_k.iloc[:, 6], errors="coerce"
-            ).fillna(0),
-            "Сторители 2023": pd.to_numeric(
-                raw_k.iloc[:, 7], errors="coerce"
-            ).fillna(0),
+            "КД 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
+            "КД 2023": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
         })
 
         korupcija_clean = korupcija_clean[
             korupcija_clean["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
         ]
-
-        korupcija_clean["Промена текст"] = korupcija_clean["Промена"].apply(
-            lambda x: f"{x*100:.1f}%"
-        )
-        korupcija_clean["Насока"] = korupcija_clean["Промена"].apply(
-            lambda x: "Пораст" if x >= 0 else "Пад"
-        )
-        korupcija_clean["zero"] = 0
-
         sector_order = korupcija_clean["СВР"].tolist()
 
-        # График 1: Корупција 2024 vs 2023 (Без Data Labels)
+        # График 1: Корупција 2024 vs 2023 (Column Chart)
         st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
         melted_kd_k = korupcija_clean.melt(
             id_vars=["СВР"],
@@ -556,92 +541,6 @@ elif "Корупција" in selected_sheet:
         bars_kd_k = base_kd_k.mark_bar()
         st.altair_chart(
             bars_kd_k.properties(height=380), use_container_width=True
-        )
-
-        # График 2: Dot plot / Lollipop график со податоци од промена
-        st.write(
-            "**2. Корупција - Промена (%) - Dot Plot / Lollipop со податоци**"
-        )
-        base_dot_k = alt.Chart(korupcija_clean).encode(
-            x=alt.X(
-                "СВР:N",
-                title=None,
-                sort=sector_order,
-                axis=alt.Axis(labelAngle=270),
-            )
-        )
-        color_enc_dot = alt.Color(
-            "Насока:N",
-            scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
-            legend=alt.Legend(title=None),
-        )
-        rule_dot = base_dot_k.mark_rule(strokeWidth=2).encode(
-            y=alt.Y(
-                "Промена:Q",
-                axis=alt.Axis(format="%"),
-                title="Промена (%)",
-                scale=alt.Scale(zero=True),
-            ),
-            y2="zero:Q",
-            color=color_enc_dot,
-        )
-        circle_dot = base_dot_k.mark_circle(size=220).encode(
-            y="Промена:Q", color=color_enc_dot
-        )
-        text_dot_pos = (
-            base_dot_k.transform_filter(alt.datum["Промена"] >= 0)
-            .mark_text(align="center", dy=-16, fontSize=11, fontWeight="bold")
-            .encode(y="Промена:Q", text="Промена текст:N")
-        )
-        text_dot_neg = (
-            base_dot_k.transform_filter(alt.datum["Промена"] < 0)
-            .mark_text(align="center", dy=18, fontSize=11, fontWeight="bold")
-            .encode(y="Промена:Q", text="Промена текст:N")
-        )
-        st.altair_chart(
-            (rule_dot + circle_dot + text_dot_pos + text_dot_neg).properties(
-                height=380
-            ),
-            use_container_width=True,
-        )
-
-        # График 3: Сторители 2024 vs 2023 (Bar Chart график)
-        st.write("**3. Сторители: 2024 vs 2023 година**")
-        melted_stor_k = korupcija_clean.melt(
-            id_vars=["СВР"],
-            value_vars=["Сторители 2024", "Сторители 2023"],
-            var_name="Година",
-            value_name="Број на сторители",
-        )
-        melted_stor_k["Година"] = melted_stor_k["Година"].replace(
-            {"Сторители 2024": "Сторители 2024", "Сторители 2023": "Сторители 2023"}
-        )
-
-        base_stor_k = alt.Chart(melted_stor_k).encode(
-            x=alt.X(
-                "СВР:N",
-                title=None,
-                sort=sector_order,
-                axis=alt.Axis(labelAngle=270),
-            ),
-            y=alt.Y(
-                "Број на сторители:Q",
-                title="Број",
-                axis=alt.Axis(format="d", tickMinStep=1),
-            ),
-            color=alt.Color(
-                "Година:N",
-                scale=alt.Scale(
-                    domain=["Сторители 2024", "Сторители 2023"],
-                    range=["#ff7f0e", "#ffbb78"],
-                ),
-                legend=alt.Legend(title="Година"),
-            ),
-            xOffset="Година:N",
-        )
-        bars_stor_k = base_stor_k.mark_bar()
-        st.altair_chart(
-            bars_stor_k.properties(height=380), use_container_width=True
         )
 
         st.subheader("📋 Детална табела")
