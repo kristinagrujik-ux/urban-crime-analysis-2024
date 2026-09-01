@@ -144,7 +144,7 @@ if "Кривични дела против државата" in selected_sheet:
                 "promena_procent:Q",
                 title="Промена (%)",
                 axis=alt.Axis(format="%"),
-                scale=alt.Scale(domain=[-0.2, 6.0], zero=True),
+                scale=alt.Scale(domain=[-0.2, 8.0], zero=True),
             ),
         )
 
@@ -823,7 +823,7 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО
+# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (Ажурирано без броеви на првиот график и скала до 80% на вториот)
 elif "Насилство" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -905,6 +905,7 @@ elif "Насилство" in selected_sheet:
                 var_name="Година",
                 value_name="Број",
             )
+            # Тргнати се text_n (data labels) за да биде без броеви
             base_n = alt.Chart(melted_n).encode(
                 x=alt.X(
                     "СВР:N",
@@ -928,9 +929,8 @@ elif "Насилство" in selected_sheet:
                 xOffset="Година:N",
             )
             bars_n = base_n.mark_bar()
-            text_n = base_n.mark_text(align="center", dy=-8).encode(text="Број:Q")
             st.altair_chart(
-                (bars_n + text_n).properties(height=380), use_container_width=True
+                bars_n.properties(height=380), use_container_width=True
             )
 
         with col2:
@@ -951,12 +951,15 @@ elif "Насилство" in selected_sheet:
                 ),
                 legend=alt.Legend(title=None),
             )
+            # Скалата е поставена фиксно до 80% (domain од -0.6 до 0.8)
             rule_n = base_lolli_n.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена:Q",
-                    axis=alt.Axis(format="%"),
+                    axis=alt.Axis(
+                        format="%", values=[-0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8]
+                    ),
                     title="Промена",
-                    scale=alt.Scale(zero=True),
+                    scale=alt.Scale(domain=[-0.6, 0.8], zero=True),
                 ),
                 y2="zero:Q",
                 color=color_enc_n,
@@ -984,7 +987,7 @@ elif "Насилство" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.7 ОПШТ ПРИКАЗ ЗА СИТЕ ДРУГИ КАТЕГОРИИ (Тешки кражби, Кражби, Имотни делкти, итн.)
+# 4.7 ОПШТ ПРИКАЗ ЗА СИТЕ ДРУГИ КАТЕГОРИИ
 else:
     raw = df.copy()
     label_col = raw.columns[0]
