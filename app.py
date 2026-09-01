@@ -823,7 +823,7 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (Ажурирано без броеви на првиот график и скала до 20% на вториот)
+# 4.6 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТЕШКИ КРАЖБИ (Без броеви на првиот график и скала до 20% на вториот)
 elif "Тешки кражби" in selected_sheet:
     raw = df.copy()
     label_col = raw.columns[0]
@@ -951,7 +951,7 @@ elif "Тешки кражби" in selected_sheet:
                 ),
                 legend=alt.Legend(title=None),
             )
-            # Скалата е поставена фиксно до 20% (domain од -0.25 до 0.20)
+            # Скалата е поставена фиксно од -25% до 20% (domain од -0.25 до 0.20) за горната граница да биде строго на 20%
             rule_tk = base_lolli_tk.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена:Q",
