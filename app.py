@@ -483,78 +483,33 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА (ПО БАРАЊЕ)
+# 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА (ПОПРАВЕН)
 elif "Корупција" in selected_sheet:
-    raw = df.copy()
-    label_col = raw.columns[0]
+    @st.cache_data
+    def load_korupcija(sheet):
+        return pd.read_excel(file_path, sheet_name=sheet, header=4)
 
-    header_row_idx = None
-    for i in range(min(5, len(raw))):
-        row_vals = raw.iloc[i].astype(str)
-        if row_vals.str.contains("2024", na=False).any() and row_vals.str.contains(
-            "2023", na=False
-        ).any():
-            header_row_idx = i
-            break
-
-    if header_row_idx is None:
-        st.error("Не можат да се пронајдат заглавијата за оваа табела.")
-        st.dataframe(df, use_container_width=True)
-    else:
-        header_row = raw.iloc[header_row_idx]
-
-        year_cols = [
-            col
-            for col in raw.columns
-            if str(header_row[col]).strip() in ["2024 година", "2023 година"]
-        ]
-        kd_2024_col, kd_2023_col = year_cols[0], year_cols[1]
-        stor_2024_col, stor_2023_col = year_cols[2], year_cols[3]
-
-        promena_col = next(
-            (
-                col
-                for col in raw.columns
-                if "Промена" in str(header_row[col])
-            ),
-            None,
-        )
-
-        data_rows = raw.iloc[header_row_idx + 1 :].copy()
-        data_rows = data_rows[data_rows[label_col].notna()]
-        data_rows = data_rows[
-            ~data_rows[label_col].astype(str).str.contains("Вкупно", na=False)
-        ]
+    try:
+        raw_k = load_korupcija(selected_sheet)
+        if len(raw_k.columns) > 0:
+            raw_k = raw_k.dropna(subset=[raw_k.columns[0]])
 
         korupcija_clean = pd.DataFrame({
-            "СВР": data_rows[label_col].values,
-            "КД 2024": pd.to_numeric(
-                data_rows[kd_2024_col], errors="coerce"
-            ).fillna(0),
-            "КД 2023": pd.to_numeric(
-                data_rows[kd_2023_col], errors="coerce"
-            ).fillna(0),
+            "СВР": raw_k.iloc[:, 0].values,
+            "КД 2024": pd.to_numeric(raw_k.iloc[:, 3], errors="coerce").fillna(0),
+            "КД 2023": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
+            "Промена": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
             "Сторители 2024": pd.to_numeric(
-                data_rows[stor_2024_col], errors="coerce"
+                raw_k.iloc[:, 6], errors="coerce"
             ).fillna(0),
             "Сторители 2023": pd.to_numeric(
-                data_rows[stor_2023_col], errors="coerce"
+                raw_k.iloc[:, 7], errors="coerce"
             ).fillna(0),
-        }).dropna(subset=["СВР"])
+        })
 
-        if promena_col is not None:
-            korupcija_clean["Промена"] = (
-                pd.to_numeric(data_rows[promena_col], errors="coerce")
-                .fillna(0)
-                .values
-            )
-        else:
-            prev_year = korupcija_clean["КД 2023"]
-            curr_year = korupcija_clean["КД 2024"]
-            prev_year_safe = prev_year.replace(0, float("nan"))
-            korupcija_clean["Промена"] = (
-                (curr_year - prev_year) / prev_year_safe
-            ).fillna(0)
+        korupcija_clean = korupcija_clean[
+            korupcija_clean["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
+        ]
 
         korupcija_clean["Промена текст"] = korupcija_clean["Промена"].apply(
             lambda x: f"{x*100:.1f}%"
@@ -566,7 +521,7 @@ elif "Корупција" in selected_sheet:
 
         sector_order = korupcija_clean["СВР"].tolist()
 
-        # График 1: Корупција 2024 vs 2023 (Column Chart) - БЕЗ DATA LABELS
+        # График 1: Корупција 2024 vs 2023 (Без Data Labels)
         st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
         melted_kd_k = korupcija_clean.melt(
             id_vars=["СВР"],
@@ -599,7 +554,6 @@ elif "Корупција" in selected_sheet:
             xOffset="Година:N",
         )
         bars_kd_k = base_kd_k.mark_bar()
-        # Исклучени се text labels за првиот график
         st.altair_chart(
             bars_kd_k.properties(height=380), use_container_width=True
         )
@@ -659,6 +613,10 @@ elif "Корупција" in selected_sheet:
             var_name="Година",
             value_name="Број на сторители",
         )
+        melted_stor_k["Година"] = melted_stor_k["Година"].replace(
+            {"Сторители 2024": "Сторители 2024", "Сторители 2023": "Сторители 2023"}
+        )
+
         base_stor_k = alt.Chart(melted_stor_k).encode(
             x=alt.X(
                 "СВР:N",
@@ -682,16 +640,15 @@ elif "Корупција" in selected_sheet:
             xOffset="Година:N",
         )
         bars_stor_k = base_stor_k.mark_bar()
-        text_stor_k = base_stor_k.mark_text(align="center", dy=-8).encode(
-            text="Број на сторители:Q"
-        )
         st.altair_chart(
-            (bars_stor_k + text_stor_k).properties(height=380),
-            use_container_width=True,
+            bars_stor_k.properties(height=380), use_container_width=True
         )
 
         st.subheader("📋 Детална табела")
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(raw_k, use_container_width=True, hide_index=True)
+
+    except Exception as e:
+        st.error(f"Грешка при обработка на податоците за корупција: {e}")
 
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
