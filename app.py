@@ -251,7 +251,7 @@ elif "Криумчарење на мигранти" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА
+# 3. СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НЕДОЗВОЛЕНА ТРГОВИЈА СО ДРОГА (ВРАТЕНИ СИТЕ 4 ГРАФИЦИ)
 elif "трговија со дрога" in selected_sheet.lower():
     valid_rows = df[
         df.iloc[:, 0].astype(str).str.contains("СВР|ОСОСК", na=False)
@@ -304,8 +304,10 @@ elif "трговија со дрога" in selected_sheet.lower():
     valid_rows["zero"] = 0
     sector_order = valid_rows[sector_col].tolist()
 
-    col1, col2 = st.columns(2)
-    with col1:
+    col1, col2 = alt.hconcat(), alt.hconcat()  # користиме стандардни streamlit колони долу
+
+    c1, c2 = st.columns(2)
+    with c1:
         st.write("**Вкупни КД: 2024 vs 2023**")
         df_melted_kd = valid_rows.melt(
             id_vars=[sector_col],
@@ -333,7 +335,7 @@ elif "трговија со дрога" in selected_sheet.lower():
             use_container_width=True,
         )
 
-    with col2:
+    with c2:
         st.write("**Недозволена трговија со дрога - Промена на кривични дела (%)**")
         base_kd = alt.Chart(valid_rows).encode(
             x=alt.X(
@@ -351,23 +353,9 @@ elif "трговија со дрога" in selected_sheet.lower():
         rule_kd = base_kd.mark_rule(strokeWidth=2).encode(
             y=alt.Y(
                 "Промена КД %:Q",
-                axis=alt.Axis(
-                    format="%",
-                    values=[
-                        -0.25,
-                        -0.20,
-                        -0.15,
-                        -0.10,
-                        -0.05,
-                        0,
-                        0.05,
-                        0.10,
-                        0.15,
-                        0.20,
-                    ],
-                ),
+                axis=alt.Axis(format="%"),
                 title="Промена",
-                scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
+                scale=alt.Scale(zero=True),
             ),
             y2="zero:Q",
             color=color_enc_kd,
@@ -392,8 +380,8 @@ elif "трговија со дрога" in selected_sheet.lower():
             use_container_width=True,
         )
 
-    col3, col4 = st.columns(2)
-    with col3:
+    c3, c4 = st.columns(2)
+    with c3:
         st.write("**Сторители: 2024 vs 2023**")
         df_melted_stor = valid_rows.melt(
             id_vars=[sector_col],
@@ -421,7 +409,7 @@ elif "трговија со дрога" in selected_sheet.lower():
             use_container_width=True,
         )
 
-    with col4:
+    with c4:
         st.write("**Недозволена трговија со дрога - Промена на сторители (%)**")
         base_stor = alt.Chart(valid_rows).encode(
             x=alt.X(
@@ -439,23 +427,9 @@ elif "трговија со дрога" in selected_sheet.lower():
         rule_stor = base_stor.mark_rule(strokeWidth=2).encode(
             y=alt.Y(
                 "Промена Сторители %:Q",
-                axis=alt.Axis(
-                    format="%",
-                    values=[
-                        -0.25,
-                        -0.20,
-                        -0.15,
-                        -0.10,
-                        -0.05,
-                        0,
-                        0.05,
-                        0.10,
-                        0.15,
-                        0.20,
-                    ],
-                ),
+                axis=alt.Axis(format="%"),
                 title="Промена",
-                scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
+                scale=alt.Scale(zero=True),
             ),
             y2="zero:Q",
             color=color_enc_stor,
@@ -494,7 +468,6 @@ elif "Корупција" in selected_sheet:
         if len(raw_k.columns) > 0:
             raw_k = raw_k.dropna(subset=[raw_k.columns[0]])
 
-        # ИСПРАВЕНИ ИНДЕКСИ: Колоните 4 и 5 одговараат на КД 2024 и КД 2023
         korupcija_clean = pd.DataFrame({
             "СВР": raw_k.iloc[:, 0].values,
             "КД 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
@@ -506,7 +479,6 @@ elif "Корупција" in selected_sheet:
         ]
         sector_order = korupcija_clean["СВР"].tolist()
 
-        # График 1: Корупција 2024 vs 2023 (Column Chart)
         st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
         melted_kd_k = korupcija_clean.melt(
             id_vars=["СВР"],
@@ -867,7 +839,7 @@ elif "Убиства" in selected_sheet:
                     "Промена:Q",
                     axis=alt.Axis(format="%"),
                     title="Промена",
-                    scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
+                    scale=alt.Scale(zero=True),
                 ),
                 y2="zero:Q",
                 color=color_enc_u,
@@ -1024,7 +996,7 @@ elif "Тешки кражби" in selected_sheet:
                     "Промена:Q",
                     axis=alt.Axis(format="%"),
                     title="Промена",
-                    scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
+                    scale=alt.Scale(zero=True),
                 ),
                 y2="zero:Q",
                 color=color_enc_tk,
@@ -1170,7 +1142,7 @@ else:
                         "Промена:Q",
                         axis=alt.Axis(format="%"),
                         title="Промена",
-                        scale=alt.Scale(domain=[-0.25, 0.20], zero=True),
+                        scale=alt.Scale(zero=True),
                     ),
                     y2="zero:Q",
                     color=color_enc_g,
