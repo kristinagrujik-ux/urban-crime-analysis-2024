@@ -963,46 +963,56 @@ elif "Тешки кражби" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
-# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (ДИРЕКТНО ЧИТАЊЕ ОД РЕД 4 НААТАМУ)
+# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (ЦЕЛОСНО ИСЧИСТЕН ОД UNNAMED)
 elif "Насилиство" in selected_sheet:
     try:
-        # Читање на Excel фајлот со правилно подесен header за Насилиство
-        @st.cache_data
-        def load_nasilistvo(sheet):
-            return pd.read_excel(file_path, sheet_name=sheet, header=4)
-
-        raw_n = load_nasilistvo(selected_sheet)
-        if len(raw_n.columns) > 0:
-            raw_n = raw_n.dropna(subset=[raw_n.columns[0]])
-
-        nas_clean = pd.DataFrame(
+        raw_n = df.copy()
+        
+        # Наоѓање на редот каде што почнуваат податоците (каде што е СВР Скопје)
+        start_idx = 0
+        for idx, row in raw_n.iterrows():
+            row_str = str(row.values)
+            if "СВР Скопје" in row_str:
+                start_idx = idx
+                break
+        
+        # Сечеме од тој ред натаму каде што се СВР-овите и Вкупно
+        nas_clean = raw_n.iloc[start_idx : start_idx + 9].copy()
+        
+        col_svr = nas_clean.columns[0]
+        col_2024 = nas_clean.columns[3]
+        col_2023 = nas_clean.columns[5]
+        
+        cleaned_df = pd.DataFrame(
             {
-                "СВР": raw_n.iloc[:, 0].values,
-                "2024 година": pd.to_numeric(raw_n.iloc[:, 3], errors="coerce").fillna(0),
-                "2023 година": pd.to_numeric(raw_n.iloc[:, 5], errors="coerce").fillna(0),
+                "СВР": nas_clean[col_svr].values,
+                "2024 година": pd.to_numeric(nas_clean[col_2024], errors="coerce").fillna(0),
+                "2023 година": pd.to_numeric(nas_clean[col_2023], errors="coerce").fillna(0),
             }
         )
-
-        nas_clean = nas_clean[
-            nas_clean["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
+        
+        cleaned_df = cleaned_df[
+            cleaned_df["СВР"].astype(str).str.contains("СВР|ОСОСК|Вкупно", na=False)
         ]
 
-        prev_year = nas_clean["2023 година"]
-        curr_year = nas_clean["2024 година"]
+        prev_year = cleaned_df["2023 година"]
+        curr_year = cleaned_df["2024 година"]
         prev_year_safe = prev_year.replace(0, float("nan"))
-        nas_clean["Промена"] = ((curr_year - prev_year) / prev_year_safe).fillna(0)
-        nas_clean["Промена текст"] = nas_clean["Промена"].apply(
+        cleaned_df["Промена"] = ((curr_year - prev_year) / prev_year_safe).fillna(0)
+        cleaned_df["Промена текст"] = cleaned_df["Промена"].apply(
             lambda x: f"{x*100:.1f}%"
         )
-        nas_clean["Насока"] = nas_clean["Промена"].apply(
+        cleaned_df["Насока"] = cleaned_df["Промена"].apply(
             lambda x: "Пораст" if x >= 0 else "Пад"
         )
-        sector_order = nas_clean["СВР"].tolist()
+        
+        chart_df = cleaned_df[~cleaned_df["СВР"].str.contains("Вкупно", na=False)].copy()
+        sector_order = chart_df["СВР"].tolist()
 
         col1, col2 = st.columns(2)
         with col1:
             st.write("**Насилиство: 2024 vs 2023 година**")
-            melted_nas = nas_clean.melt(
+            melted_nas = chart_df.melt(
                 id_vars=["СВР"],
                 value_vars=["2024 година", "2023 година"],
                 var_name="Година",
@@ -1026,13 +1036,12 @@ elif "Насилиство" in selected_sheet:
                 ),
                 xOffset="Година:N",
             )
-            # Првиот график е исклучиво со столпчиња без бројки (data labels) горе
             st.altair_chart(base_nas.mark_bar().properties(height=380), use_container_width=True)
 
         with col2:
             st.write("**Насилиство - Промена (%) - Lollipop Chart**")
-            nas_clean["zero"] = 0
-            base_lolli_nas = alt.Chart(nas_clean).encode(
+            chart_df["zero"] = 0
+            base_lolli_nas = alt.Chart(chart_df).encode(
                 x=alt.X(
                     "СВР:N",
                     title=None,
@@ -1078,7 +1087,10 @@ elif "Насилиство" in selected_sheet:
             )
 
         st.subheader("📋 Детална табела")
-        st.dataframe(raw_n, use_container_width=True, hide_index=True)
+        display_table = cleaned_df[["СВР", "2024 година", "2023 година", "Промена текст"]].rename(
+            columns={"Промена текст": "Промена %"}
+        )
+        st.dataframe(display_table, use_container_width=True, hide_index=True)
 
     except Exception as e:
         st.error(f"Грешка при обработка на податоците за насилиство: {e}")
