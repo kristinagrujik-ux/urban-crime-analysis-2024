@@ -918,7 +918,7 @@ elif "Тешки кражби" in selected_sheet:
             data_rows = data_rows[
                 ~data_rows[label_col].astype(str).str.contains("Вкупно", na=False)
             ]
-
+            
             tk_clean = pd.DataFrame(
                 {
                     "СВР": data_rows[label_col].values,
@@ -930,38 +930,27 @@ elif "Тешки кражби" in selected_sheet:
                     ).fillna(0),
                 }
             ).dropna(subset=["СВР"])
-
-            prev_year = tk_clean["2023 година"]
-            curr_year = tk_clean["2024 година"]
-            prev_year_safe = prev_year.replace(0, float("nan"))
-            tk_clean["Промена"] = ((curr_year - prev_year) / prev_year_safe).fillna(0)
-            tk_clean["Промена текст"] = tk_clean["Промена"].apply(
-                lambda x: f"{x*100:.1f}%"
-            )
-            tk_clean["Насока"] = tk_clean["Промена"].apply(
-                lambda x: "Пораст" if x >= 0 else "Пад"
-            )
+            
             sector_order = tk_clean["СВР"].tolist()
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("**Тешки кражби: 2024 vs 2023 година**")
-                melted_tk = tk_clean.melt(
-                    id_vars=["СВР"],
-                    value_vars=["2024 година", "2023 година"],
-                    var_name="Година",
-                    value_name="Број",
-                )
-                base_tk = alt.Chart(melted_tk).encode(
+            
+            st.write("**Тешки кражби: 2024 vs 2023 година**")
+            melted_tk = tk_clean.melt(
+                id_vars=["СВР"],
+                value_vars=["2024 година", "2023 година"],
+                var_name="Година",
+                value_name="Број",
+            )
+            chart_tk = (
+                alt.Chart(melted_tk)
+                .mark_bar()
+                .encode(
                     x=alt.X(
                         "СВР:N",
                         title=None,
                         sort=sector_order,
                         axis=alt.Axis(labelAngle=270),
                     ),
-                    y=alt.Y(
-                        "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
-                    ),
+                    y=alt.Y("Број:Q", title="Број"),
                     color=alt.Color(
                         "Година:N",
                         scale=alt.Scale(
@@ -972,68 +961,12 @@ elif "Тешки кражби" in selected_sheet:
                     ),
                     xOffset="Година:N",
                 )
-                bars_tk = base_tk.mark_bar()
-                text_tk = base_tk.mark_text(align="center", dy=-8).encode(
-                    text="Број:Q"
-                )
-                st.altair_chart(
-                    (bars_tk + text_tk).properties(height=380),
-                    use_container_width=True,
-                )
-
-            with col2:
-                st.write("**Тешки кражби - Промена (%) - Lollipop Chart**")
-                tk_clean["zero"] = 0
-                base_lolli_tk = alt.Chart(tk_clean).encode(
-                    x=alt.X(
-                        "СВР:N",
-                        title=None,
-                        sort=sector_order,
-                        axis=alt.Axis(labelAngle=270),
-                    )
-                )
-                color_enc_tk = alt.Color(
-                    "Насока:N",
-                    scale=alt.Scale(
-                        domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]
-                    ),
-                    legend=alt.Legend(title=None),
-                )
-                rule_tk = base_lolli_tk.mark_rule(strokeWidth=2).encode(
-                    y=alt.Y(
-                        "Промена:Q",
-                        axis=alt.Axis(format="%"),
-                        title="Промена",
-                        scale=alt.Scale(zero=True),
-                    ),
-                    y2="zero:Q",
-                    color=color_enc_tk,
-                )
-                circle_tk = base_lolli_tk.mark_circle(size=200).encode(
-                    y="Промена:Q", color=color_enc_tk
-                )
-                text_tk_pos = (
-                    base_lolli_tk.transform_filter(alt.datum["Промена"] >= 0)
-                    .mark_text(align="center", dy=-16, fontSize=11)
-                    .encode(y="Промена:Q", text="Промена текст:N")
-                )
-                text_tk_neg = (
-                    base_lolli_tk.transform_filter(alt.datum["Промена"] < 0)
-                    .mark_text(align="center", dy=18, fontSize=11)
-                    .encode(y="Промена:Q", text="Промена текст:N")
-                )
-                st.altair_chart(
-                    (rule_tk + circle_tk + text_tk_pos + text_tk_neg).properties(
-                        height=380
-                    ),
-                    use_container_width=True,
-                )
-
-            st.subheader("📋 Детална табела")
-            st.dataframe(df, use_container_width=True)
-        else:
-            st.dataframe(df, use_container_width=True)
-
-# 5. СЕКОЈ ДРУГ СЛУЧАЈ (Default приказ)
+            )
+            st.altair_chart(
+                chart_tk.properties(height=380), use_container_width=True
+            )
+            
+        st.subheader("📋 Детална табела")
+        st.dataframe(df, use_container_width=True)
 else:
     st.dataframe(df, use_container_width=True)
