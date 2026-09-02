@@ -620,6 +620,8 @@ elif "трговија со дрога" in selected_sheet.lower():
 
         st.subheader("📋 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
+        st.subheader("📋 Детална табела")
+        st.dataframe(raw_k, use_container_width=True, hide_index=True)
 
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
