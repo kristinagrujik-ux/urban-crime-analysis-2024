@@ -963,6 +963,81 @@ elif "Тешки кражби" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
 
+# 4.7 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА НАСИЛСТВО (НОВА ПОПРАВКА)
+elif "Насилиство" in selected_sheet:
+    raw = df.copy()
+    label_col = raw.columns[0]
+    header_row_idx = None
+    for i in range(min(5, len(raw))):
+        row_vals = raw.iloc[i].astype(str)
+        if row_vals.str.contains("2024", na=False).any() and row_vals.str.contains(
+            "2023", na=False
+        ).any():
+            header_row_idx = i
+            break
+
+    if header_row_idx is None:
+        st.dataframe(df, use_container_width=True)
+    else:
+        header_row = raw.iloc[header_row_idx]
+        year_cols = [
+            col
+            for col in raw.columns
+            if str(header_row[col]).strip() in ["2024 година", "2023 година"]
+        ]
+        
+        if len(year_cols) >= 2:
+            col_2024, col_2023 = year_cols[0], year_cols[1]
+            data_rows = raw.iloc[header_row_idx + 1 :].copy()
+            data_rows = data_rows[data_rows[label_col].notna()]
+            data_rows = data_rows[
+                ~data_rows[label_col].astype(str).str.contains("Вкупно", na=False)
+            ]
+
+            nas_clean = pd.DataFrame(
+                {
+                    "СВР": data_rows[label_col].values,
+                    "2024 година": pd.to_numeric(
+                        data_rows[col_2024], errors="coerce"
+                    ).fillna(0),
+                    "2023 година": pd.to_numeric(
+                        data_rows[col_2023], errors="coerce"
+                    ).fillna(0),
+                }
+            ).dropna(subset=["СВР"])
+
+            sector_order = nas_clean["СВР"].tolist()
+            
+            st.write("**Споредба за Насилиство (2024 vs 2023)**")
+            melted_nas = nas_clean.melt(
+                id_vars=["СВР"],
+                value_vars=["2024 година", "2023 година"],
+                var_name="Година",
+                value_name="Број",
+            )
+            base_nas = alt.Chart(melted_nas).encode(
+                x=alt.X(
+                    "СВР:N",
+                    title=None,
+                    sort=sector_order,
+                    axis=alt.Axis(labelAngle=270),
+                ),
+                y=alt.Y("Број:Q", title="Број"),
+                color=alt.Color(
+                    "Година:N",
+                    scale=alt.Scale(
+                        domain=["2024 година", "2023 година"],
+                        range=["#1f77b4", "#aec7e8"],
+                    ),
+                    legend=alt.Legend(title="Година"),
+                ),
+                xOffset="Година:N",
+            )
+            st.altair_chart(base_nas.mark_bar().properties(height=380), use_container_width=True)
+
+        st.subheader("📋 Детална табела")
+        st.dataframe(df, use_container_width=True)
+
 # Останати листови (дефолт приказ)
 else:
     st.dataframe(df, use_container_width=True)
