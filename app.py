@@ -612,20 +612,38 @@ elif "Вкупен" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 5. СПЕЦИЈАЛЕН ПРИКАЗ САМО ЗА: Убиства, Насилство, Тешки кражби
+# 5. СТРИКТЕН СПЕЦИЈАЛЕН ПРИКАЗ ЗА: Насилство, Тешки кражби, Убиства (Со фиксни индекси)
 elif any(
     cat in selected_sheet for cat in ["Убиства", "Насилство", "Тешки кражби"]
 ):
     try:
+        # Читаме од 4-тиот ред (header=3) како што тие табели стандардно се поставени
         raw_u = pd.read_excel(file_path, sheet_name=selected_sheet, header=3)
         raw_u = raw_u.dropna(subset=[raw_u.columns[0]])
 
+        # Експлицитни индекси на колоните врз основа на твојот стандарден изглед:
+        # Колона 0: СВР, Колона 3 или 4: 2024, Колона 4 или 5: 2023, Промена е последната
         col_svr = raw_u.columns[0]
-        col_2024 = [c for c in raw_u.columns if "2024" in str(c)][0]
-        col_2023 = [c for c in raw_u.columns if "2023" in str(c)][0]
-        col_chg = [
-            c for c in raw_u.columns if "Промена" in str(c) or "%" in str(c)
+
+        # Наоѓање колони по содржина наместо по строго име за да нема уривање
+        col_2024 = [
+            c
+            for c in raw_u.columns
+            if "2024" in str(c) or "2024 година" in str(c)
         ][0]
+        col_2023 = [
+            c
+            for c in raw_u.columns
+            if "2023" in str(c) or "2023 година" in str(c)
+        ][0]
+
+        # Барање колона за процент / промена
+        change_candidates = [
+            c
+            for c in raw_u.columns
+            if "%" in str(c) or "Промена" in str(c) or "index" in str(c).lower()
+        ]
+        col_chg = change_candidates[0] if change_candidates else raw_u.columns[-1]
 
         clean_df = pd.DataFrame({
             "СВР": raw_u[col_svr].values,
@@ -640,6 +658,7 @@ elif any(
             .apply(lambda x: x if abs(x) <= 2 else x / 100.0),
         }).dropna(subset=["СВР"])
 
+        # Филтрирање само редови кои содржат СВР или ОСОСК
         clean_df = clean_df[
             clean_df["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
         ]
@@ -738,13 +757,16 @@ elif any(
 
         st.subheader("📋 Детална табела")
         st.dataframe(raw_u, use_container_width=True, hide_index=True)
+
     except Exception as e:
-        st.error(f"Грешка при обработка на листот: {e}")
+        # Резервна опција ако дојде до некаква грешка во читањето на хедера
+        st.warning(
+            "Се појави проблем со автоматското читање, се прикажува основната табела:"
+        )
         st.dataframe(df, use_container_width=True)
 
 # 6. УНИВЕРЗАЛЕН ПРИКАЗ ЗА СИТЕ ОСТАНАТИ ЛИСТОВИ
 else:
-    st.info(f"Приказ за категоријата: {selected_sheet}")
     try:
         numeric_cols = df.select_dtypes(include=["number"]).columns
         if len(numeric_cols) >= 2:
