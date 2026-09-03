@@ -510,104 +510,146 @@ elif "Корупција" in selected_sheet:
             {"Сторители 2024": "2024 година", "Сторители 2023": "2023 година"}
         )
 
-        # ── ГРАФИК 1: Корупција 2024 vs 2023 (Column Chart) ──────────────────
-        st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
-        base_kd_k = alt.Chart(melted_kd_k).encode(
-            x=alt.X(
-                "СВР:N",
-                title=None,
-                sort=sector_order,
-                axis=alt.Axis(labelAngle=270),
-            ),
-            y=alt.Y(
-                "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
-            ),
-            color=alt.Color(
-                "Година:N",
-                scale=alt.Scale(
-                    domain=["2024 година", "2023 година"],
-                    range=["#1f77b4", "#aec7e8"],
-                ),
-                legend=alt.Legend(title="Година"),
-            ),
-            xOffset="Година:N",
-        )
-        st.altair_chart(
-            base_kd_k.mark_bar().properties(height=350),
-            use_container_width=True,
-        )
+        # ── ГРАФИКОНИ 1 и 2: Странично (тесни, во 2 колони) ────────────────
+        col1, col2 = st.columns(2)
 
-        # ── ГРАФИК 2: Корупција – Промена % (Diverging Bar Chart + data labels) ──
-        st.write("**2. Корупција - Промена % (Diverging Chart)**")
-        base_div = alt.Chart(korupcija_clean).encode(
-            x=alt.X(
-                "СВР:N",
-                title=None,
-                sort=sector_order,
-                axis=alt.Axis(labelAngle=270),
+        with col1:
+            # ГРАФИК 1: Кривични дела 2024 vs 2023 (тесен, вертикален grouped bar)
+            st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
+            chart1 = (
+                alt.Chart(melted_kd_k)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "СВР:N",
+                        title=None,
+                        sort=sector_order,
+                        axis=alt.Axis(labelAngle=270),
+                    ),
+                    y=alt.Y(
+                        "Број:Q",
+                        title="Број",
+                        axis=alt.Axis(format="d", tickMinStep=1),
+                    ),
+                    color=alt.Color(
+                        "Година:N",
+                        scale=alt.Scale(
+                            domain=["2024 година", "2023 година"],
+                            range=["#1f77b4", "#aec7e8"],
+                        ),
+                        legend=alt.Legend(title="Година"),
+                    ),
+                    xOffset="Година:N",
+                )
+                .properties(height=350)
             )
-        )
-        color_enc_div = alt.Color(
-            "Насока:N",
-            scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
-            legend=alt.Legend(title=None),
-        )
-        rule_div = base_div.mark_rule(strokeWidth=2).encode(
-            y=alt.Y(
-                "Промена %:Q",
-                axis=alt.Axis(format="%"),
-                title="Промена",
-                scale=alt.Scale(zero=True),
-            ),
-            y2="zero:Q",
-            color=color_enc_div,
-        )
-        circle_div = base_div.mark_circle(size=200).encode(
-            y="Промена %:Q", color=color_enc_div
-        )
-        text_div_pos = (
-            base_div.transform_filter(alt.datum["Промена %"] >= 0)
-            .mark_text(align="center", dy=-15, fontSize=10, fontWeight="bold")
-            .encode(y="Промена %:Q", text="Промена % текст:N")
-        )
-        text_div_neg = (
-            base_div.transform_filter(alt.datum["Промена %"] < 0)
-            .mark_text(align="center", dy=15, fontSize=10, fontWeight="bold")
-            .encode(y="Промена %:Q", text="Промена % текст:N")
-        )
-        st.altair_chart(
-            (rule_div + circle_div + text_div_pos + text_div_neg).properties(
-                height=350
-            ),
-            use_container_width=True,
-        )
+            st.altair_chart(chart1, use_container_width=True)
 
-        # ── ГРАФИК 3: Сторители 2024 vs 2023 (Bar Chart – хоризонтален) ──────
-        st.write("**3. Сторители: 2024 vs 2023 година**")
-        base_stor_k = alt.Chart(melted_stor_k).encode(
-            y=alt.Y(
-                "СВР:N",
-                title=None,
-                sort=sector_order,
-                axis=alt.Axis(labelLimit=200),
-            ),
-            x=alt.X(
-                "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
-            ),
-            color=alt.Color(
-                "Година:N",
-                scale=alt.Scale(
-                    domain=["2024 година", "2023 година"],
-                    range=["#1f77b4", "#aec7e8"],
-                ),
-                legend=alt.Legend(title="Година"),
-            ),
-            yOffset="Година:N",
-        )
-        st.altair_chart(
-            base_stor_k.mark_bar().properties(height=350),
-            use_container_width=True,
-        )
+        with col2:
+            # ГРАФИК 2: Сторители 2024 vs 2023 (тесен, хоризонтален grouped bar)
+            st.write("**2. Сторители: 2024 vs 2023 година**")
+            chart2 = (
+                alt.Chart(melted_stor_k)
+                .mark_bar()
+                .encode(
+                    y=alt.Y(
+                        "СВР:N",
+                        title=None,
+                        sort=sector_order,
+                        axis=alt.Axis(labelLimit=200),
+                    ),
+                    x=alt.X(
+                        "Број:Q",
+                        title="Број",
+                        axis=alt.Axis(format="d", tickMinStep=1),
+                    ),
+                    color=alt.Color(
+                        "Година:N",
+                        scale=alt.Scale(
+                            domain=["2024 година", "2023 година"],
+                            range=["#1f77b4", "#aec7e8"],
+                        ),
+                        legend=alt.Legend(title="Година"),
+                    ),
+                    yOffset="Година:N",
+                )
+                .properties(height=350)
+            )
+            st.altair_chart(chart2, use_container_width=True)
+
+        # ── ГРАФИК 3: Промена % — Хоризонтален Diverging BAR Chart ─────────
+        st.write("**3. Корупција - Промена % (Diverging Chart)**")
+
+        col_l, col_mid, col_r = st.columns([0.3, 4, 0.3])
+        with col_mid:
+            # Основни хоризонтални барови (зелени = пораст, црвени = пад)
+            bars_div = (
+                alt.Chart(korupcija_clean)
+                .mark_bar()
+                .encode(
+                    y=alt.Y(
+                        "СВР:N",
+                        sort=sector_order,
+                        title=None,
+                        axis=alt.Axis(labelLimit=200),
+                    ),
+                    x=alt.X(
+                        "Промена %:Q",
+                        title="Промена",
+                        axis=alt.Axis(format="%"),
+                        scale=alt.Scale(zero=True),
+                    ),
+                    color=alt.Color(
+                        "Насока:N",
+                        scale=alt.Scale(
+                            domain=["Пораст", "Пад"],
+                            range=["#2ca02c", "#d62728"],
+                        ),
+                        legend=alt.Legend(title=None),
+                    ),
+                )
+            )
+
+            # Data labels за позитивни вредности (десно од барот)
+            text_pos = (
+                alt.Chart(korupcija_clean)
+                .transform_filter(alt.datum["Промена %"] >= 0)
+                .mark_text(
+                    align="left",
+                    dx=5,
+                    fontSize=11,
+                    fontWeight="bold",
+                    color="#2ca02c",
+                )
+                .encode(
+                    y=alt.Y("СВР:N", sort=sector_order),
+                    x=alt.X("Промена %:Q"),
+                    text="Промена % текст:N",
+                )
+            )
+
+            # Data labels за негативни вредности (лево од барот)
+            text_neg = (
+                alt.Chart(korupcija_clean)
+                .transform_filter(alt.datum["Промена %"] < 0)
+                .mark_text(
+                    align="right",
+                    dx=-5,
+                    fontSize=11,
+                    fontWeight="bold",
+                    color="#d62728",
+                )
+                .encode(
+                    y=alt.Y("СВР:N", sort=sector_order),
+                    x=alt.X("Промена %:Q"),
+                    text="Промена % текст:N",
+                )
+            )
+
+            st.altair_chart(
+                (bars_div + text_pos + text_neg).properties(height=350),
+                use_container_width=True,
+            )
 
         st.subheader("📋 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
