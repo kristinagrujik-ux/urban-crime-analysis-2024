@@ -562,12 +562,12 @@ elif "Корупција" in selected_sheet:
                 bars_kd_k.properties(height=350), use_container_width=True
             )
         with col_k2:
-            st.write("**3. Сторители: 2024 vs 2023 година**")
+            st.write("**2. Сторители: 2024 vs 2023 година**")
             st.altair_chart(
                 bars_stor_k.properties(height=350), use_container_width=True
             )
 
-        st.write("**2. Корупција - Промена % (Diverging Chart)**")
+        st.write("**3. Корупција - Промена % (Diverging Chart)**")
         base_div = alt.Chart(korupcija_clean).encode(
             x=alt.X(
                 "СВР:N",
@@ -1243,4 +1243,3 @@ else:
 
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
-
