@@ -372,7 +372,7 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 3.4 КОРУПЦИЈА (Со отстранети графикони за сторители и лолипоп)
+# 3.4 КОРУПЦИЈА
 elif "Корупција" in selected_sheet:
     try:
         raw_k = pd.read_excel(file_path, sheet_name=selected_sheet, header=4)
@@ -612,41 +612,51 @@ elif "Вкупен" in selected_sheet:
     st.subheader("📋 Детална табела")
     st.dataframe(df, use_container_width=True)
 
-# 4.5 УБИСТВА
-elif "Убиства" in selected_sheet:
+# 5. СПЕЦИЈАЛЕН ПРИКАЗ САМО ЗА: Убиства, Насилство, Тешки кражби
+elif any(
+    cat in selected_sheet for cat in ["Убиства", "Насилство", "Тешки кражби"]
+):
     try:
         raw_u = pd.read_excel(file_path, sheet_name=selected_sheet, header=3)
         raw_u = raw_u.dropna(subset=[raw_u.columns[0]])
-        
+
         col_svr = raw_u.columns[0]
         col_2024 = [c for c in raw_u.columns if "2024" in str(c)][0]
         col_2023 = [c for c in raw_u.columns if "2023" in str(c)][0]
-        col_chg = [c for c in raw_u.columns if "Промена" in str(c) or "%" in str(c)][0]
+        col_chg = [
+            c for c in raw_u.columns if "Промена" in str(c) or "%" in str(c)
+        ][0]
 
-        ubistva_clean = pd.DataFrame({
+        clean_df = pd.DataFrame({
             "СВР": raw_u[col_svr].values,
-            "2024 година": pd.to_numeric(raw_u[col_2024], errors="coerce").fillna(0),
-            "2023 година": pd.to_numeric(raw_u[col_2023], errors="coerce").fillna(0),
-            "Промена": pd.to_numeric(raw_u[col_chg], errors="coerce").fillna(0).apply(lambda x: x if abs(x) <= 2 else x/100.0),
+            "2024 година": pd.to_numeric(
+                raw_u[col_2024], errors="coerce"
+            ).fillna(0),
+            "2023 година": pd.to_numeric(
+                raw_u[col_2023], errors="coerce"
+            ).fillna(0),
+            "Промена": pd.to_numeric(raw_u[col_chg], errors="coerce")
+            .fillna(0)
+            .apply(lambda x: x if abs(x) <= 2 else x / 100.0),
         }).dropna(subset=["СВР"])
 
-        ubistva_clean = ubistva_clean[
-            ubistva_clean["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
+        clean_df = clean_df[
+            clean_df["СВР"].astype(str).str.contains("СВР|ОСОСК", na=False)
         ]
 
-        ubistva_clean["Промена текст"] = ubistva_clean["Промена"].apply(
+        clean_df["Промена текст"] = clean_df["Промена"].apply(
             lambda x: f"{x*100:.1f}%"
         )
-        ubistva_clean["Насока"] = ubistva_clean["Промена"].apply(
+        clean_df["Насока"] = clean_df["Промена"].apply(
             lambda x: "Пораст" if x >= 0 else "Пад"
         )
-        ubistva_clean["zero"] = 0
-        sector_order = ubistva_clean["СВР"].tolist()
+        clean_df["zero"] = 0
+        sector_order = clean_df["СВР"].tolist()
 
         col1, col2 = st.columns(2)
         with col1:
-            st.write("**Убиства: 2024 vs 2023 година**")
-            melted_u = ubistva_clean.melt(
+            st.write(f"**{selected_sheet}: 2024 vs 2023 година**")
+            melted_u = clean_df.melt(
                 id_vars=["СВР"],
                 value_vars=["2024 година", "2023 година"],
                 var_name="Година",
@@ -680,8 +690,8 @@ elif "Убиства" in selected_sheet:
             )
 
         with col2:
-            st.write("**Убиства - Промена (%) (Diverging Chart)**")
-            base_u_div = alt.Chart(ubistva_clean).encode(
+            st.write(f"**{selected_sheet} - Промена (%) (Diverging Chart)**")
+            base_u_div = alt.Chart(clean_df).encode(
                 x=alt.X(
                     "СВР:N",
                     title=None,
@@ -691,7 +701,9 @@ elif "Убиства" in selected_sheet:
             )
             color_enc_u = alt.Color(
                 "Насока:N",
-                scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
+                scale=alt.Scale(
+                    domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]
+                ),
                 legend=alt.Legend(title=None),
             )
             rule_u = base_u_div.mark_rule(strokeWidth=2).encode(
@@ -727,18 +739,18 @@ elif "Убиства" in selected_sheet:
         st.subheader("📋 Детална табела")
         st.dataframe(raw_u, use_container_width=True, hide_index=True)
     except Exception as e:
-        st.error(f"Грешка кај Убиства: {e}")
+        st.error(f"Грешка при обработка на листот: {e}")
         st.dataframe(df, use_container_width=True)
 
-# 5. УНИВЕРЗАЛЕН ПРИКАЗ ЗА СИТЕ ОСТАНАТИ ЛИСТОВИ (Насилство, Тешки кражби итн.)
+# 6. УНИВЕРЗАЛЕН ПРИКАЗ ЗА СИТЕ ОСТАНАТИ ЛИСТОВИ
 else:
     st.info(f"Приказ за категоријата: {selected_sheet}")
     try:
-        numeric_cols = df.select_dtypes(include=['number']).columns
+        numeric_cols = df.select_dtypes(include=["number"]).columns
         if len(numeric_cols) >= 2:
             st.write("**Графички приказ на податоците**")
-            st.bar_chart(df.select_dtypes(include=['number']).head(15))
-        
+            st.bar_chart(df.select_dtypes(include=["number"]).head(15))
+
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
     except Exception as e:
