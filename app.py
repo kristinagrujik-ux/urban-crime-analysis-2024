@@ -628,35 +628,35 @@ elif "Корупција" in selected_sheet:
         # ── РЕД 2: График 3 — ТЕСЕН (само половина ширина) ──────────────────
         col3, col_spacer = st.columns([1, 1])
         with col3:
-            st.write("**3. Сторители: 2024 vs 2023 година**")
-            chart_stor = (
-                alt.Chart(melted_stor_k)
-                .mark_bar()
-                .encode(
-                    y=alt.Y(
-                        "СВР:N",
-                        title=None,
-                        sort=sector_order,
-                        axis=alt.Axis(labelLimit=200),
-                    ),
-                    x=alt.X(
-                        "Број:Q",
-                        title="Број",
-                        axis=alt.Axis(format="d", tickMinStep=1),
-                    ),
-                    color=alt.Color(
-                        "Година:N",
-                        scale=alt.Scale(
-                            domain=["2024 година", "2023 година"],
-                            range=["#1f77b4", "#aec7e8"],
-                        ),
-                        legend=alt.Legend(title="Година"),
-                    ),
-                    yOffset="Година:N",
-                )
-                .properties(height=350)
-            )
-            st.altair_chart(chart_stor, use_container_width=True)
+    st.write("**3. Сторители: 2024 vs 2023 година**")
+    chart_stor = (
+        alt.Chart(melted_stor_k)
+        .mark_bar()
+        .encode(
+            y=alt.Y(
+                "СВР:N",
+                title=None,
+                sort=sector_order,
+                axis=alt.Axis(labelLimit=300, labelPadding=6),  # ← changed from 200
+            ),
+            x=alt.X(
+                "Број:Q",
+                title="Број",
+                axis=alt.Axis(format="d", tickMinStep=1),
+            ),
+            color=alt.Color(
+                "Година:N",
+                scale=alt.Scale(
+                    domain=["2024 година", "2023 година"],
+                    range=["#1f77b4", "#aec7e8"],
+                ),
+                legend=alt.Legend(title="Година"),
+            ),
+            yOffset="Година:N",
+        )
+        .properties(height=350)
+    )
+    st.altair_chart(chart_stor, use_container_width=True)
 
         st.subheader("📋 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
