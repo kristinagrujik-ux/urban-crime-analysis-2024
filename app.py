@@ -467,11 +467,27 @@ elif "Корупција" in selected_sheet:
         if len(raw_k.columns) > 0:
             raw_k = raw_k.dropna(subset=[raw_k.columns[0]])
 
+        # ── Автоматска детекција на колоната "Промена %" по ime ──────────────
+        promena_col_name = None
+        for col in raw_k.columns:
+            if "промена" in str(col).lower() or "promena" in str(col).lower():
+                promena_col_name = col
+                break
+
+        promena_raw = pd.to_numeric(
+            raw_k[promena_col_name] if promena_col_name else raw_k.iloc[:, 6],
+            errors="coerce",
+        ).fillna(0)
+
+        # Ако вредностите се > 1.5, тие се проценти (пр. 1.2), треба /100
+        # Ако се < 1.5, веќе се десетични (пр. 0.012)
+        promena_vals = promena_raw / 100.0 if promena_raw.abs().max() > 1.5 else promena_raw
+
         korupcija_clean = pd.DataFrame({
             "СВР": raw_k.iloc[:, 0].values,
             "КД 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
             "КД 2023": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
-            "Промена %": pd.to_numeric(raw_k.iloc[:, 6], errors="coerce").fillna(0) / 100.0,
+            "Промена %": promena_vals,
             "Сторители 2024": pd.to_numeric(raw_k.iloc[:, 7], errors="coerce").fillna(0),
             "Сторители 2023": pd.to_numeric(raw_k.iloc[:, 8], errors="coerce").fillna(0),
         })
@@ -510,11 +526,10 @@ elif "Корупција" in selected_sheet:
             {"Сторители 2024": "2024 година", "Сторители 2023": "2023 година"}
         )
 
-        # ── РЕД 1: График 1 (КД) + График 2 (Diverging Chart) ──────────────
+        # ── РЕД 1: График 1 (КД) + График 2 (Diverging Chart) ───────────────
         col1, col2 = st.columns(2)
 
         with col1:
-            # ГРАФИК 1: Кривични дела 2024 vs 2023 (непроменет)
             st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
             chart1 = (
                 alt.Chart(melted_kd_k)
@@ -546,9 +561,7 @@ elif "Корупција" in selected_sheet:
             st.altair_chart(chart1, use_container_width=True)
 
         with col2:
-            # ГРАФИК 2 (ново место): Промена % — Diverging Chart
             st.write("**2. Корупција - Промена % (Diverging Chart)**")
-
             bars_div = (
                 alt.Chart(korupcija_clean)
                 .mark_bar()
@@ -575,7 +588,6 @@ elif "Корупција" in selected_sheet:
                     ),
                 )
             )
-
             text_pos = (
                 alt.Chart(korupcija_clean)
                 .transform_filter(alt.datum["Промена %"] >= 0)
@@ -592,7 +604,6 @@ elif "Корупција" in selected_sheet:
                     text="Промена % текст:N",
                 )
             )
-
             text_neg = (
                 alt.Chart(korupcija_clean)
                 .transform_filter(alt.datum["Промена %"] < 0)
@@ -609,48 +620,50 @@ elif "Корупција" in selected_sheet:
                     text="Промена % текст:N",
                 )
             )
-
             st.altair_chart(
                 (bars_div + text_pos + text_neg).properties(height=350),
                 use_container_width=True,
             )
 
-        # ── РЕД 2 (цела ширина): График 3 (ново место) — Сторители ──────────
-        st.write("**3. Сторители: 2024 vs 2023 година**")
-        chart_stor = (
-            alt.Chart(melted_stor_k)
-            .mark_bar()
-            .encode(
-                y=alt.Y(
-                    "СВР:N",
-                    title=None,
-                    sort=sector_order,
-                    axis=alt.Axis(labelLimit=200),
-                ),
-                x=alt.X(
-                    "Број:Q",
-                    title="Број",
-                    axis=alt.Axis(format="d", tickMinStep=1),
-                ),
-                color=alt.Color(
-                    "Година:N",
-                    scale=alt.Scale(
-                        domain=["2024 година", "2023 година"],
-                        range=["#1f77b4", "#aec7e8"],
+        # ── РЕД 2: График 3 — ТЕСЕН (само половина ширина) ──────────────────
+        col3, col_spacer = st.columns([1, 1])
+        with col3:
+            st.write("**3. Сторители: 2024 vs 2023 година**")
+            chart_stor = (
+                alt.Chart(melted_stor_k)
+                .mark_bar()
+                .encode(
+                    y=alt.Y(
+                        "СВР:N",
+                        title=None,
+                        sort=sector_order,
+                        axis=alt.Axis(labelLimit=200),
                     ),
-                    legend=alt.Legend(title="Година"),
-                ),
-                yOffset="Година:N",
+                    x=alt.X(
+                        "Број:Q",
+                        title="Број",
+                        axis=alt.Axis(format="d", tickMinStep=1),
+                    ),
+                    color=alt.Color(
+                        "Година:N",
+                        scale=alt.Scale(
+                            domain=["2024 година", "2023 година"],
+                            range=["#1f77b4", "#aec7e8"],
+                        ),
+                        legend=alt.Legend(title="Година"),
+                    ),
+                    yOffset="Година:N",
+                )
+                .properties(height=350)
             )
-            .properties(height=350)
-        )
-        st.altair_chart(chart_stor, use_container_width=True)
+            st.altair_chart(chart_stor, use_container_width=True)
 
         st.subheader("📋 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
 
     except Exception as e:
         st.error(f"Грешка при обработка на податоците за корупција: {e}")
+
 
 # 4. ГРАФИКОНИ ЗА ВКУПЕН КРИМИНАЛИТЕТ
 elif "Вкупен" in selected_sheet:
