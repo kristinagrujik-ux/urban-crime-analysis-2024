@@ -654,7 +654,6 @@ elif "Корпуција" in selected_sheet:
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
     except Exception as e:
         st.error(f"Грешка при вчитување на податоците за корупција: {e}")
-
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
     raw = df.copy()
