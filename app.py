@@ -619,38 +619,38 @@ elif "Корпуција" in selected_sheet:
                 use_container_width=True,
             )
 
-st.write("**3. Сторители: 2024 vs 2023 година**")
-        chart_stor = (
-            alt.Chart(melted_stor_k)
-            .mark_bar()
-            .encode(
-                x=alt.X(
-                    "Име:N",
-                    title=None,
-                    sort=sector_order,
-                    axis=alt.Axis(labelAngle=-45),
+        # ── ГРАФИК 3: Сторители 2024 vs 2023 (Bar Chart – хоризонтален) ──────
+        st.write("**3. Сторители: 2024 vs 2023 година**")
+        base_stor_k = alt.Chart(melted_stor_k).encode(
+            y=alt.Y(
+                "СВР:N",
+                title=None,
+                sort=sector_order,
+                axis=alt.Axis(labelLimit=200),
+            ),
+            x=alt.X(
+                "Број:Q", title="Број", axis=alt.Axis(format="d", tickMinStep=1)
+            ),
+            color=alt.Color(
+                "Година:N",
+                scale=alt.Scale(
+                    domain=["2024 година", "2023 година"],
+                    range=["#1f77b4", "#aec7e8"],
                 ),
-                y=alt.Y(
-                    "Број:Q",
-                    title="Број",
-                    axis=alt.Axis(format="d", tickMinStep=1),
-                ),
-                color=alt.Color(
-                    "Година:N",
-                    scale=alt.Scale(
-                        domain=["2024 година", "2023 година"],
-                        range=["#1f77b4", "#aec7e8"],
-                    ),
-                    legend=alt.Legend(title="Година"),
-                ),
-                xOffset="Година:N",
-            )
-            .properties(height=350)
+                legend=alt.Legend(title="Година"),
+            ),
+            yOffset="Година:N",
         )
-        st.altair_chart(chart_stor, use_container_width=True)
+        st.altair_chart(
+            base_stor_k.mark_bar().properties(height=350),
+            use_container_width=True,
+        )
 
-        st.subheader("📊 Детална табела")
+        st.subheader("📋 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
+
+    except Exception as e:
+        st.error(f"Грешка при обработка на податоците за корупција: {e}")
 
     except Exception as e:
         st.error(f"Грешка при вчитување на податоците за корупција: {e}")
