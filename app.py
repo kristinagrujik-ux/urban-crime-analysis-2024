@@ -619,19 +619,19 @@ elif "Корпуција" in selected_sheet:
                 use_container_width=True,
             )
 
-    # -- ДЕЛ 2: Графикон 3 (Сторители) -----------------------------------
+   # -- ДЕЛ 2: Графикон 3 (Сторители - Хоризонтален) -------------------
         st.write("**3. Сторители: 2024 vs 2023 година**")
         chart_stor = (
             alt.Chart(melted_stor_k)
             .mark_bar()
             .encode(
-                y=alt.Y(
+                x=alt.X(
                     "Име:N",
                     title=None,
                     sort=sector_order,
-                    axis=alt.Axis(labelLimit=200),
+                    axis=alt.Axis(labelAngle=-45),
                 ),
-                x=alt.X(
+                y=alt.Y(
                     "Број:Q",
                     title="Број",
                     axis=alt.Axis(format="d", tickMinStep=1),
