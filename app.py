@@ -619,7 +619,7 @@ elif "Корпуција" in selected_sheet:
                 use_container_width=True,
             )
 
-   # -- ДЕЛ 2: Графикон 3 (Сторители - Хоризонтален) -------------------
+  # -- ДЕЛ 2: Графикон 3 (Сторители - Хоризонтален бар График) -------------------
         st.write("**3. Сторители: 2024 vs 2023 година**")
         chart_stor = (
             alt.Chart(melted_stor_k)
@@ -652,6 +652,9 @@ elif "Корпуција" in selected_sheet:
 
         st.subheader("📊 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
+
+    except Exception as e:
+        st.error(f"Грешка при вчитување на податоците за корупција: {e}")
 
     except Exception as e:
         st.error(f"Грешка при вчитување на податоците за корупција: {e}")
