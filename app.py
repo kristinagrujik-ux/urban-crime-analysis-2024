@@ -619,14 +619,14 @@ elif "Корпуција" in selected_sheet:
                 use_container_width=True,
             )
 
-      ── РЕД 2 (цела ширина): График 3 (ново место) — Сторители ──────────
+    # -- ДЕЛ 2: Графикон 3 (Сторители) -----------------------------------
         st.write("**3. Сторители: 2024 vs 2023 година**")
         chart_stor = (
             alt.Chart(melted_stor_k)
             .mark_bar()
             .encode(
                 y=alt.Y(
-                    "СВР:N",
+                    "Име:N",
                     title=None,
                     sort=sector_order,
                     axis=alt.Axis(labelLimit=200),
@@ -644,17 +644,17 @@ elif "Корпуција" in selected_sheet:
                     ),
                     legend=alt.Legend(title="Година"),
                 ),
-                yOffset="Година:N",
+                xOffset="Година:N",
             )
             .properties(height=350)
         )
         st.altair_chart(chart_stor, use_container_width=True)
 
-        st.subheader("📋 Детална табела")
+        st.subheader("📊 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
 
     except Exception as e:
-        st.error(f"Грешка при обработка на податоците за корупција: {e}")
+        st.error(f"Грешка при вчитување на податоците за корупција: {e}")
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
     raw = df.copy()
