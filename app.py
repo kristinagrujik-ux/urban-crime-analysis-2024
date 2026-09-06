@@ -514,7 +514,7 @@ elif "Корупција" in selected_sheet:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.write("**1. Кривични дела: 2024 vs 2023 година )
+            st.write("**1. Кривични дела: 2024 vs 2023 година(Кривични дела)**")
             chart1 = (
                 alt.Chart(melted_kd_k)
                 .mark_bar()
