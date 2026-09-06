@@ -469,9 +469,8 @@ elif "Корупција" in selected_sheet:
 
         korupcija_clean = pd.DataFrame({
             "Име": raw_k.iloc[:, 0].values,
-            "Бр 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
-            "Бр 2023": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
-            # Вредноста во Excel е веќе дропка (пр. 1.1538 = 115.4%), затоа ја множиме со 100
+            "КД 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
+            "КД 2023": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
             "Промена %": pd.to_numeric(raw_k.iloc[:, 6], errors="coerce").fillna(0) * 100.0,
             "Сторители 2024": pd.to_numeric(raw_k.iloc[:, 7], errors="coerce").fillna(0),
             "Сторители 2023": pd.to_numeric(raw_k.iloc[:, 8], errors="coerce").fillna(0),
@@ -483,22 +482,22 @@ elif "Корупција" in selected_sheet:
 
         sector_order = korupcija_clean["Име"].tolist()
 
-        korupcija_clean["Промена % Изглед"] = korupcija_clean["Промена %"].apply(
+        korupcija_clean["Промена % текст"] = korupcija_clean["Промена %"].apply(
             lambda x: f"{x:.1f}%"
         )
-        korupcija_clean["Статус"] = korupcija_clean["Промена %"].apply(
+        korupcija_clean["Промена % значење"] = korupcija_clean["Промена %"].apply(
             lambda x: "Пораст" if x >= 0 else "Пад"
         )
         korupcija_clean["zero"] = 0
 
         melted_kd_k = korupcija_clean.melt(
             id_vars=["Име"],
-            value_vars=["Бр 2024", "Бр 2023"],
+            value_vars=["КД 2024", "КД 2023"],
             var_name="Година",
             value_name="Број",
         )
         melted_kd_k["Година"] = melted_kd_k["Година"].replace(
-            {"Бр 2024": "2024 година", "Бр 2023": "2023 година"}
+            {"КД 2024": "2024 година", "КД 2023": "2023 година"}
         )
 
         melted_stor_k = korupcija_clean.melt(
@@ -511,7 +510,7 @@ elif "Корупција" in selected_sheet:
             {"Сторители 2024": "2024 година", "Сторители 2023": "2023 година"}
         )
 
-       # -- ДЕЛ 1: Графикон 1 (Кривични дела) + Графикон 2 (Lollipop Chart) ----
+        # -- ДЕЛ 1: Графикон 1 (Кривични дела) + Графикон 2 (Lollipop Chart) ----
         col1, col2 = st.columns(2)
 
         with col1:
@@ -548,7 +547,6 @@ elif "Корупција" in selected_sheet:
         with col2:
             st.write("**2. Корупција - Промена (%) - Lollipop Chart**")
 
-            korupcija_clean["zero"] = 0
             base_lolli_k = alt.Chart(korupcija_clean).encode(
                 x=alt.X(
                     "Име:N",
@@ -567,8 +565,8 @@ elif "Корупција" in selected_sheet:
             rule_k = base_lolli_k.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена %:Q",
-                    axis=alt.Axis(format="%"),
-                    title="Промена",
+                    axis=alt.Axis(format=".1f"),
+                    title="Промена (%)",
                     scale=alt.Scale(zero=True),
                 ),
                 y2="zero:Q",
@@ -582,13 +580,13 @@ elif "Корупција" in selected_sheet:
             text_k_pos = (
                 base_lolli_k.transform_filter(alt.datum["Промена %"] >= 0)
                 .mark_text(align="center", dy=-16, fontSize=11)
-                .encode(y="Промена %:Q", text="Промена % време:N")
+                .encode(y="Промена %:Q", text="Промена % текст:N")
             )
 
             text_k_neg = (
                 base_lolli_k.transform_filter(alt.datum["Промена %"] < 0)
                 .mark_text(align="center", dy=18, fontSize=11)
-                .encode(y="Промена %:Q", text="Промена % време:N")
+                .encode(y="Промена %:Q", text="Промена % текст:N")
             )
 
             st.altair_chart(
@@ -630,44 +628,8 @@ elif "Корупција" in selected_sheet:
         st.subheader("📊 Детална табела")
         st.dataframe(raw_k, use_container_width=True, hide_index=True)
 
-        # ── РЕД 2 (потесен - половина ширина): График 3 — Сторители (Horizontal Bar Chart) ──
-        col3, col_spacer = st.columns([1, 1])
-        with col3:
-            st.write("**3. Сторители: 2024 vs 2023 година**")
-            chart_stor = (
-                alt.Chart(melted_stor_k)
-                .mark_bar()
-                .encode(
-                    y=alt.Y(
-                        "Име:N",
-                        title=None,
-                        sort=sector_order,
-                        axis=alt.Axis(labelLimit=200),
-                    ),
-                    x=alt.X(
-                        "Број:Q",
-                        title="Број",
-                        axis=alt.Axis(format="d", tickMinStep=1),
-                    ),
-                    color=alt.Color(
-                        "Година:N",
-                        scale=alt.Scale(
-                            domain=["2024 година", "2023 година"],
-                            range=["#1f77b4", "#aec7e8"],
-                        ),
-                        legend=alt.Legend(title="Година"),
-                    ),
-                    yOffset="Година:N",
-                )
-                .properties(height=350)
-            )
-            st.altair_chart(chart_stor, use_container_width=True)
-
-        st.subheader("📋 Детална табела")
-        st.dataframe(raw_k, use_container_width=True, hide_index=True)
-
     except Exception as e:
-        st.error(f"Грешка при обработка на податоците за корупција: {e}")
+        st.error(f"Грешка при вчитување на податоците за корупција: {e}")
 
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
