@@ -511,11 +511,11 @@ elif "Корупција" in selected_sheet:
             {"Сторители 2024": "2024 година", "Сторители 2023": "2023 година"}
         )
 
-        # ── РЕД 1: График 1 (КД) + График 2 (Diverging Chart) ───────────────
+       # -- ДЕЛ 1: Графикон 1 (Кривични дела) + Графикон 2 (Lollipop Chart) ----
         col1, col2 = st.columns(2)
 
         with col1:
-            st.write("**1. Корупција: 2024 vs 2023 година (Кривични дела)**")
+            st.write("**1. Кривични дела: 2024 vs 2023 година (Вертикален столб)**")
             chart1 = (
                 alt.Chart(melted_kd_k)
                 .mark_bar()
@@ -546,66 +546,89 @@ elif "Корупција" in selected_sheet:
             st.altair_chart(chart1, use_container_width=True)
 
         with col2:
-            st.write("**2. Корупција - Промена (%) - Diverging Bar Chart**")
+            st.write("**2. Корупција - Промена (%) - Lollipop Chart**")
 
-            base_div = alt.Chart(korupcija_clean).encode(
-                y=alt.Y(
+            korupcija_clean["zero"] = 0
+            base_lolli_k = alt.Chart(korupcija_clean).encode(
+                x=alt.X(
                     "Име:N",
-                    sort=sector_order,
                     title=None,
-                    axis=alt.Axis(labelLimit=200),
+                    sort=sector_order,
+                    axis=alt.Axis(labelAngle=270),
                 )
             )
 
-            color_enc_div = alt.Color(
-                "Статус:N",
-                scale=alt.Scale(
-                    domain=["Пораст", "Пад"],
-                    range=["#2ca02c", "#d62728"],
-                ),
+            color_enc_k = alt.Color(
+                "Промена % значење:N",
+                scale=alt.Scale(domain=["Пораст", "Пад"], range=["#2ca02c", "#d62728"]),
                 legend=alt.Legend(title=None),
             )
 
-            bars_div = base_div.mark_bar().encode(
-                x=alt.X(
+            rule_k = base_lolli_k.mark_rule(strokeWidth=2).encode(
+                y=alt.Y(
                     "Промена %:Q",
-                    title="Промена (%)",
-                    axis=alt.Axis(format=".0f"),
-                    scale=alt.Scale(domain=[-100, 500], zero=True),
+                    axis=alt.Axis(format="%"),
+                    title="Промена",
+                    scale=alt.Scale(zero=True),
                 ),
-                color=color_enc_div,
+                y2="zero:Q",
+                color=color_enc_k,
             )
 
-            text_pos = base_div.transform_filter(
-                alt.datum["Промена %"] >= 0
-            ).mark_text(
-                align="left",
-                dx=5,
-                fontSize=11,
-                fontWeight="bold",
-                color="#2ca02c",
-            ).encode(
-                x="Промена %:Q",
-                text="Промена % Изглед:N",
+            circle_k = base_lolli_k.mark_circle(size=200).encode(
+                y="Промена %:Q", color=color_enc_k
             )
 
-            text_neg = base_div.transform_filter(
-                alt.datum["Промена %"] < 0
-            ).mark_text(
-                align="right",
-                dx=-5,
-                fontSize=11,
-                fontWeight="bold",
-                color="#d62728",
-            ).encode(
-                x="Промена %:Q",
-                text="Промена % Изглед:N",
+            text_k_pos = (
+                base_lolli_k.transform_filter(alt.datum["Промена %"] >= 0)
+                .mark_text(align="center", dy=-16, fontSize=11)
+                .encode(y="Промена %:Q", text="Промена % време:N")
+            )
+
+            text_k_neg = (
+                base_lolli_k.transform_filter(alt.datum["Промена %"] < 0)
+                .mark_text(align="center", dy=18, fontSize=11)
+                .encode(y="Промена %:Q", text="Промена % време:N")
             )
 
             st.altair_chart(
-                (bars_div + text_pos + text_neg).properties(height=350),
+                (rule_k + circle_k + text_k_pos + text_k_neg).properties(height=350),
                 use_container_width=True,
             )
+
+        # -- ДЕЛ 2: Графикон 3 (Сторители - Широк хоризонтален графикон) ------
+        st.write("**3. Сторители: 2024 vs 2023 година**")
+        chart_stor = (
+            alt.Chart(melted_stor_k)
+            .mark_bar()
+            .encode(
+                y=alt.Y(
+                    "Име:N",
+                    title=None,
+                    sort=sector_order,
+                    axis=alt.Axis(labelLimit=200),
+                ),
+                x=alt.X(
+                    "Број:Q",
+                    title="Број",
+                    axis=alt.Axis(format="d", tickMinStep=1),
+                ),
+                color=alt.Color(
+                    "Година:N",
+                    scale=alt.Scale(
+                        domain=["2024 година", "2023 година"],
+                        range=["#1f77b4", "#aec7e8"],
+                    ),
+                    legend=alt.Legend(title="Година"),
+                ),
+                yOffset="Година:N",
+            )
+            .properties(height=400)
+        )
+        st.altair_chart(chart_stor, use_container_width=True)
+
+        st.subheader("📊 Детална табела")
+        st.dataframe(raw_k, use_container_width=True, hide_index=True)
 
         # ── РЕД 2 (потесен - половина ширина): График 3 — Сторители (Horizontal Bar Chart) ──
         col3, col_spacer = st.columns([1, 1])
