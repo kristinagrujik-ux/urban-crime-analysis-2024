@@ -456,6 +456,7 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.dataframe(df, use_container_width=True)
 
 # 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА
+# 3.4 Аналитички приказ за Корупција
 elif "Корупција" in selected_sheet:
 
     @st.cache_data
@@ -565,7 +566,7 @@ elif "Корупција" in selected_sheet:
             rule_k = base_lolli_k.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена %:Q",
-                    axis=alt.Axis(format=".1f"),
+                    axis=alt.Axis(format=".0f"),  # Овде се тргаат децималите (.0f)[cite: 1]
                     title="Промена (%)",
                     scale=alt.Scale(zero=True),
                 ),
