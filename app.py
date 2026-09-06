@@ -456,8 +456,7 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.dataframe(df, use_container_width=True)
 
 # 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА
-# 3.4 Аналитички приказ за Корупција
-elif "Корупција" in selected_sheet:
+if "Корупција" in selected_sheet:
 
     @st.cache_data
     def load_korupcija(sheet):
@@ -472,7 +471,7 @@ elif "Корупција" in selected_sheet:
             "Име": raw_k.iloc[:, 0].values,
             "КД 2024": pd.to_numeric(raw_k.iloc[:, 4], errors="coerce").fillna(0),
             "КД 2023": pd.to_numeric(raw_k.iloc[:, 5], errors="coerce").fillna(0),
-            "Промена %": pd.to_numeric(raw_k.iloc[:, 6], errors="coerce").fillna(0) * 100.0,
+            "Промена %": pd.to_numeric(raw_k.iloc[:, 6], errors="coerce").fillna(0),
             "Сторители 2024": pd.to_numeric(raw_k.iloc[:, 7], errors="coerce").fillna(0),
             "Сторители 2023": pd.to_numeric(raw_k.iloc[:, 8], errors="coerce").fillna(0),
         })
@@ -484,7 +483,7 @@ elif "Корупција" in selected_sheet:
         sector_order = korupcija_clean["Име"].tolist()
 
         korupcija_clean["Промена % текст"] = korupcija_clean["Промена %"].apply(
-            lambda x: f"{x:.1f}%"
+            lambda x: f"{x*100:.1f}%"
         )
         korupcija_clean["Промена % значење"] = korupcija_clean["Промена %"].apply(
             lambda x: "Пораст" if x >= 0 else "Пад"
@@ -566,7 +565,7 @@ elif "Корупција" in selected_sheet:
             rule_k = base_lolli_k.mark_rule(strokeWidth=2).encode(
                 y=alt.Y(
                     "Промена %:Q",
-                    axis=alt.Axis(format=".0f"),  # Овде се тргаат децималите (.0f)[cite: 1]
+                    axis=alt.Axis(format="%"),  # Формат со проценти на оската
                     title="Промена (%)",
                     scale=alt.Scale(zero=True),
                 ),
@@ -631,7 +630,6 @@ elif "Корупција" in selected_sheet:
 
     except Exception as e:
         st.error(f"Грешка при вчитување на податоците за корупција: {e}")
-
 # 3.5 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ОРГАНИЗИРАН КРИМИНАЛ
 elif "Организиран" in selected_sheet:
     raw = df.copy()
