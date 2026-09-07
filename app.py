@@ -462,7 +462,8 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
 
     blocks = []
 
-    # Само блок за Трговија со деца (редици 13 до 16)
+    # Трговија со луѓе е целосно отстранета. 
+    # Се додава само блокот за Трговија со деца (или другите податоци по потреба):
     try:
         b2_rows = raw.iloc[13:17].copy()
         df2 = pd.DataFrame({
@@ -477,39 +478,28 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
     except Exception:
         pass
 
+    # Прикажување само на она што останало во blocks
     if not blocks:
-        st.error("Не можат да се пронајдат податоците за трговија со деца.")
-        st.dataframe(df, use_container_width=True)
+        st.info("Нема достапни податоци за овој приказ.")
     else:
         for title, block_df in blocks:
             st.write(f"**{title}: 2024 vs 2023 vs 2022 година**")
-            if not block_df.empty:
-                order = block_df["Категорија"].tolist()
-                melted = block_df.melt(
-                    id_vars=["Категорија"], 
-                    value_vars=["2024 година", "2023 година", "2022 година"], 
-                    var_name="Година", 
-                    value_name="Број"
-                )
-                palette = ["#d62728", "#f4a582", "#fddbc7"]
-                base = alt.Chart(melted).encode(
-                    x=alt.X("Категорија:N", title=None, sort=order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
-                    y=alt.Y("Број:Q", title="Број"),
-                    color=alt.Color("Година:N", scale=alt.Scale(domain=["2024 година", "2023 година", "2022 година"], range=palette), legend=alt.Legend(title="Година")),
-                    xOffset="Година:N",
-                )
-                bars = base.mark_bar()
-                text = base.mark_text(dy=-8).encode(text="Број:Q")
-                st.altair_chart((bars + text).properties(height=380), use_container_width=True)
-            else:
-                st.info(f"Нема податоци за {title}.")
-
-        st.subheader("📋 Детална табела")
-        for title, block_df in blocks:
-            display_df = block_df.rename(columns={"Категорија": "Кривични дела"}).copy()
-            for col in ["2024 година", "2023 година", "2022 година"]:
-                display_df[col] = display_df[col].astype(int)
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
+            order = block_df["Категорија"].tolist()
+            melted = block_df.melt(
+                id_vars=["Категорија"], 
+                value_vars=["2024 година", "2023 година", "2022 година"], 
+                var_name="Година", 
+                value_name="Број"
+            )
+            base = alt.Chart(melted).encode(
+                x=alt.X("Категорија:N", title=None, sort=order, axis=alt.Axis(labelAngle=270, labelLimit=200)),
+                y=alt.Y("Број:Q", title="Број"),
+                color=alt.Color("Година:N", legend=alt.Legend(title="Година")),
+                xOffset="Година:N",
+            )
+            bars = base.mark_bar()
+            text = base.mark_text(dy=-8).encode(text="Број:Q")
+            st.altair_chart((bars + text).properties(height=380), use_container_width=True)
 # 3.4 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА КОРУПЦИЈА
 elif "Корупција" in selected_sheet:
 
