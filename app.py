@@ -748,7 +748,8 @@ elif "Организиран" in selected_sheet:
         ]
 
         org_clean = pd.DataFrame({
-            "Категорија": data_rows[label_col].astype(str).str.strip().values,
+            # Додаваме празно место на почетокот за да не ја сече првата буква на графиконот
+            "Категорија": " " + data_rows[label_col].astype(str).str.strip(),
             "ОКГ 2024": pd.to_numeric(
                 data_rows[okg_2024_col], errors="coerce"
             ).fillna(0),
@@ -784,7 +785,7 @@ elif "Организиран" in selected_sheet:
                     "Категорија:N",
                     sort=cat_order,
                     title=None,
-                    axis=alt.Axis(labelLimit=500),
+                    axis=alt.Axis(labelLimit=500, labelPadding=10),
                 ),
                 x=alt.X("Број:Q", title="Број"),
                 color=alt.Color(
@@ -799,10 +800,10 @@ elif "Организиран" in selected_sheet:
             )
             bars_okg = base_okg.mark_bar()
             text_okg = base_okg.mark_text(align="left", dx=3).encode(text="Број:Q")
-            st.altair_chart(
-                (bars_okg + text_okg).properties(width=450, height=400),
-                use_container_width=True,
-            )
+            
+            # Додадено е лево порамнување (padding) за да се појави целото име со Т
+            chart_okg = (bars_okg + text_okg).properties(width=400, height=400).configure(padding={"left": 120})
+            st.altair_chart(chart_okg, use_container_width=True)
 
         with col2:
             st.write("**Членови на криминални групи: 2024 vs 2023 година**")
@@ -825,7 +826,7 @@ elif "Организиран" in selected_sheet:
                     "Категорија:N",
                     sort=cat_order,
                     title=None,
-                    axis=alt.Axis(labelLimit=500),
+                    axis=alt.Axis(labelLimit=500, labelPadding=10),
                 ),
                 x=alt.X("Број:Q", title="Број", scale=alt.Scale(domain=[0, 80])),
                 color=alt.Color(
@@ -840,10 +841,9 @@ elif "Организиран" in selected_sheet:
             )
             bars_mem = base_mem.mark_bar()
             text_mem = base_mem.mark_text(align="left", dx=3).encode(text="Број:Q")
-            st.altair_chart(
-                (bars_mem + text_mem).properties(width=450, height=400),
-                use_container_width=True,
-            )
+            
+            chart_mem = (bars_mem + text_mem).properties(width=400, height=400).configure(padding={"left": 120})
+            st.altair_chart(chart_mem, use_container_width=True)
 
         st.subheader("📋 Детална табела")
         st.dataframe(df, use_container_width=True)
