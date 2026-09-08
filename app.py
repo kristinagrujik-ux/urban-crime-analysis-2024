@@ -456,6 +456,7 @@ elif "трговија со дрога" in selected_sheet.lower():
     st.dataframe(df, use_container_width=True)
 
 # 3.35 СПЕЦИЈАЛИЗИРАН ПРИКАЗ ЗА ТРГОВИЈА СО ЛУЃЕ И ДЕЦА
+# Избришете го целосно овој блок од код:
 elif "трговија" in selected_sheet.lower() and "дрога" not in selected_sheet.lower():
     raw = df.copy()
     blocks = []
@@ -469,7 +470,6 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
             "2023 година": pd.to_numeric(b1_rows.iloc[:, 6], errors="coerce").fillna(0),
             "2022 година": pd.to_numeric(b1_rows.iloc[:, 8], errors="coerce").fillna(0),
         })
-        # Строго филтрирање да нема None или празни места
         df1 = df1[df1["Категорија"].notna()]
         df1 = df1[~df1["Категорија"].astype(str).str.lower().isin(["nan", "none", ""])]
         if not df1.empty:
@@ -524,15 +524,6 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
                 bars = base.mark_bar()
                 text = base.mark_text(dy=-8).encode(text="Број:Q")
                 st.altair_chart((bars + text).properties(height=380), use_container_width=True)
-
-        st.subheader("📋 Детална табела")
-        for title, block_df in blocks:
-            st.write(f"**{title}**")
-            # Тука се прикажува исклучиво исчистениот block_df, без целосното df
-            display_df = block_df.rename(columns={"Категорија": "Кривични дела"}).copy()
-            for col in ["2024 година", "2023 година", "2022 година"]:
-                display_df[col] = display_df[col].astype(int)
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
 
         st.subheader("📋 Детална табела")
         for title, block_df in blocks:
