@@ -460,7 +460,7 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
     raw = df.copy()
     blocks = []
 
-    # Блок 1: Трговија со луѓе (редици 3, 5, 7 од Excel -> index 2, 4, 6 во Python)
+    # Блок 1: Трговија со луѓе
     try:
         b1_rows = raw.iloc[[2, 4, 6], :].copy()
         df1 = pd.DataFrame({
@@ -468,8 +468,8 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
             "2024 година": pd.to_numeric(b1_rows.iloc[:, 3], errors="coerce").fillna(0),
             "2023 година": pd.to_numeric(b1_rows.iloc[:, 6], errors="coerce").fillna(0),
             "2022 година": pd.to_numeric(b1_rows.iloc[:, 8], errors="coerce").fillna(0),
-        }).dropna(subset=["Категорија"])
-        # Ги отстрануваме сите редици каде Категорија е None, nan или празно
+        })
+        # Строго филтрирање да нема None или празни места
         df1 = df1[df1["Категорија"].notna()]
         df1 = df1[~df1["Категорија"].astype(str).str.lower().isin(["nan", "none", ""])]
         if not df1.empty:
@@ -477,7 +477,7 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
     except Exception:
         pass
 
-    # Блок 2: Трговија со деца (редици 14, 15, 16 од Excel -> index 13, 14, 15 во Python)
+    # Блок 2: Трговија со деца
     try:
         b2_rows = raw.iloc[13:16, :].copy()
         df2 = pd.DataFrame({
@@ -485,7 +485,7 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
             "2024 година": pd.to_numeric(b2_rows.iloc[:, 3], errors="coerce").fillna(0),
             "2023 година": pd.to_numeric(b2_rows.iloc[:, 6], errors="coerce").fillna(0),
             "2022 година": pd.to_numeric(b2_rows.iloc[:, 8], errors="coerce").fillna(0),
-        }).dropna(subset=["Категорија"])
+        })
         df2 = df2[df2["Категорија"].notna()]
         df2 = df2[~df2["Категорија"].astype(str).str.lower().isin(["nan", "none", ""])]
         if not df2.empty:
@@ -524,6 +524,15 @@ elif "трговија" in selected_sheet.lower() and "дрога" not in select
                 bars = base.mark_bar()
                 text = base.mark_text(dy=-8).encode(text="Број:Q")
                 st.altair_chart((bars + text).properties(height=380), use_container_width=True)
+
+        st.subheader("📋 Детална табела")
+        for title, block_df in blocks:
+            st.write(f"**{title}**")
+            # Тука се прикажува исклучиво исчистениот block_df, без целосното df
+            display_df = block_df.rename(columns={"Категорија": "Кривични дела"}).copy()
+            for col in ["2024 година", "2023 година", "2022 година"]:
+                display_df[col] = display_df[col].astype(int)
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
 
         st.subheader("📋 Детална табела")
         for title, block_df in blocks:
